@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>The Waning Light Admin</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: "Iowan Old Style", Georgia, serif;
+        background: linear-gradient(180deg, #f6efe4 0%, #e9ddc7 100%);
+        color: #241d18;
+      }
+
+      #admin-root {
+        min-height: 100vh;
+        padding: 24px;
+      }
+
+      .shell {
+        max-width: 1200px;
+        margin: 0 auto;
+        display: grid;
+        gap: 16px;
+      }
+
+      .card {
+        background: rgba(255, 250, 240, 0.92);
+        border: 1px solid #d0bda3;
+        border-radius: 16px;
+        padding: 16px;
+        box-shadow: 0 10px 30px rgba(77, 50, 26, 0.08);
+      }
+
+      .two-column {
+        display: grid;
+        gap: 16px;
+        grid-template-columns: 1.1fr 0.9fr;
+      }
+
+      .row {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+
+      label {
+        display: grid;
+        gap: 6px;
+        font-size: 14px;
+      }
+
+      input,
+      textarea,
+      button,
+      select {
+        font: inherit;
+      }
+
+      input,
+      textarea {
+        width: 100%;
+        padding: 10px 12px;
+        border-radius: 10px;
+        border: 1px solid #c7b39b;
+        background: #fffdfa;
+      }
+
+      textarea {
+        min-height: 140px;
+        resize: vertical;
+      }
+
+      button {
+        padding: 10px 14px;
+        border-radius: 999px;
+        border: 1px solid #815b33;
+        background: #3c2f23;
+        color: #fff6ea;
+        cursor: pointer;
+      }
+
+      button.secondary {
+        background: transparent;
+        color: #3c2f23;
+      }
+
+      ul {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: grid;
+        gap: 8px;
+      }
+
+      li button {
+        width: 100%;
+        text-align: left;
+        border-radius: 12px;
+      }
+
+      pre {
+        white-space: pre-wrap;
+        word-break: break-word;
+        background: #fffdfa;
+        border: 1px solid #d8c7b2;
+        padding: 12px;
+        border-radius: 12px;
+      }
+
+      @media (max-width: 900px) {
+        .two-column {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="admin-root"></div>
+    <script type="module" src="/src/ui/admin.ts"></script>
+  </body>
+</html>
