@@ -1,0 +1,30 @@
+{
+  "name": "waning-light",
+  "version": "1.0.0",
+  "description": "The Waning Light hexcrawl MVP",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "game",
+    "hexcrawl",
+    "typescript",
+    "vite"
+  ],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "@libsql/client": "^0.17.2"
+  },
+  "devDependencies": {
+    "@types/node": "^25.5.0",
+    "@vercel/node": "^5.6.18",
+    "typescript": "^5.9.3",
+    "vite": "^8.0.1",
+    "vitest": "^4.1.0"
+  }
+}
