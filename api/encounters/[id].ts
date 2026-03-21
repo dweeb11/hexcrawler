@@ -40,6 +40,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     }
 
     const { text, requiredTags, biomes, choices } = req.body ?? {};
+    if (!text || !Array.isArray(requiredTags) || !Array.isArray(choices)) {
+      res.status(400).json({
+        error: "Missing required fields: text, requiredTags, choices",
+      });
+      return;
+    }
+
     await db.execute({
       sql: `
         UPDATE encounters

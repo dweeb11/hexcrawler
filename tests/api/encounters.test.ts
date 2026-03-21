@@ -115,6 +115,46 @@ describe("encounter API routes", () => {
     expect(res.jsonBody).toMatchObject({ id: "forest-stream" });
   });
 
+  it("updates encounters through PUT /api/encounters/[id]", async () => {
+    const handler = (await import("../../api/encounters/[id]")).default;
+    execute.mockResolvedValueOnce({ rows: [], rowsAffected: 1 });
+
+    const res = createResponse();
+    await handler(
+      {
+        method: "PUT",
+        query: { id: "forest-stream" },
+        body: {
+          text: "Updated stream",
+          requiredTags: ["water"],
+          choices: [{ label: "Drink", outcome: { hope: 1 } }],
+        },
+      } as never,
+      res as never,
+    );
+
+    expect(requireAuth).toHaveBeenCalled();
+    expect(res.statusCode).toBe(200);
+    expect(res.jsonBody).toEqual({ id: "forest-stream" });
+  });
+
+  it("rejects PUT with missing required fields", async () => {
+    const handler = (await import("../../api/encounters/[id]")).default;
+
+    const res = createResponse();
+    await handler(
+      {
+        method: "PUT",
+        query: { id: "forest-stream" },
+        body: { text: "No tags or choices" },
+      } as never,
+      res as never,
+    );
+
+    expect(res.statusCode).toBe(400);
+    expect(res.jsonBody).toMatchObject({ error: expect.stringContaining("Missing required fields") });
+  });
+
   it("deletes encounters through DELETE /api/encounters/[id]", async () => {
     const handler = (await import("../../api/encounters/[id]")).default;
     execute.mockResolvedValueOnce({ rows: [], rowsAffected: 1 });
