@@ -5,3 +5,7 @@ dist/
 .env.*
 !.env.example
 .vercel/
+local.db
+.vercel
+api/**/*.js
+api/**/*.mjs

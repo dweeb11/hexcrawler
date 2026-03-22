@@ -1,17 +1,15 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const execute = vi.fn();
-const ensureTable = vi.fn();
-const requireAuth = vi.fn();
 
-vi.mock("../../api/lib/db", () => ({
-  getDb: () => ({ execute }),
-  ensureTable,
+// Mock @libsql/client/web — the endpoint files import createClient from here
+vi.mock("@libsql/client/web", () => ({
+  createClient: () => ({ execute }),
 }));
 
-vi.mock("../../api/lib/auth", () => ({
-  requireAuth,
-}));
+// Mock ADMIN_API_KEY for auth tests
+vi.stubEnv("ADMIN_API_KEY", "test-key");
+vi.stubEnv("TURSO_DATABASE_URL", "libsql://test.turso.io");
 
 function createResponse() {
   return {
@@ -35,10 +33,10 @@ function createResponse() {
 
 describe("encounter API routes", () => {
   beforeEach(() => {
+    vi.resetModules();
     execute.mockReset();
-    ensureTable.mockReset();
-    requireAuth.mockReset();
-    requireAuth.mockReturnValue(true);
+    // ensureTable call
+    execute.mockResolvedValueOnce({ rows: [] });
   });
 
   it("lists encounters from GET /api/encounters", async () => {
@@ -48,9 +46,9 @@ describe("encounter API routes", () => {
         {
           id: "forest-stream",
           text: "A clear stream",
-          required_tags: "[\"water\"]",
-          biomes: "[\"forest\"]",
-          choices: "[{\"label\":\"Drink\",\"outcome\":{\"hope\":2}}]",
+          required_tags: '["water"]',
+          biomes: '["forest"]',
+          choices: '[{"label":"Drink","outcome":{"hope":2}}]',
         },
       ],
     });
@@ -58,7 +56,6 @@ describe("encounter API routes", () => {
     const res = createResponse();
     await handler({ method: "GET" } as never, res as never);
 
-    expect(ensureTable).toHaveBeenCalled();
     expect(res.statusCode).toBe(200);
     expect(res.jsonBody).toEqual([
       {
@@ -79,6 +76,7 @@ describe("encounter API routes", () => {
     await handler(
       {
         method: "POST",
+        headers: { "x-api-key": "test-key" },
         body: {
           id: "new-encounter",
           text: "Test",
@@ -89,7 +87,6 @@ describe("encounter API routes", () => {
       res as never,
     );
 
-    expect(requireAuth).toHaveBeenCalled();
     expect(res.statusCode).toBe(201);
     expect(res.jsonBody).toEqual({ id: "new-encounter" });
   });
@@ -101,9 +98,9 @@ describe("encounter API routes", () => {
         {
           id: "forest-stream",
           text: "A clear stream",
-          required_tags: "[\"water\"]",
+          required_tags: '["water"]',
           biomes: null,
-          choices: "[{\"label\":\"Drink\",\"outcome\":{\"hope\":2}}]",
+          choices: '[{"label":"Drink","outcome":{"hope":2}}]',
         },
       ],
     });
@@ -123,6 +120,7 @@ describe("encounter API routes", () => {
     await handler(
       {
         method: "PUT",
+        headers: { "x-api-key": "test-key" },
         query: { id: "forest-stream" },
         body: {
           text: "Updated stream",
@@ -133,7 +131,6 @@ describe("encounter API routes", () => {
       res as never,
     );
 
-    expect(requireAuth).toHaveBeenCalled();
     expect(res.statusCode).toBe(200);
     expect(res.jsonBody).toEqual({ id: "forest-stream" });
   });
@@ -145,6 +142,7 @@ describe("encounter API routes", () => {
     await handler(
       {
         method: "PUT",
+        headers: { "x-api-key": "test-key" },
         query: { id: "forest-stream" },
         body: { text: "No tags or choices" },
       } as never,
@@ -160,9 +158,15 @@ describe("encounter API routes", () => {
     execute.mockResolvedValueOnce({ rows: [], rowsAffected: 1 });
 
     const res = createResponse();
-    await handler({ method: "DELETE", query: { id: "forest-stream" } } as never, res as never);
+    await handler(
+      {
+        method: "DELETE",
+        headers: { "x-api-key": "test-key" },
+        query: { id: "forest-stream" },
+      } as never,
+      res as never,
+    );
 
-    expect(requireAuth).toHaveBeenCalled();
     expect(res.statusCode).toBe(204);
     expect(res.ended).toBe(true);
   });
@@ -172,9 +176,14 @@ describe("encounter API routes", () => {
     execute.mockResolvedValue({ rows: [], rowsAffected: 1 });
 
     const res = createResponse();
-    await handler({ method: "POST" } as never, res as never);
+    await handler(
+      {
+        method: "POST",
+        headers: { "x-api-key": "test-key" },
+      } as never,
+      res as never,
+    );
 
-    expect(requireAuth).toHaveBeenCalled();
     expect(res.statusCode).toBe(200);
     expect(res.jsonBody).toMatchObject({ total: 18 });
   });
