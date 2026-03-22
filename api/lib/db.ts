@@ -4,10 +4,7 @@ let client: Client | null = null;
 
 export function getDb(): Client {
   if (!client) {
-    const url = process.env.TURSO_DATABASE_URL;
-    if (!url) {
-      throw new Error("TURSO_DATABASE_URL is not configured.");
-    }
+    const url = process.env.TURSO_DATABASE_URL || "file:local.db";
 
     client = createClient({
       url,
