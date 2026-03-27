@@ -9,3 +9,5 @@ local.db
 .vercel
 api/**/*.js
 api/**/*.mjs
+.env*.local
+.superpowers/
