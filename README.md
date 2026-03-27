@@ -135,7 +135,7 @@ Environment variables must be configured in the Vercel dashboard for Production.
 | `WORKING_AGREEMENT.games.md` | Game-specific development conventions |
 | `GIT_CONVENTIONS.md` | Branching and commit standards |
 | `MULTI_AGENT.md` | Multi-agent collaboration model |
-| `docs/superpowers/specs/` | Technical design specs |
+| `docs/` | Technical design specs |
 | `docs/milestones/` | Milestone checklists |
 
 ## License

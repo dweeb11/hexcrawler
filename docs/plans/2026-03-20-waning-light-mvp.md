@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript (strict), Vite, Vitest, Vercel (hosting + serverless), Turso (`@libsql/client`), Canvas 2D API
 
-**Spec:** `docs/superpowers/specs/2026-03-20-waning-light-design.md`
+**Spec:** `docs/2026-03-20-waning-light-design.md`
 
 ---
 

@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript, Canvas 2D, Vitest, Turso (encounter storage)
 
-**Design Spec:** `docs/superpowers/specs/2026-03-27-friends-family-demo-design.md` — Milestone 2 section
+**Design Spec:** `docs/2026-03-27-friends-family-demo-design.md` — Milestone 2 section
 
 **Prerequisite:** M1 must be complete (save/load, visited tracking, simplified hex display).
 

@@ -129,6 +129,7 @@ ADMIN_API_KEY=your-secret-key
 - `WORKING_AGREEMENT.md` — Development process
 - `WORKING_AGREEMENT.games.md` — Game-specific conventions
 - `GIT_CONVENTIONS.md` — Branching and commits
-- `docs/superpowers/specs/` — Design specs
-- `docs/milestones/` — Specs and milestone checklists
+- `docs/` — Design specs
+- `docs/plans/` — Implementation plans
+- `docs/milestones/` — Milestone checklists
 - `docs/worklogs/` — Feature worklogs

@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript, Turso, Vercel serverless, Vitest
 
-**Design Spec:** `docs/superpowers/specs/2026-03-27-friends-family-demo-design.md` — Milestone 4 section
+**Design Spec:** `docs/2026-03-27-friends-family-demo-design.md` — Milestone 4 section
 
 **Prerequisite:** M3 must be complete (win conditions, game feel, sound).
 
