@@ -166,7 +166,7 @@ export function serializeState(state: GameState): SerializedGameState {
     searing: state.searing,
     turn: state.turn,
     mode: state.mode,
-    log: state.log,
+    log: state.log.slice(-50),
     status: state.status,
     encounters: state.encounters,
   };
