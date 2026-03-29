@@ -1,11 +1,13 @@
 import { fetchEncounters } from "./api/encounters";
+import { coordKey } from "./engine/hex";
 import { clearSave, hasSave, loadGame, saveGame } from "./engine/save";
 import { pixelToHex, setupCanvas } from "./renderer/canvas";
 import { createCamera } from "./renderer/camera";
 import { render } from "./renderer/renderer";
-import { createInitialState, type GameState } from "./engine/state";
+import { createInitialState, type Action, type GameState } from "./engine/state";
 import { resolveTurn } from "./engine/turn";
 import { screenToWorld } from "./renderer/camera";
+import { dismissHint } from "./ui/hints";
 import { clearLog, updateLog } from "./ui/log";
 import { clickedNeighborToAction, keyToAction } from "./ui/input";
 
@@ -69,6 +71,29 @@ async function main(): Promise<void> {
     }
   };
 
+  const applyAction = (action: Action) => {
+    const previousState = state;
+    const nextState = resolveTurn(previousState, action, rng);
+
+    if (
+      action.type === "push" &&
+      coordKey(nextState.player.hex) !== coordKey(previousState.player.hex)
+    ) {
+      dismissHint("first-turn");
+    }
+
+    if (action.type === "choose" && previousState.mode.type === "encounter") {
+      dismissHint("first-encounter");
+    }
+
+    if (action.type === "pause" && action.activity === "forage") {
+      dismissHint("low-supply");
+    }
+
+    state = nextState;
+    persistState(state);
+  };
+
   const frame = () => {
     camera = render(ctx, state, camera);
     updateLog(logPanel, state.log);
@@ -83,8 +108,7 @@ async function main(): Promise<void> {
 
     const action = keyToAction(event.key, state.mode);
     if (action) {
-      state = resolveTurn(state, action, rng);
-      persistState(state);
+      applyAction(action);
     }
   });
 
@@ -102,8 +126,7 @@ async function main(): Promise<void> {
     const clicked = pixelToHex(world.x, world.y);
     const action = clickedNeighborToAction(state.player.hex, clicked);
     if (action) {
-      state = resolveTurn(state, action, rng);
-      persistState(state);
+      applyAction(action);
     }
   });
 

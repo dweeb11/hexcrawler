@@ -24,7 +24,7 @@ export function render(
       renderMap(ctx, state, centeredCamera, width, height);
       break;
     case "encounter":
-      renderEncounter(ctx, state.mode, state.player, width, height);
+      renderEncounter(ctx, state, width, height);
       break;
     case "camp":
       renderCamp(ctx, state.mode, width, height);
