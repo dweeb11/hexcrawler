@@ -97,27 +97,33 @@ function handlePush(state: GameState, action: Extract<Action, { type: "push" }>,
     return appendLog(nextState, "The path ahead refuses to resolve.");
   }
 
+  map.set(key, { ...destinationTile, visited: true });
+  const enteredTile = map.get(key);
+  if (!enteredTile) {
+    return appendLog(nextState, "The path ahead refuses to resolve.");
+  }
+
   nextState = {
     ...nextState,
     map,
     player: { ...nextState.player, hex: destination },
   };
-  nextState = appendLog(nextState, `You push onward into ${destinationTile.biome}. (-1 Supply)`);
+  nextState = appendLog(nextState, `You push onward into ${enteredTile.biome}. (-1 Supply)`);
 
-  if (destinationTile.encounter) {
-    const clearedTile = { ...destinationTile, encounter: null };
+  if (enteredTile.encounter) {
+    const clearedTile = { ...enteredTile, encounter: null };
     map.set(key, clearedTile);
     return {
       ...nextState,
       map: new Map(map),
       mode: {
         type: "encounter",
-        encounter: destinationTile.encounter,
+        encounter: enteredTile.encounter,
         hex: destination,
       },
       log: [
         ...nextState.log,
-        { turn: nextState.turn, text: destinationTile.encounter.text },
+        { turn: nextState.turn, text: enteredTile.encounter.text },
       ],
     };
   }

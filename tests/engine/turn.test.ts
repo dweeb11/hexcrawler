@@ -32,6 +32,13 @@ describe("resolveTurn push flow", () => {
     expect(next.turn).toBe(state.turn + 1);
   });
 
+  it("marks the destination hex as visited after push", () => {
+    const { state, rng } = makeState();
+    const next = resolveTurn(state, { type: "push", direction: 0 }, rng);
+    const destination = next.map.get(coordKey(next.player.hex));
+    expect(destination?.visited).toBe(true);
+  });
+
   it("refuses to move without supply", () => {
     const { state, rng } = makeState();
     const emptyState: GameState = {
@@ -83,6 +90,7 @@ describe("resolveTurn encounter flow", () => {
           encounter,
           revealed: true,
           consumed: false,
+          visited: false,
         }),
       },
       { type: "push", direction: 0 },

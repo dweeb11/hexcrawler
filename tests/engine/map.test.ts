@@ -59,6 +59,7 @@ describe("generateHex", () => {
     expect(tile.tags.size).toBeGreaterThanOrEqual(2);
     expect(tile.revealed).toBe(true);
     expect(tile.consumed).toBe(false);
+    expect(tile.visited).toBe(false);
   });
 
   it("assigns matching encounters", () => {
@@ -82,6 +83,7 @@ describe("generateHex", () => {
       encounter: null,
       revealed: true,
       consumed: false,
+      visited: true,
     };
     const map = new Map([[coordKey(neighborCoord), existing]]);
     const tile = generateHex(coord, map, [], seededRng(42));

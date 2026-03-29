@@ -4,7 +4,7 @@ import type { GameState, HexTile } from "../../engine/state";
 import { drawHexagon, hexToPixel, HEX_SIZE } from "../canvas";
 import type { Camera } from "../camera";
 import { worldToScreen } from "../camera";
-import { COLORS, BIOME_GLYPHS, TAG_GLYPHS } from "../glyphs";
+import { COLORS, BIOME_GLYPHS } from "../glyphs";
 import { renderHud } from "../hud";
 
 function drawTile(
@@ -26,6 +26,7 @@ function drawTile(
   }
 
   ctx.save();
+  ctx.globalAlpha = tile.visited ? 1 : 0.4;
   drawHexagon(ctx, screen.x, screen.y, HEX_SIZE - 1);
   ctx.fillStyle = tile.consumed ? COLORS.consumed : COLORS.fog;
   ctx.fill();
@@ -36,20 +37,7 @@ function drawTile(
   ctx.fillStyle = tile.consumed ? COLORS.searing : COLORS.biome[tile.biome];
   ctx.font = "bold 18px monospace";
   ctx.fillText(BIOME_GLYPHS[tile.biome], screen.x, screen.y - 4);
-
-  ctx.fillStyle = COLORS.textDim;
-  ctx.font = "12px monospace";
-  const tagGlyphs = [...tile.tags]
-    .slice(0, 2)
-    .map((tag) => TAG_GLYPHS[tag] ?? "?")
-    .join(" ");
-  ctx.fillText(tagGlyphs, screen.x, screen.y + 16);
-
-  if (!tile.consumed && tile.encounter) {
-    ctx.fillStyle = COLORS.encounter;
-    ctx.font = "bold 16px monospace";
-    ctx.fillText("!", screen.x + 18, screen.y - 18);
-  }
+  ctx.globalAlpha = 1;
   ctx.restore();
 }
 

@@ -32,6 +32,7 @@ export interface HexTile {
   readonly encounter: Encounter | null;
   readonly revealed: boolean;
   readonly consumed: boolean;
+  readonly visited: boolean;
 }
 
 export interface LogEntry {
@@ -92,6 +93,7 @@ export interface SerializedHexTile {
   readonly encounter: Encounter | null;
   readonly revealed: boolean;
   readonly consumed: boolean;
+  readonly visited: boolean;
 }
 
 export interface SerializedGameState {
@@ -114,6 +116,7 @@ export function createInitialState(encounters: Encounter[], rng: RNG): GameState
     encounter: null,
     revealed: true,
     consumed: false,
+    visited: true,
   };
   const axes: HexAxis[] = ["q", "r", "s"];
   const axis = axes[Math.floor(rng() * axes.length)] ?? "q";
@@ -157,6 +160,7 @@ export function serializeState(state: GameState): SerializedGameState {
       encounter: tile.encounter,
       revealed: tile.revealed,
       consumed: tile.consumed,
+      visited: tile.visited,
     };
   }
 
@@ -183,6 +187,7 @@ export function deserializeState(data: SerializedGameState): GameState {
       encounter: tile.encounter,
       revealed: tile.revealed,
       consumed: tile.consumed,
+      visited: tile.visited ?? false,
     });
   }
 

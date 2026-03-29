@@ -42,6 +42,7 @@ describe("serializeState / deserializeState", () => {
       expect([...restoredTile!.tags]).toEqual([...tile.tags]);
       expect(restoredTile?.revealed).toBe(tile.revealed);
       expect(restoredTile?.consumed).toBe(tile.consumed);
+      expect(restoredTile?.visited).toBe(tile.visited);
     }
   });
 
