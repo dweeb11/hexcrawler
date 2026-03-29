@@ -35,9 +35,12 @@ export interface HexTile {
   readonly visited: boolean;
 }
 
+export type LogType = "narrative" | "resource" | "searing" | "system";
+
 export interface LogEntry {
   readonly turn: number;
   readonly text: string;
+  readonly type?: LogType;
 }
 
 export interface SearingState {
@@ -142,6 +145,7 @@ export function createInitialState(encounters: Encounter[], rng: RNG): GameState
       {
         turn: 0,
         text: "You stand in a sheltered settlement. The Searing stains the horizon.",
+        type: "narrative",
       },
     ],
     status: "playing",

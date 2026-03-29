@@ -8,15 +8,16 @@ export function updateLog(panel: HTMLElement, entries: LogEntry[]): void {
     }
 
     const row = document.createElement("div");
-    row.style.marginBottom = "6px";
-    row.style.paddingBottom = "6px";
-    row.style.borderBottom = "1px solid #1f1f1f";
+    row.className = `log-entry log-${entry.type ?? "narrative"}`;
 
     const turn = document.createElement("span");
-    turn.style.color = "#666";
+    turn.className = "log-turn";
     turn.textContent = `[${entry.turn}] `;
     row.appendChild(turn);
-    row.appendChild(document.createTextNode(entry.text));
+
+    const text = document.createElement("span");
+    text.textContent = entry.text;
+    row.appendChild(text);
     panel.appendChild(row);
   }
 
