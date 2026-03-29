@@ -6,6 +6,7 @@ import type { Camera } from "../camera";
 import { worldToScreen } from "../camera";
 import { COLORS, BIOME_GLYPHS } from "../glyphs";
 import { renderHud } from "../hud";
+import { drawLegend } from "../legend";
 
 function drawTile(
   ctx: CanvasRenderingContext2D,
@@ -88,12 +89,5 @@ export function renderMap(
   ctx.restore();
 
   renderHud(ctx, state, width);
-
-  ctx.save();
-  ctx.fillStyle = COLORS.textDim;
-  ctx.textAlign = "left";
-  ctx.textBaseline = "bottom";
-  ctx.font = "13px monospace";
-  ctx.fillText("Move: Q W E A S D  Camp: R rest, F forage", 18, height - 20);
-  ctx.restore();
+  drawLegend(ctx, width, height, "map");
 }

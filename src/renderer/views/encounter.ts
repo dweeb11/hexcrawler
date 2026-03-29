@@ -1,5 +1,6 @@
 import type { GameMode, Player, ResourceDelta } from "../../engine/state";
 import { COLORS } from "../glyphs";
+import { drawLegend } from "../legend";
 
 function formatDelta(delta: ResourceDelta): string {
   const parts = Object.entries(delta)
@@ -46,9 +47,7 @@ export function renderEncounter(
     y += 54;
   });
 
-  ctx.fillStyle = COLORS.textDim;
-  ctx.textAlign = "center";
-  ctx.fillText("Press 1-9 to choose.", width / 2, height - 60);
+  drawLegend(ctx, width, height, "encounter");
   ctx.restore();
 }
 
