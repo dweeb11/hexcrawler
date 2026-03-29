@@ -1,4 +1,5 @@
 import { fetchEncounters } from "./api/encounters";
+import { clearSave, hasSave, loadGame, saveGame } from "./engine/save";
 import { pixelToHex, setupCanvas } from "./renderer/canvas";
 import { createCamera } from "./renderer/camera";
 import { render } from "./renderer/renderer";
@@ -31,14 +32,41 @@ async function main(): Promise<void> {
   const encounters = await fetchEncounters();
   let seed = Date.now();
   let rng = createRng(seed);
-  let state: GameState = createInitialState(encounters, rng);
+  let state: GameState;
   let camera = createCamera();
+
+  if (hasSave()) {
+    const saved = loadGame();
+    if (saved && saved.status === "playing") {
+      const shouldContinue = await showContinuePrompt(canvas, ctx);
+      if (shouldContinue) {
+        state = saved;
+      } else {
+        clearSave();
+        state = createInitialState(encounters, rng);
+      }
+    } else {
+      clearSave();
+      state = createInitialState(encounters, rng);
+    }
+  } else {
+    state = createInitialState(encounters, rng);
+  }
 
   const restart = () => {
     seed = Date.now();
     rng = createRng(seed);
     state = createInitialState(encounters, rng);
+    clearSave();
     clearLog(logPanel);
+  };
+
+  const persistState = (nextState: GameState) => {
+    if (nextState.status === "playing") {
+      saveGame(nextState);
+    } else {
+      clearSave();
+    }
   };
 
   const frame = () => {
@@ -56,6 +84,7 @@ async function main(): Promise<void> {
     const action = keyToAction(event.key, state.mode);
     if (action) {
       state = resolveTurn(state, action, rng);
+      persistState(state);
     }
   });
 
@@ -74,10 +103,47 @@ async function main(): Promise<void> {
     const action = clickedNeighborToAction(state.player.hex, clicked);
     if (action) {
       state = resolveTurn(state, action, rng);
+      persistState(state);
     }
   });
 
   window.requestAnimationFrame(frame);
+}
+
+function showContinuePrompt(
+  canvas: HTMLCanvasElement,
+  ctx: CanvasRenderingContext2D,
+): Promise<boolean> {
+  return new Promise((resolve) => {
+    const ratio = window.devicePixelRatio || 1;
+    const width = canvas.width / ratio;
+    const height = canvas.height / ratio;
+
+    ctx.save();
+    ctx.fillStyle = "#0a0a0a";
+    ctx.fillRect(0, 0, width, height);
+    ctx.fillStyle = "#c0c0c0";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.font = "24px monospace";
+    ctx.fillText("Saved game found", width / 2, height / 2 - 40);
+    ctx.font = "16px monospace";
+    ctx.fillText(
+      "Press C to Continue  |  Press N for New Game",
+      width / 2,
+      height / 2 + 20,
+    );
+    ctx.restore();
+
+    const handler = (event: KeyboardEvent) => {
+      const key = event.key.toLowerCase();
+      if (key === "c" || key === "n") {
+        document.removeEventListener("keydown", handler);
+        resolve(key === "c");
+      }
+    };
+    document.addEventListener("keydown", handler);
+  });
 }
 
 void main();
