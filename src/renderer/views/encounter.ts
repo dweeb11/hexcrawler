@@ -1,7 +1,6 @@
-import { MAX_SUPPLY, type GameState, type ResourceDelta } from "../../engine/state";
+import { type GameState, type ResourceDelta } from "../../engine/state";
 import { COLORS } from "../glyphs";
 import { drawLegend } from "../legend";
-import { getActiveHint } from "../../ui/hints";
 
 function formatDelta(delta: ResourceDelta): string {
   const parts = Object.entries(delta)
@@ -15,6 +14,7 @@ export function renderEncounter(
   state: GameState,
   width: number,
   height: number,
+  activeHint: { id: string; text: string } | null,
 ): void {
   if (state.mode.type !== "encounter") {
     return;
@@ -56,15 +56,9 @@ export function renderEncounter(
 
   drawLegend(ctx, width, height, "encounter");
 
-  const hint = getActiveHint({
-    turn: state.turn,
-    supply: state.player.supply,
-    maxSupply: MAX_SUPPLY,
-    mode: state.mode.type,
-  });
-  if (hint) {
+  if (activeHint) {
     ctx.font = "13px monospace";
-    const hintWidth = ctx.measureText(hint.text).width + 40;
+    const hintWidth = ctx.measureText(activeHint.text).width + 40;
     const hintX = (width - hintWidth) / 2;
     const hintY = height - 50;
     ctx.fillStyle = "rgba(40, 40, 20, 0.9)";
@@ -74,7 +68,7 @@ export function renderEncounter(
     ctx.fillStyle = "#da4";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.fillText(hint.text, width / 2, hintY + 16);
+    ctx.fillText(activeHint.text, width / 2, hintY + 16);
   }
 
   ctx.restore();

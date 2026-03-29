@@ -1,16 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { clearSave, hasSave, loadGame, saveGame, SAVE_KEY } from "../../src/engine/save";
+import { clearSave, hasSave, loadGame, saveGame, SAVE_KEY } from "../../src/ui/save";
 import { createInitialState } from "../../src/engine/state";
-
-function seededRng(seed: number) {
-  let value = seed;
-
-  return () => {
-    value = (value * 16807) % 2147483647;
-    return (value - 1) / 2147483646;
-  };
-}
+import { seededRng } from "../helpers";
 
 const storage = new Map<string, string>();
 const localStorageMock = {

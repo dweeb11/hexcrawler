@@ -1,4 +1,4 @@
-import { deserializeState, serializeState, type GameState } from "./state";
+import { deserializeState, serializeState, type GameState } from "../engine/state";
 
 export const SAVE_KEY = "waning-light-save";
 

@@ -3,15 +3,7 @@ import { describe, expect, it } from "vitest";
 import { coordKey, cubeCoord } from "../../src/engine/hex";
 import { createInitialState, type Action, type Encounter, type GameState } from "../../src/engine/state";
 import { resolveTurn } from "../../src/engine/turn";
-
-function seededRng(seed: number) {
-  let value = seed;
-
-  return () => {
-    value = (value * 16807) % 2147483647;
-    return (value - 1) / 2147483646;
-  };
-}
+import { seededRng } from "../helpers";
 
 function makeState(seed = 42): { state: GameState; rng: () => number } {
   const setupRng = seededRng(seed);

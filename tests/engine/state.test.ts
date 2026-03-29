@@ -7,15 +7,7 @@ import {
   type Encounter,
   type GameState,
 } from "../../src/engine/state";
-
-function seededRng(seed: number) {
-  let value = seed;
-
-  return () => {
-    value = (value * 16807) % 2147483647;
-    return (value - 1) / 2147483646;
-  };
-}
+import { seededRng } from "../helpers";
 
 describe("serializeState / deserializeState", () => {
   it("round-trips initial state without data loss", () => {

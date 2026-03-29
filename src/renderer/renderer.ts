@@ -10,6 +10,7 @@ export function render(
   ctx: CanvasRenderingContext2D,
   state: GameState,
   camera: Camera,
+  activeHint: { id: string; text: string } | null,
 ): Camera {
   const ratio = window.devicePixelRatio || 1;
   const width = ctx.canvas.width / ratio;
@@ -21,10 +22,10 @@ export function render(
 
   switch (state.mode.type) {
     case "map":
-      renderMap(ctx, state, centeredCamera, width, height);
+      renderMap(ctx, state, centeredCamera, width, height, activeHint);
       break;
     case "encounter":
-      renderEncounter(ctx, state, width, height);
+      renderEncounter(ctx, state, width, height, activeHint);
       break;
     case "camp":
       renderCamp(ctx, state.mode, width, height);

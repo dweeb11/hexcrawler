@@ -3,15 +3,7 @@ import { describe, expect, it } from "vitest";
 import { coordKey, cubeCoord } from "../../src/engine/hex";
 import { generateHex, getVisibleNeighbors, rollBiome, rollTags } from "../../src/engine/map";
 import type { Encounter, HexTile } from "../../src/engine/state";
-
-function seededRng(seed: number) {
-  let value = seed;
-
-  return () => {
-    value = (value * 16807) % 2147483647;
-    return (value - 1) / 2147483646;
-  };
-}
+import { seededRng } from "../helpers";
 
 describe("rollBiome", () => {
   it("returns a valid biome", () => {

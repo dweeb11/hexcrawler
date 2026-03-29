@@ -1,15 +1,34 @@
 import { fetchEncounters } from "./api/encounters";
 import { coordKey } from "./engine/hex";
-import { clearSave, hasSave, loadGame, saveGame } from "./engine/save";
+import { clearSave, hasSave, loadGame, saveGame } from "./ui/save";
 import { pixelToHex, setupCanvas } from "./renderer/canvas";
 import { createCamera } from "./renderer/camera";
 import { render } from "./renderer/renderer";
-import { createInitialState, type Action, type GameState } from "./engine/state";
+import { createInitialState, MAX_SUPPLY, type Action, type GameState } from "./engine/state";
 import { resolveTurn } from "./engine/turn";
 import { screenToWorld } from "./renderer/camera";
-import { dismissHint } from "./ui/hints";
+import { getActiveHint, type HintId } from "./ui/hints";
 import { clearLog, updateLog } from "./ui/log";
 import { clickedNeighborToAction, keyToAction } from "./ui/input";
+
+const HINTS_KEY = "waning-light-hints";
+const VALID_HINT_IDS: HintId[] = ["first-turn", "low-supply", "first-encounter", "first-rumor"];
+
+function loadDismissedHints(): Set<HintId> {
+  try {
+    const raw = localStorage.getItem(HINTS_KEY);
+    if (!raw) return new Set();
+    const parsed: unknown = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return new Set();
+    return new Set(parsed.filter((v): v is HintId => VALID_HINT_IDS.includes(v as HintId)));
+  } catch {
+    return new Set();
+  }
+}
+
+function saveDismissedHints(hints: Set<HintId>): void {
+  localStorage.setItem(HINTS_KEY, JSON.stringify([...hints]));
+}
 
 function createRng(seed: number): () => number {
   let current = seed % 2147483647;
@@ -36,6 +55,14 @@ async function main(): Promise<void> {
   let rng = createRng(seed);
   let state: GameState;
   let camera = createCamera();
+  const dismissedHints = loadDismissedHints();
+
+  const dismissHint = (id: HintId): void => {
+    if (!dismissedHints.has(id)) {
+      dismissedHints.add(id);
+      saveDismissedHints(dismissedHints);
+    }
+  };
 
   if (hasSave()) {
     const saved = loadGame();
@@ -95,7 +122,11 @@ async function main(): Promise<void> {
   };
 
   const frame = () => {
-    camera = render(ctx, state, camera);
+    const activeHint = getActiveHint(
+      { turn: state.turn, supply: state.player.supply, maxSupply: MAX_SUPPLY, mode: state.mode.type },
+      dismissedHints,
+    );
+    camera = render(ctx, state, camera, activeHint);
     updateLog(logPanel, state.log);
     window.requestAnimationFrame(frame);
   };

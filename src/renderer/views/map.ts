@@ -1,13 +1,12 @@
 import { coordKey } from "../../engine/hex";
 import { getVisibleNeighbors } from "../../engine/map";
-import { MAX_SUPPLY, type GameState, type HexTile } from "../../engine/state";
+import { type GameState, type HexTile } from "../../engine/state";
 import { drawHexagon, hexToPixel, HEX_SIZE } from "../canvas";
 import type { Camera } from "../camera";
 import { worldToScreen } from "../camera";
 import { COLORS, BIOME_GLYPHS } from "../glyphs";
 import { renderHud } from "../hud";
 import { drawLegend } from "../legend";
-import { getActiveHint } from "../../ui/hints";
 
 function drawTile(
   ctx: CanvasRenderingContext2D,
@@ -64,6 +63,7 @@ export function renderMap(
   camera: Camera,
   width: number,
   height: number,
+  activeHint: { id: string; text: string } | null,
 ): void {
   for (const tile of state.map.values()) {
     drawTile(ctx, tile, camera, width, height);
@@ -92,16 +92,10 @@ export function renderMap(
   renderHud(ctx, state, width);
   drawLegend(ctx, width, height, "map");
 
-  const hint = getActiveHint({
-    turn: state.turn,
-    supply: state.player.supply,
-    maxSupply: MAX_SUPPLY,
-    mode: state.mode.type,
-  });
-  if (hint) {
+  if (activeHint) {
     ctx.save();
     ctx.font = "13px monospace";
-    const hintWidth = ctx.measureText(hint.text).width + 40;
+    const hintWidth = ctx.measureText(activeHint.text).width + 40;
     const hintX = (width - hintWidth) / 2;
     const hintY = height - 50;
     ctx.fillStyle = "rgba(40, 40, 20, 0.9)";
@@ -111,7 +105,7 @@ export function renderMap(
     ctx.fillStyle = "#da4";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.fillText(hint.text, width / 2, hintY + 16);
+    ctx.fillText(activeHint.text, width / 2, hintY + 16);
     ctx.restore();
   }
 }
