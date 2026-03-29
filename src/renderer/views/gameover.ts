@@ -1,4 +1,5 @@
 import { COLORS } from "../glyphs";
+import { drawLegend } from "../legend";
 
 export function renderGameOver(
   ctx: CanvasRenderingContext2D,
@@ -20,8 +21,6 @@ export function renderGameOver(
   ctx.font = "18px monospace";
   ctx.fillText(reason, width / 2, 220);
 
-  ctx.fillStyle = COLORS.textDim;
-  ctx.font = "14px monospace";
-  ctx.fillText("Press Enter to begin again.", width / 2, height - 100);
+  drawLegend(ctx, width, height, "gameover");
   ctx.restore();
 }

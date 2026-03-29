@@ -3,15 +3,7 @@ import { describe, expect, it } from "vitest";
 import { coordKey, cubeCoord } from "../../src/engine/hex";
 import { createInitialState, type Action, type Encounter, type GameState } from "../../src/engine/state";
 import { resolveTurn } from "../../src/engine/turn";
-
-function seededRng(seed: number) {
-  let value = seed;
-
-  return () => {
-    value = (value * 16807) % 2147483647;
-    return (value - 1) / 2147483646;
-  };
-}
+import { seededRng } from "../helpers";
 
 function makeState(seed = 42): { state: GameState; rng: () => number } {
   const setupRng = seededRng(seed);
@@ -30,6 +22,13 @@ describe("resolveTurn push flow", () => {
     expect(coordKey(next.player.hex)).not.toBe(coordKey(state.player.hex));
     expect(next.map.has(coordKey(next.player.hex))).toBe(true);
     expect(next.turn).toBe(state.turn + 1);
+  });
+
+  it("marks the destination hex as visited after push", () => {
+    const { state, rng } = makeState();
+    const next = resolveTurn(state, { type: "push", direction: 0 }, rng);
+    const destination = next.map.get(coordKey(next.player.hex));
+    expect(destination?.visited).toBe(true);
   });
 
   it("refuses to move without supply", () => {
@@ -83,6 +82,7 @@ describe("resolveTurn encounter flow", () => {
           encounter,
           revealed: true,
           consumed: false,
+          visited: false,
         }),
       },
       { type: "push", direction: 0 },

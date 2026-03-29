@@ -32,11 +32,15 @@ export interface HexTile {
   readonly encounter: Encounter | null;
   readonly revealed: boolean;
   readonly consumed: boolean;
+  readonly visited: boolean;
 }
+
+export type LogType = "narrative" | "resource" | "searing" | "system";
 
 export interface LogEntry {
   readonly turn: number;
   readonly text: string;
+  readonly type?: LogType;
 }
 
 export interface SearingState {
@@ -92,6 +96,7 @@ export interface SerializedHexTile {
   readonly encounter: Encounter | null;
   readonly revealed: boolean;
   readonly consumed: boolean;
+  readonly visited: boolean;
 }
 
 export interface SerializedGameState {
@@ -114,6 +119,7 @@ export function createInitialState(encounters: Encounter[], rng: RNG): GameState
     encounter: null,
     revealed: true,
     consumed: false,
+    visited: true,
   };
   const axes: HexAxis[] = ["q", "r", "s"];
   const axis = axes[Math.floor(rng() * axes.length)] ?? "q";
@@ -139,6 +145,7 @@ export function createInitialState(encounters: Encounter[], rng: RNG): GameState
       {
         turn: 0,
         text: "You stand in a sheltered settlement. The Searing stains the horizon.",
+        type: "narrative",
       },
     ],
     status: "playing",
@@ -157,6 +164,7 @@ export function serializeState(state: GameState): SerializedGameState {
       encounter: tile.encounter,
       revealed: tile.revealed,
       consumed: tile.consumed,
+      visited: tile.visited,
     };
   }
 
@@ -166,7 +174,7 @@ export function serializeState(state: GameState): SerializedGameState {
     searing: state.searing,
     turn: state.turn,
     mode: state.mode,
-    log: state.log,
+    log: state.log.slice(-50),
     status: state.status,
     encounters: state.encounters,
   };
@@ -183,6 +191,7 @@ export function deserializeState(data: SerializedGameState): GameState {
       encounter: tile.encounter,
       revealed: tile.revealed,
       consumed: tile.consumed,
+      visited: tile.visited ?? false,
     });
   }
 

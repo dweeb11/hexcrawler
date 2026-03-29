@@ -137,6 +137,7 @@ export function generateHex(
     encounter: pickEncounter(encounters, tags, biome, rng),
     revealed: true,
     consumed: searing ? isConsumed(coord, searing) : false,
+    visited: false,
   };
 }
 
