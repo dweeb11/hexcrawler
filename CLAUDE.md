@@ -1,19 +1,10 @@
-# CLAUDE.md
+# The Waning Light (Hexcrawler)
 
-## First Session Orientation
+## Vision
+Solo fantasy hexcrawl web game. TypeScript + Canvas 2D, ASCII-glyph terminal aesthetic.
+The player is a Cinder-Seeker outrunning the Searing across a procedurally generated hex map.
 
-Before doing anything, read these files in order:
-1. `PITCH.md` — the human's design vision (never modify)
-2. `WORKING_AGREEMENT.md` — how we work together
-3. `WORKING_AGREEMENT.games.md` — game-specific conventions
-4. `GIT_CONVENTIONS.md` — branching and commit rules
-5. This file — project-specific architecture and conventions
-
----
-
-## Project Overview
-
-**The Waning Light** — a solo fantasy hexcrawl web game. TypeScript + Canvas 2D, ASCII-glyph terminal aesthetic. The player is a Cinder-Seeker outrunning the Searing across a procedurally generated hex map.
+## Tech Stack
 
 - **Engine:** Pure TypeScript, no game framework. Canvas 2D API for rendering.
 - **Build:** Vite
@@ -121,15 +112,48 @@ ADMIN_API_KEY=your-secret-key
 - **API key auth on writes.** All write endpoints require `X-API-Key` header with constant-time comparison. Read endpoints are public. Never log the API key.
 - **Secrets never committed.** All env vars require `.env.example` entries.
 
+---
+
+## Process
+
+```
+  VISION ──▸ ART DIR ──▸ DESIGN ──▸ MILESTONE ──▸ IMPLEMENT ──▸ VERIFY ──▸ SHIP
+             (glyph style)  docs/design/  docs/milestones/  branch+test  evidence  merge via PR
+```
+
+## Agent Roles
+
+**You are Producer + Engineer. The human is Designer + Assistant Producer.**
+- Own the process — update milestone checklists as you complete tasks
+- Surface design decisions — don't make them, flag them and wait
+- Commit after each task, not at end of session
+
+## Testing
+
+| Code Type | Approach |
+|-----------|----------|
+| Pure engine logic (turn, hex, map, searing) | Test FIRST (Vitest) |
+| API routes, Turso integration | Test ALONGSIDE |
+| Renderer, UI, encounter flow | Manual acceptance criteria |
+
+## Git
+
+- Branch per feature: `feat/`, `fix/`, `docs/`, `refactor/`
+- PRs for all merges
+- Commit after every completed task
+
+## Knowledge
+
+**Read `.claude/knowledge/` before starting work.** Update when you discover non-obvious patterns or gotchas. Max 5 files, 50 lines each.
+
+## Non-Negotiables
+
+- Plans save to `docs/milestones/` or `docs/design/` — NEVER `docs/superpowers/`
+- No date-prefixed filenames
+- PITCH.md and SCRATCH.md are human-owned — never modify
+
 ## Documentation
 
-- `PITCH.md` — Design vision (human-owned, never modify)
-- `SCRATCH.md` — Runtime notes (human-owned, never modify)
 - `GAME_DESIGN.md` — Original game design document
-- `WORKING_AGREEMENT.md` — Development process
-- `WORKING_AGREEMENT.games.md` — Game-specific conventions
-- `GIT_CONVENTIONS.md` — Branching and commits
-- `docs/` — Design specs
-- `docs/plans/` — Implementation plans
-- `docs/milestones/` — Milestone checklists
-- `docs/worklogs/` — Feature worklogs
+- `docs/design/` — Design specs and implementation plans
+- `docs/milestones/M#-name/` — Milestone checklists
