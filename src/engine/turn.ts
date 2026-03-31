@@ -4,12 +4,19 @@ import { generateHex } from "./map";
 import { applyDelta, checkLoss, forageResult } from "./resources";
 import { advanceSearing, isConsumed, shouldAdvance } from "./searing";
 import { rollNightIncident } from "./data/incidents";
-import { HOPE_DECAY_INTERVAL, type Action, type GameState, type LogEntry, type RNG } from "./state";
+import {
+  HOPE_DECAY_INTERVAL,
+  type Action,
+  type GameState,
+  type LogEntry,
+  type LogType,
+  type RNG,
+} from "./state";
 
-function appendLog(state: GameState, text: string): GameState {
+function appendLog(state: GameState, text: string, type: LogType = "narrative"): GameState {
   return {
     ...state,
-    log: [...state.log, { turn: state.turn, text }],
+    log: [...state.log, { turn: state.turn, text, type }],
   };
 }
 
@@ -59,7 +66,7 @@ function applyEndOfTurnEffects(state: GameState): GameState {
       ...nextState,
       player: applyDelta(nextState.player, { hope: -1 }),
     };
-    nextState = appendLog(nextState, "The road wears at your resolve. (-1 Hope)");
+    nextState = appendLog(nextState, "The road wears at your resolve. (-1 Hope)", "resource");
   }
 
   if (shouldAdvance(nextState.turn, nextState.searing.advanceRate)) {
@@ -67,7 +74,7 @@ function applyEndOfTurnEffects(state: GameState): GameState {
       ...nextState,
       searing: advanceSearing(nextState.searing),
     };
-    nextState = appendLog(nextState, "The Searing advances.");
+    nextState = appendLog(nextState, "The Searing advances.", "searing");
     nextState = markConsumedTiles(nextState);
   }
 
@@ -76,7 +83,11 @@ function applyEndOfTurnEffects(state: GameState): GameState {
 
 function handlePush(state: GameState, action: Extract<Action, { type: "push" }>, rng: RNG): GameState {
   if (state.player.supply <= 0) {
-    return appendLog(state, "You have no Supply left. Pause and forage, or pause and rest.");
+    return appendLog(
+      state,
+      "You have no Supply left. Pause and forage, or pause and rest.",
+      "system",
+    );
   }
 
   const destination = neighbor(state.player.hex, action.direction);
@@ -94,7 +105,13 @@ function handlePush(state: GameState, action: Extract<Action, { type: "push" }>,
 
   const destinationTile = map.get(key);
   if (!destinationTile) {
-    return appendLog(nextState, "The path ahead refuses to resolve.");
+    return appendLog(nextState, "The path ahead refuses to resolve.", "system");
+  }
+
+  map.set(key, { ...destinationTile, visited: true });
+  const enteredTile = map.get(key);
+  if (!enteredTile) {
+    return appendLog(nextState, "The path ahead refuses to resolve.", "system");
   }
 
   nextState = {
@@ -102,22 +119,26 @@ function handlePush(state: GameState, action: Extract<Action, { type: "push" }>,
     map,
     player: { ...nextState.player, hex: destination },
   };
-  nextState = appendLog(nextState, `You push onward into ${destinationTile.biome}. (-1 Supply)`);
+  nextState = appendLog(
+    nextState,
+    `You push onward into ${enteredTile.biome}. (-1 Supply)`,
+    "resource",
+  );
 
-  if (destinationTile.encounter) {
-    const clearedTile = { ...destinationTile, encounter: null };
+  if (enteredTile.encounter) {
+    const clearedTile = { ...enteredTile, encounter: null };
     map.set(key, clearedTile);
     return {
       ...nextState,
       map: new Map(map),
       mode: {
         type: "encounter",
-        encounter: destinationTile.encounter,
+        encounter: enteredTile.encounter,
         hex: destination,
       },
       log: [
         ...nextState.log,
-        { turn: nextState.turn, text: destinationTile.encounter.text },
+        { turn: nextState.turn, text: enteredTile.encounter.text, type: "narrative" },
       ],
     };
   }
@@ -128,7 +149,7 @@ function handlePush(state: GameState, action: Extract<Action, { type: "push" }>,
 function handlePause(state: GameState, action: Extract<Action, { type: "pause" }>, rng: RNG): GameState {
   const currentHex = state.map.get(coordKey(state.player.hex));
   if (!currentHex) {
-    return appendLog(state, "There is nowhere to make camp here.");
+    return appendLog(state, "There is nowhere to make camp here.", "system");
   }
 
   let nextState = state;
@@ -156,19 +177,19 @@ function handlePause(state: GameState, action: Extract<Action, { type: "pause" }
       ...nextState,
       player: applyDelta(nextState.player, incident.delta),
     };
-    incidentLog = { turn: nextState.turn, text: incident.text };
+    incidentLog = { turn: nextState.turn, text: incident.text, type: "narrative" };
   }
 
-  nextState = appendLog(nextState, resultText);
+  nextState = appendLog(nextState, resultText, "resource");
   if (incidentLog) {
-    nextState = appendLog(nextState, incidentLog.text);
+    nextState = appendLog(nextState, incidentLog.text, incidentLog.type ?? "narrative");
   }
 
   return {
     ...nextState,
     mode: {
       type: "camp",
-      result: { turn: nextState.turn, text: resultText },
+      result: { turn: nextState.turn, text: resultText, type: "resource" },
       incident: incidentLog,
     },
   };
@@ -181,7 +202,7 @@ function handleChoose(state: GameState, action: Extract<Action, { type: "choose"
 
   const choice = state.mode.encounter.choices[action.choiceIndex];
   if (!choice) {
-    return appendLog(state, "You hesitate. No such choice presents itself.");
+    return appendLog(state, "You hesitate. No such choice presents itself.", "system");
   }
 
   const outcome = resolveChoice(choice, rng);
@@ -194,7 +215,7 @@ function handleChoose(state: GameState, action: Extract<Action, { type: "choose"
   const text = outcome.succeeded
     ? `You choose "${choice.label}" and it pays off.`
     : `You choose "${choice.label}" and pay for the risk.`;
-  nextState = appendLog(nextState, text);
+  nextState = appendLog(nextState, text, "narrative");
 
   return applyEndOfTurnEffects(nextState);
 }

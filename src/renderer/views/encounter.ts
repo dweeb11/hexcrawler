@@ -1,5 +1,6 @@
-import type { GameMode, Player, ResourceDelta } from "../../engine/state";
+import { type GameState, type ResourceDelta } from "../../engine/state";
 import { COLORS } from "../glyphs";
+import { drawLegend } from "../legend";
 
 function formatDelta(delta: ResourceDelta): string {
   const parts = Object.entries(delta)
@@ -10,11 +11,18 @@ function formatDelta(delta: ResourceDelta): string {
 
 export function renderEncounter(
   ctx: CanvasRenderingContext2D,
-  mode: Extract<GameMode, { type: "encounter" }>,
-  player: Player,
+  state: GameState,
   width: number,
   height: number,
+  activeHint: { id: string; text: string } | null,
 ): void {
+  if (state.mode.type !== "encounter") {
+    return;
+  }
+
+  const mode = state.mode;
+  const player = state.player;
+
   ctx.save();
   ctx.fillStyle = COLORS.bg;
   ctx.fillRect(0, 0, width, height);
@@ -46,9 +54,23 @@ export function renderEncounter(
     y += 54;
   });
 
-  ctx.fillStyle = COLORS.textDim;
-  ctx.textAlign = "center";
-  ctx.fillText("Press 1-9 to choose.", width / 2, height - 60);
+  drawLegend(ctx, width, height, "encounter");
+
+  if (activeHint) {
+    ctx.font = "13px monospace";
+    const hintWidth = ctx.measureText(activeHint.text).width + 40;
+    const hintX = (width - hintWidth) / 2;
+    const hintY = height - 50;
+    ctx.fillStyle = "rgba(40, 40, 20, 0.9)";
+    ctx.fillRect(hintX, hintY, hintWidth, 30);
+    ctx.strokeStyle = "#da4";
+    ctx.strokeRect(hintX, hintY, hintWidth, 30);
+    ctx.fillStyle = "#da4";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(activeHint.text, width / 2, hintY + 16);
+  }
+
   ctx.restore();
 }
 

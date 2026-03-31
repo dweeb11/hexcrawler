@@ -1,11 +1,12 @@
 import { coordKey } from "../../engine/hex";
 import { getVisibleNeighbors } from "../../engine/map";
-import type { GameState, HexTile } from "../../engine/state";
+import { type GameState, type HexTile } from "../../engine/state";
 import { drawHexagon, hexToPixel, HEX_SIZE } from "../canvas";
 import type { Camera } from "../camera";
 import { worldToScreen } from "../camera";
-import { COLORS, BIOME_GLYPHS, TAG_GLYPHS } from "../glyphs";
+import { COLORS, BIOME_GLYPHS } from "../glyphs";
 import { renderHud } from "../hud";
+import { drawLegend } from "../legend";
 
 function drawTile(
   ctx: CanvasRenderingContext2D,
@@ -26,6 +27,7 @@ function drawTile(
   }
 
   ctx.save();
+  ctx.globalAlpha = tile.visited ? 1 : 0.4;
   drawHexagon(ctx, screen.x, screen.y, HEX_SIZE - 1);
   ctx.fillStyle = tile.consumed ? COLORS.consumed : COLORS.fog;
   ctx.fill();
@@ -36,20 +38,7 @@ function drawTile(
   ctx.fillStyle = tile.consumed ? COLORS.searing : COLORS.biome[tile.biome];
   ctx.font = "bold 18px monospace";
   ctx.fillText(BIOME_GLYPHS[tile.biome], screen.x, screen.y - 4);
-
-  ctx.fillStyle = COLORS.textDim;
-  ctx.font = "12px monospace";
-  const tagGlyphs = [...tile.tags]
-    .slice(0, 2)
-    .map((tag) => TAG_GLYPHS[tag] ?? "?")
-    .join(" ");
-  ctx.fillText(tagGlyphs, screen.x, screen.y + 16);
-
-  if (!tile.consumed && tile.encounter) {
-    ctx.fillStyle = COLORS.encounter;
-    ctx.font = "bold 16px monospace";
-    ctx.fillText("!", screen.x + 18, screen.y - 18);
-  }
+  ctx.globalAlpha = 1;
   ctx.restore();
 }
 
@@ -74,6 +63,7 @@ export function renderMap(
   camera: Camera,
   width: number,
   height: number,
+  activeHint: { id: string; text: string } | null,
 ): void {
   for (const tile of state.map.values()) {
     drawTile(ctx, tile, camera, width, height);
@@ -100,12 +90,22 @@ export function renderMap(
   ctx.restore();
 
   renderHud(ctx, state, width);
+  drawLegend(ctx, width, height, "map");
 
-  ctx.save();
-  ctx.fillStyle = COLORS.textDim;
-  ctx.textAlign = "left";
-  ctx.textBaseline = "bottom";
-  ctx.font = "13px monospace";
-  ctx.fillText("Move: Q W E A S D  Camp: R rest, F forage", 18, height - 20);
-  ctx.restore();
+  if (activeHint) {
+    ctx.save();
+    ctx.font = "13px monospace";
+    const hintWidth = ctx.measureText(activeHint.text).width + 40;
+    const hintX = (width - hintWidth) / 2;
+    const hintY = height - 50;
+    ctx.fillStyle = "rgba(40, 40, 20, 0.9)";
+    ctx.fillRect(hintX, hintY, hintWidth, 30);
+    ctx.strokeStyle = "#da4";
+    ctx.strokeRect(hintX, hintY, hintWidth, 30);
+    ctx.fillStyle = "#da4";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(activeHint.text, width / 2, hintY + 16);
+    ctx.restore();
+  }
 }
