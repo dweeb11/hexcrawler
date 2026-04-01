@@ -1,10 +1,9 @@
-export type HintId = "first-turn" | "low-supply" | "first-encounter" | "first-rumor";
+export type HintId = "first-turn" | "low-supply" | "first-encounter";
 
 const HINT_TEXTS: Record<HintId, string> = {
   "first-turn": "QWEASD to move  |  R to rest  |  F to forage",
   "first-encounter": "Press 1, 2, or 3 to choose",
   "low-supply": "Supplies are low - press F to forage",
-  "first-rumor": "",
 };
 
 export function getActiveHint(

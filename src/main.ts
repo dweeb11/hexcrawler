@@ -12,7 +12,7 @@ import { clearLog, updateLog } from "./ui/log";
 import { clickedNeighborToAction, keyToAction } from "./ui/input";
 
 const HINTS_KEY = "waning-light-hints";
-const VALID_HINT_IDS: HintId[] = ["first-turn", "low-supply", "first-encounter", "first-rumor"];
+const VALID_HINT_IDS: HintId[] = ["first-turn", "low-supply", "first-encounter"];
 
 function loadDismissedHints(): Set<HintId> {
   try {
@@ -174,6 +174,7 @@ function showContinuePrompt(
     const height = canvas.height / ratio;
 
     ctx.save();
+    ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
     ctx.fillStyle = "#0a0a0a";
     ctx.fillRect(0, 0, width, height);
     ctx.fillStyle = "#c0c0c0";
