@@ -9,6 +9,17 @@
           }
         ]
       }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if echo \"$TOOL_INPUT\" | grep -q 'docs/superpowers/'; then echo 'WARNING: File written to docs/superpowers/ — should be docs/design/ or docs/milestones/'; exit 2; fi"
+          }
+        ]
+      }
     ]
   }
 }
