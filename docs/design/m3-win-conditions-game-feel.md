@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript, Canvas 2D, Web Audio API, Vitest
 
-**Design Spec:** `docs/2026-03-27-friends-family-demo-design.md` — Milestone 3 section
+**Design Spec:** `docs/design/friends-family-demo.md` — Milestone 3 section
 
 **Prerequisite:** M2 must be complete (rumor deck, relics, encounter overhaul).
 

@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript, Canvas 2D, LocalStorage, Vitest
 
-**Design Spec:** `docs/2026-03-27-friends-family-demo-design.md` — Milestone 1 section
+**Design Spec:** `docs/design/friends-family-demo.md` — Milestone 1 section
 
 ---
 
