@@ -25,4 +25,4 @@ ASCII-glyph terminal aesthetic. Dark background, monospace glyphs, muted palette
 |-------------|--------|-------|
 | Biome glyph set | Final | `♠` forest, `▲` mountain, `Ω` ruins, `⌂` settlement, `~` wastes |
 | Searing visual gradient | Final | `░▒▓█` advancing from consumed side with warm color shift |
-| Visited/unvisited dimming | In Progress | Full brightness vs 0.4 alpha — part of M1 |
+| Visited/unvisited dimming | Final | Full brightness vs 0.4 alpha — shipped in M1 |
