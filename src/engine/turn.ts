@@ -108,11 +108,8 @@ function handlePush(state: GameState, action: Extract<Action, { type: "push" }>,
     return appendLog(nextState, "The path ahead refuses to resolve.", "system");
   }
 
-  map.set(key, { ...destinationTile, visited: true });
-  const enteredTile = map.get(key);
-  if (!enteredTile) {
-    return appendLog(nextState, "The path ahead refuses to resolve.", "system");
-  }
+  const enteredTile = { ...destinationTile, visited: true };
+  map.set(key, enteredTile);
 
   nextState = {
     ...nextState,
