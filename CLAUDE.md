@@ -42,7 +42,7 @@ Turn-Engine with ECS-Lite. Game state is a single immutable object. All game log
 ```
 src/
   engine/          # Pure game logic — no DOM, no Canvas
-    state.ts       # GameState type, initial state factory
+    state.ts       # GameState type, serialization, initial state factory
     turn.ts        # resolveTurn(state, action) → newState
     hex.ts         # Cube coordinate math, neighbors, distance
     map.ts         # Procedural hex generation, tag propagation, fog of war
@@ -50,15 +50,34 @@ src/
     encounters.ts  # Encounter matching, resolution (data from API)
     resources.ts   # Supply/Hope/Health drain, recovery, thresholds
     data/          # Static game data (non-encounter)
+      biomes.ts    # Biome weight tables, per-biome tag pools
+      incidents.ts # Night incident table
   renderer/        # Canvas 2D — reads state, draws frames
-  ui/              # HTML UI layer (input, log, admin)
+    canvas.ts      # Canvas setup, hex drawing primitives
+    glyphs.ts      # ASCII glyph definitions (biomes + feature tags)
+    camera.ts      # Viewport tracking player position
+    hud.ts         # Resource bars, searing proximity warning
+    legend.ts      # Persistent key legend (movement, actions)
+    views/         # Per-mode render functions
+      map.ts       # Hex grid, fog of war, visited dimming
+      encounter.ts # Full-screen encounter view
+      camp.ts      # Camp/rest result view
+      gameover.ts  # Death/escape screen
+  ui/              # HTML UI layer
+    input.ts       # Keyboard/click → action mapping
+    log.ts         # Typed, styled event log
+    hints.ts       # Contextual tutorial hints (pure function)
+    save.ts        # LocalStorage save/load helpers
+    admin.ts       # Admin panel (/admin route)
   api/             # Client-side API helpers
-  main.ts          # Bootstrap
+    encounters.ts  # Fetch/cache encounters from /api/encounters
+  main.ts          # Bootstrap, game loop, save/load integration
 api/               # Vercel serverless functions (outside src/)
   encounters/      # CRUD for encounter data in Turso
 tests/
   engine/          # Unit tests for pure game logic
   api/             # API route tests
+  helpers.ts       # Shared test utilities (seededRng)
 ```
 
 **Key rule:** `engine/` never imports from `renderer/` or `ui/`. All game logic is testable in Node without a browser.
