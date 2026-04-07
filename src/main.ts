@@ -1,4 +1,5 @@
 import { fetchEncounters } from "./api/encounters";
+import { createAnalyticsClient } from "./api/analytics";
 import { coordKey } from "./engine/hex";
 import { ALL_RUMORS } from "./engine/data/rumors";
 import { clearSave, hasSave, loadGame, saveGame } from "./ui/save";
@@ -54,6 +55,31 @@ function createRng(seed: number): () => number {
   };
 }
 
+function submitPlaytest(gameState: GameState, outcome: "won" | "lost"): void {
+  const biomesVisited = [...new Set(
+    [...gameState.map.values()]
+      .filter((tile) => tile.visited)
+      .map((tile) => tile.biome),
+  )];
+  const deathCause =
+    outcome === "lost" && gameState.mode.type === "gameover"
+      ? gameState.mode.reason
+      : undefined;
+  const rumorsCompleted = gameState.rumors.completed.length;
+
+  fetch("/api/playtests", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      outcome,
+      turnsSurvived: gameState.turn,
+      deathCause,
+      biomesVisited,
+      rumorsCompleted,
+    }),
+  }).catch(() => { /* fire-and-forget; ignore network failures */ });
+}
+
 async function main(): Promise<void> {
   const canvas = document.getElementById("game-canvas");
   const logPanel = document.getElementById("log-panel");
@@ -74,6 +100,7 @@ async function main(): Promise<void> {
   const encounters = await fetchEncounters();
   let seed = Date.now();
   let rng = createRng(seed);
+  let analytics = createAnalyticsClient();
   let state: GameState;
   let camera = createCamera();
   const dismissedHints = loadDismissedHints();
@@ -94,21 +121,26 @@ async function main(): Promise<void> {
       } else {
         clearSave();
         state = createInitialState(encounters, rng, ALL_RUMORS);
+        analytics.track("game_start", { seed, fromSave: true });
       }
     } else {
       clearSave();
       state = createInitialState(encounters, rng, ALL_RUMORS);
+      analytics.track("game_start", { seed, fromSave: true });
     }
   } else {
     state = createInitialState(encounters, rng, ALL_RUMORS);
+    analytics.track("game_start", { seed, fromSave: false });
   }
 
   const restart = () => {
     seed = Date.now();
     rng = createRng(seed);
+    analytics = createAnalyticsClient();
     state = createInitialState(encounters, rng, ALL_RUMORS);
     clearSave();
     clearLog(logPanel);
+    analytics.track("game_start", { seed, restart: true });
   };
 
   const persistState = (nextState: GameState) => {
@@ -122,6 +154,8 @@ async function main(): Promise<void> {
   const applyAction = (action: Action) => {
     const previousState = state;
     const nextState = resolveTurn(previousState, action, rng);
+    const previousRumorIds = new Set(previousState.rumors.active.map((rumor) => rumor.rumorId));
+    const previousRelicIds = new Set(previousState.relics.map((relic) => relic.id));
 
     if (
       action.type === "push" &&
@@ -150,6 +184,12 @@ async function main(): Promise<void> {
       previousState.mode.type !== "encounter"
     ) {
       playEncounterOpen();
+      const encounterHex = nextState.map.get(coordKey(nextState.mode.hex));
+      analytics.track("encounter", {
+        turnCount: nextState.turn,
+        encounterId: nextState.mode.encounter.id,
+        biome: encounterHex?.biome ?? null,
+      });
     }
 
     if (nextState.searing.line !== previousState.searing.line) {
@@ -158,10 +198,47 @@ async function main(): Promise<void> {
 
     if (nextState.status === "won" && previousState.status !== "won") {
       playWin();
+      submitPlaytest(nextState, "won");
+      analytics.track("game_end", {
+        outcome: "won",
+        cause: "won",
+        turnCount: nextState.turn,
+      });
     }
 
     if (nextState.status === "lost" && previousState.status !== "lost") {
       playLoss();
+      submitPlaytest(nextState, "lost");
+      analytics.track("game_end", {
+        outcome: "lost",
+        cause: nextState.mode.type === "gameover" ? nextState.mode.reason : "unknown",
+        turnCount: nextState.turn,
+      });
+    }
+
+    if (nextState.turn > previousState.turn) {
+      analytics.track("turn", {
+        turnCount: nextState.turn,
+        actionType: action.type,
+      });
+    }
+
+    for (const rumor of nextState.rumors.active) {
+      if (!previousRumorIds.has(rumor.rumorId)) {
+        analytics.track("rumor", {
+          rumorId: rumor.rumorId,
+          turnCount: nextState.turn,
+        });
+      }
+    }
+
+    for (const relic of nextState.relics) {
+      if (!previousRelicIds.has(relic.id)) {
+        analytics.track("relic", {
+          relicId: relic.id,
+          turnCount: nextState.turn,
+        });
+      }
     }
 
     state = nextState;

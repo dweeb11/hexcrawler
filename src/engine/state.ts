@@ -26,6 +26,7 @@ export interface RumorWeights {
 export interface Encounter {
   readonly id: string;
   readonly text: string;
+  readonly shadowText?: string;
   readonly requiredTags: string[];
   readonly biomes?: Biome[];
   readonly choices: Choice[];
@@ -115,11 +116,26 @@ export interface SearingState {
   readonly advanceRate: number;
 }
 
+export type GameOverOutcome =
+  | "win_pillars"
+  | "win_gear"
+  | "loss_health"
+  | "loss_hope"
+  | "loss_searing";
+
 export type GameMode =
   | { readonly type: "map" }
   | { readonly type: "encounter"; readonly encounter: Encounter; readonly hex: CubeCoord }
   | { readonly type: "camp"; readonly result: LogEntry; readonly incident: LogEntry | null }
-  | { readonly type: "gameover"; readonly reason: string };
+  | { readonly type: "gameover"; readonly reason: string; readonly outcome: GameOverOutcome };
+
+export interface GameStats {
+  hexesExplored: number;
+  encountersResolved: number;
+  rumorsDiscovered: number;
+  rumorsCompleted: number;
+  relicsCollected: number;
+}
 
 export type Action =
   | { readonly type: "push"; readonly direction: HexDirection }
@@ -146,16 +162,18 @@ export interface GameState {
   // NEW in M2:
   rumors: RumorState;
   relics: Relic[]; // collected relics
+  // NEW in M3:
+  stats: GameStats;
 }
 
-export const STARTING_SUPPLY = 6;
+export const STARTING_SUPPLY = 7;
 export const MAX_SUPPLY = 10;
 export const STARTING_HOPE = 5;
 export const MAX_HOPE = 5;
 export const STARTING_HEALTH = 3;
 export const MAX_HEALTH = 5;
-export const SEARING_ADVANCE_RATE = 4;
-export const HOPE_DECAY_INTERVAL = 6;
+export const SEARING_ADVANCE_RATE = 5;
+export const HOPE_DECAY_INTERVAL = 7;
 
 export interface SerializedHexTile {
   readonly coord: CubeCoord;
@@ -179,6 +197,8 @@ export interface SerializedGameState {
   // NEW in M2
   rumors: RumorState;
   relics: Relic[];
+  // NEW in M3
+  stats: GameStats;
 }
 
 export function createInitialState(
@@ -231,6 +251,13 @@ export function createInitialState(
       completed: [],
     },
     relics: [],
+    stats: {
+      hexesExplored: 0,
+      encountersResolved: 0,
+      rumorsDiscovered: 0,
+      rumorsCompleted: 0,
+      relicsCollected: 0,
+    },
   };
 }
 
@@ -260,6 +287,7 @@ export function serializeState(state: GameState): SerializedGameState {
     encounters: state.encounters,
     rumors: state.rumors,
     relics: state.relics,
+    stats: state.stats,
   };
 }
 
@@ -291,5 +319,12 @@ export function deserializeState(data: any): GameState {
     encounters: data.encounters,
     rumors: data.rumors ?? { available: [], active: [], completed: [] },
     relics: data.relics ?? [],
+    stats: data.stats ?? {
+      hexesExplored: 0,
+      encountersResolved: 0,
+      rumorsDiscovered: 0,
+      rumorsCompleted: 0,
+      relicsCollected: 0,
+    },
   };
 }

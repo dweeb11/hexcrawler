@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { findMatchingEncounters, resolveChoice } from "../../src/engine/encounters";
+import { encounterForHope, findMatchingEncounters, resolveChoice } from "../../src/engine/encounters";
 import type { Choice, Encounter } from "../../src/engine/state";
 
 describe("findMatchingEncounters", () => {
@@ -48,5 +48,31 @@ describe("resolveChoice", () => {
       delta: { health: -1 },
       succeeded: false,
     });
+  });
+});
+
+describe("encounterForHope", () => {
+  it("uses shadow text when hope is low and shadow text exists", () => {
+    const encounter: Encounter = {
+      id: "shadows",
+      text: "A calm shrine.",
+      shadowText: "The shrine stares back at you.",
+      requiredTags: [],
+      choices: [{ label: "Leave", outcome: {} }],
+    };
+
+    expect(encounterForHope(encounter, 2).text).toBe("The shrine stares back at you.");
+  });
+
+  it("keeps base text when hope is not low", () => {
+    const encounter: Encounter = {
+      id: "clear-mind",
+      text: "A calm shrine.",
+      shadowText: "The shrine stares back at you.",
+      requiredTags: [],
+      choices: [{ label: "Leave", outcome: {} }],
+    };
+
+    expect(encounterForHope(encounter, 3).text).toBe("A calm shrine.");
   });
 });

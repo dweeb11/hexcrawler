@@ -4,10 +4,10 @@ import { getMaxResource } from "./relics";
 
 const FORAGE_TABLE: Record<Biome, { chance: number; yield: number }> = {
   forest: { chance: 0.7, yield: 2 },
-  mountain: { chance: 0.3, yield: 1 },
-  ruins: { chance: 0.5, yield: 2 },
+  mountain: { chance: 0.35, yield: 1 },
+  ruins: { chance: 0.55, yield: 2 },
   settlement: { chance: 0.8, yield: 3 },
-  wastes: { chance: 0.2, yield: 1 },
+  wastes: { chance: 0.3, yield: 1 },
 };
 
 function clamp(value: number, min: number, max: number): number {

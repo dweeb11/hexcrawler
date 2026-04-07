@@ -12,8 +12,8 @@ export interface RumorWeights {
   biomeWeights: Record<string, number>;
 }
 
-const RUMOR_TAG_WEIGHT_BONUS = 0.25;  // +25% weight per hint tag
-const RUMOR_BIOME_WEIGHT_BONUS = 0.20; // +20% weight per hint biome
+const RUMOR_TAG_WEIGHT_BONUS = 0.3;  // +30% weight per hint tag
+const RUMOR_BIOME_WEIGHT_BONUS = 0.25; // +25% weight per hint biome
 
 export function findNextRumorStep(
   rumorState: RumorState,

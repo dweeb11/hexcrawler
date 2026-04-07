@@ -31,7 +31,7 @@ export function render(
       renderCamp(ctx, state.mode, width, height);
       break;
     case "gameover":
-      renderGameOver(ctx, state.mode.reason, width, height);
+      renderGameOver(ctx, state, width, height);
       break;
   }
 
