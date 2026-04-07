@@ -95,6 +95,90 @@ async function loadEncounters(): Promise<Encounter[]> {
   return (await requestJson("/api/encounters")) as Encounter[];
 }
 
+interface PlaytestStats {
+  totalGames: number;
+  wins: number;
+  losses: number;
+  avgTurnsSurvived: number;
+  deathCauses: Record<string, number>;
+  biomesByFrequency: [string, number][];
+  avgRumorsCompleted: number;
+}
+
+async function loadStats(): Promise<PlaytestStats> {
+  return (await requestJson("/api/stats")) as PlaytestStats;
+}
+
+async function renderStats(container: HTMLElement): Promise<void> {
+  container.replaceChildren(create("p", { text: "Loading stats…" }));
+  try {
+    const stats = await loadStats();
+    const rows: [string, string][] = [
+      ["Games played", String(stats.totalGames)],
+      ["Wins / Losses", `${stats.wins} / ${stats.losses}`],
+      ["Avg turns survived", String(stats.avgTurnsSurvived)],
+      ["Avg rumors completed", String(stats.avgRumorsCompleted)],
+    ];
+
+    const table = document.createElement("table");
+    table.style.cssText = "width:100%;border-collapse:collapse;font-size:14px";
+    for (const [label, value] of rows) {
+      const tr = document.createElement("tr");
+      const th = document.createElement("td");
+      th.textContent = label;
+      th.style.cssText = "padding:6px 8px;color:#6b5040;font-weight:600";
+      const td = document.createElement("td");
+      td.textContent = value;
+      td.style.cssText = "padding:6px 8px;text-align:right";
+      tr.append(th, td);
+      table.append(tr);
+    }
+
+    const deathSection = create("div");
+    deathSection.append(create("h3", { text: "Death causes" }));
+    if (Object.keys(stats.deathCauses).length === 0) {
+      deathSection.append(create("p", { text: "No data yet" }));
+    } else {
+      const deathTable = document.createElement("table");
+      deathTable.style.cssText = "width:100%;border-collapse:collapse;font-size:13px";
+      for (const [cause, count] of Object.entries(stats.deathCauses)) {
+        const tr = document.createElement("tr");
+        const th = document.createElement("td");
+        th.textContent = cause;
+        th.style.padding = "4px 8px";
+        const td = document.createElement("td");
+        td.textContent = String(count);
+        td.style.cssText = "padding:4px 8px;text-align:right";
+        tr.append(th, td);
+        deathTable.append(tr);
+      }
+      deathSection.append(deathTable);
+    }
+
+    const biomeSection = create("div");
+    biomeSection.append(create("h3", { text: "Biomes visited (most → least)" }));
+    if (stats.biomesByFrequency.length === 0) {
+      biomeSection.append(create("p", { text: "No data yet" }));
+    } else {
+      const biomeList = create("ul");
+      for (const [biome, count] of stats.biomesByFrequency) {
+        const item = create("li");
+        item.textContent = `${biome}: ${count}`;
+        item.style.padding = "2px 0";
+        biomeList.append(item);
+      }
+      biomeSection.append(biomeList);
+    }
+
+    const refreshButton = create("button", { text: "Refresh", className: "secondary" });
+    refreshButton.addEventListener("click", () => renderStats(container));
+
+    container.replaceChildren(table, deathSection, biomeSection, refreshButton);
+  } catch (error) {
+    container.replaceChildren(create("pre", { text: String(error) }));
+  }
+}
+
 function renderAuthGate(root: HTMLElement): void {
   const shell = create("div", { className: "shell" });
   const card = create("section", { className: "card" });
@@ -145,6 +229,13 @@ async function renderAdmin(root: HTMLElement): Promise<void> {
   headerRow.append(titleBlock, actions);
   header.append(headerRow);
   shell.append(header);
+
+  const statsCard = create("section", { className: "card" });
+  statsCard.append(create("h2", { text: "Playtest Stats" }));
+  const statsBody = create("div");
+  statsCard.append(statsBody);
+  shell.append(statsCard);
+  renderStats(statsBody);
 
   const body = create("section", { className: "two-column" });
   const listCard = create("div", { className: "card" });

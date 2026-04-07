@@ -54,6 +54,31 @@ function createRng(seed: number): () => number {
   };
 }
 
+function submitPlaytest(gameState: GameState, outcome: "won" | "lost"): void {
+  const biomesVisited = [...new Set(
+    [...gameState.map.values()]
+      .filter((tile) => tile.visited)
+      .map((tile) => tile.biome),
+  )];
+  const deathCause =
+    outcome === "lost" && gameState.mode.type === "gameover"
+      ? gameState.mode.reason
+      : undefined;
+  const rumorsCompleted = gameState.rumors.completed.length;
+
+  fetch("/api/playtests", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      outcome,
+      turnsSurvived: gameState.turn,
+      deathCause,
+      biomesVisited,
+      rumorsCompleted,
+    }),
+  }).catch(() => { /* fire-and-forget; ignore network failures */ });
+}
+
 async function main(): Promise<void> {
   const canvas = document.getElementById("game-canvas");
   const logPanel = document.getElementById("log-panel");
@@ -158,10 +183,12 @@ async function main(): Promise<void> {
 
     if (nextState.status === "won" && previousState.status !== "won") {
       playWin();
+      submitPlaytest(nextState, "won");
     }
 
     if (nextState.status === "lost" && previousState.status !== "lost") {
       playLoss();
+      submitPlaytest(nextState, "lost");
     }
 
     state = nextState;
