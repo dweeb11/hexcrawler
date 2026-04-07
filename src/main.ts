@@ -9,6 +9,16 @@ import { resolveTurn } from "./engine/turn";
 import { screenToWorld } from "./renderer/camera";
 import { getActiveHint, type HintId } from "./ui/hints";
 import { clearLog, updateLog } from "./ui/log";
+import {
+  playMove,
+  playEncounterOpen,
+  playChoiceSelect,
+  playSearingAdvance,
+  playForage,
+  playRest,
+  playWin,
+  playLoss,
+} from "./ui/audio";
 import { clickedNeighborToAction, keyToAction } from "./ui/input";
 import { toggleJournal, updateJournal, setJournalTab } from "./ui/journal";
 
@@ -117,14 +127,40 @@ async function main(): Promise<void> {
       coordKey(nextState.player.hex) !== coordKey(previousState.player.hex)
     ) {
       dismissHint("first-turn");
+      playMove();
     }
 
     if (action.type === "choose" && previousState.mode.type === "encounter") {
       dismissHint("first-encounter");
+      playChoiceSelect();
     }
 
     if (action.type === "pause" && action.activity === "forage") {
       dismissHint("low-supply");
+      playForage();
+    }
+
+    if (action.type === "pause" && action.activity === "rest") {
+      playRest();
+    }
+
+    if (
+      nextState.mode.type === "encounter" &&
+      previousState.mode.type !== "encounter"
+    ) {
+      playEncounterOpen();
+    }
+
+    if (nextState.searing.line !== previousState.searing.line) {
+      playSearingAdvance();
+    }
+
+    if (nextState.status === "won" && previousState.status !== "won") {
+      playWin();
+    }
+
+    if (nextState.status === "lost" && previousState.status !== "lost") {
+      playLoss();
     }
 
     state = nextState;
