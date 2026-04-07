@@ -8,17 +8,26 @@ import {
 } from "./data/biomes";
 import { isConsumed } from "./searing";
 import type { CubeCoord } from "./hex";
-import type { Biome, Encounter, HexTile, RNG, SearingState } from "./state";
+import type { Biome, Encounter, HexTile, RNG, SearingState, RumorWeights } from "./state";
 
-function addRandomUniqueTag(tags: Set<string>, pool: string[], rng: RNG): void {
+function addRandomUniqueTag(
+  tags: Set<string>,
+  pool: string[],
+  rng: RNG,
+  tagWeights: Record<string, number> = {}
+): void {
   const uniquePool = [...new Set(pool)];
   if (uniquePool.length === 0) {
     return;
   }
 
-  const startIndex = Math.floor(rng() * uniquePool.length);
-  for (let offset = 0; offset < uniquePool.length; offset += 1) {
-    const tag = uniquePool[(startIndex + offset) % uniquePool.length];
+  const weightedPool = uniquePool.flatMap((tag) =>
+    Array(Math.floor(1 + (tagWeights[tag] ?? 0) * 10)).fill(tag)
+  );
+
+  const startIndex = Math.floor(rng() * weightedPool.length);
+  for (let offset = 0; offset < weightedPool.length; offset += 1) {
+    const tag = weightedPool[(startIndex + offset) % weightedPool.length];
     if (tag && !tags.has(tag)) {
       tags.add(tag);
       return;
@@ -44,13 +53,21 @@ function pickWeightedValue<T extends string>(
   return entries[entries.length - 1] as T;
 }
 
-export function rollBiome(neighborBiomes: Biome[], rng: RNG): Biome {
+export function rollBiome(
+  neighborBiomes: Biome[],
+  rng: RNG,
+  biomeWeights: Record<string, number> = {}
+): Biome {
   const weights = new Map<Biome, number>(
     ALL_BIOMES.map((biome) => [biome, BIOME_CONFIGS[biome].weight]),
   );
 
   for (const biome of neighborBiomes) {
     weights.set(biome, (weights.get(biome) ?? 0) + NEIGHBOR_BIOME_BONUS);
+  }
+
+  for (const [biome, weight] of Object.entries(biomeWeights)) {
+    weights.set(biome as Biome, (weights.get(biome as Biome) ?? 0) + weight);
   }
 
   return pickWeightedValue(
@@ -60,7 +77,12 @@ export function rollBiome(neighborBiomes: Biome[], rng: RNG): Biome {
   );
 }
 
-export function rollTags(biome: Biome, neighborTagSets: Set<string>[], rng: RNG): Set<string> {
+export function rollTags(
+  biome: Biome,
+  neighborTagSets: Set<string>[],
+  rng: RNG,
+  tagWeights: Record<string, number> = {}
+): Set<string> {
   const config = BIOME_CONFIGS[biome];
   const tags = new Set<string>();
 
@@ -80,11 +102,16 @@ export function rollTags(biome: Biome, neighborTagSets: Set<string>[], rng: RNG)
   const freshCount = 1 + (rng() < 0.5 ? 1 : 0);
   for (let index = 0; index < freshCount; index += 1) {
     const pool = rng() < PRIMARY_TAG_WEIGHT ? config.primaryTags : config.secondaryTags;
-    addRandomUniqueTag(tags, pool, rng);
+    addRandomUniqueTag(tags, pool, rng, tagWeights);
   }
 
   while (tags.size < 2) {
-    addRandomUniqueTag(tags, [...config.primaryTags, ...config.secondaryTags], rng);
+    addRandomUniqueTag(
+      tags,
+      [...config.primaryTags, ...config.secondaryTags],
+      rng,
+      tagWeights
+    );
   }
 
   if (tags.size > 3) {
@@ -120,6 +147,7 @@ export function generateHex(
   encounters: Encounter[],
   rng: RNG,
   searing?: SearingState,
+  rumorWeights?: RumorWeights,
 ): HexTile {
   const neighborTiles = neighbors(coord)
     .map((neighborCoord) => existingMap.get(coordKey(neighborCoord)))
@@ -128,11 +156,13 @@ export function generateHex(
   const biome = rollBiome(
     neighborTiles.filter((tile) => tile.revealed).map((tile) => tile.biome),
     rng,
+    rumorWeights?.biomeWeights,
   );
   const tags = rollTags(
     biome,
     neighborTiles.filter((tile) => tile.revealed).map((tile) => tile.tags),
     rng,
+    rumorWeights?.tagWeights,
   );
 
   return {
