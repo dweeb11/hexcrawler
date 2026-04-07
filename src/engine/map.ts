@@ -101,12 +101,17 @@ export function pickEncounter(
   rng: RNG,
 ): Encounter | null {
   const matching = findMatchingEncounters(encounters, tags, biome);
+  if (matching.length === 0) return null;
 
-  if (matching.length === 0 || rng() > 0.5) {
-    return null;
-  }
+  // Sort by requiredTags length descending — rarer encounters first
+  matching.sort((a, b) => b.requiredTags.length - a.requiredTags.length);
 
-  return matching[Math.floor(rng() * matching.length)] ?? null;
+  // Group by tag count
+  const maxTags = matching[0].requiredTags.length;
+  const topTier = matching.filter((e) => e.requiredTags.length === maxTags);
+
+  // Pick randomly from the top tier
+  return topTier[Math.floor(rng() * topTier.length)];
 }
 
 export function generateHex(
