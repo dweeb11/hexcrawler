@@ -16,7 +16,7 @@
 - [x] Task 2: Encounter Density — Every Hex Gets an Encounter
 - [x] Task 3: Relic Effect Application in Turn Resolution
 - [x] Task 4: Rumor Discovery and Weighted Hex Generation
-- [ ] Task 5: Rumor Step Triggering in Turn Resolution
+- [x] Task 5: Rumor Step Triggering in Turn Resolution
 - [ ] Task 6: Journal UI Panel
 - [ ] Task 7: Encounter Content — Common (1-tag) Encounters
 - [ ] Task 8: Encounter Content — Uncommon (2-tag) and Rare (3-tag) Encounters
