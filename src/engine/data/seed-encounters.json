@@ -2792,5 +2792,167 @@
         }
       }
     ]
+  },
+  {
+    "id": "forest-fallen-timbers",
+    "text": "A stand of ancient pines lies windthrown across the path, their trunks still sound.",
+    "requiredTags": [
+      "wood",
+      "overgrown"
+    ],
+    "biomes": [
+      "forest"
+    ],
+    "choices": [
+      {
+        "label": "Strip fallen bark for tinder and cordage",
+        "outcome": {
+          "supply": 2
+        }
+      },
+      {
+        "label": "Rest under the root-mass",
+        "outcome": {
+          "health": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": "settlement-charred-mill",
+    "text": "A watermill's wheel still turns despite charred beams above the axle.",
+    "requiredTags": [
+      "wood",
+      "water"
+    ],
+    "biomes": [
+      "settlement"
+    ],
+    "choices": [
+      {
+        "label": "Work the mill for salvageable grain",
+        "outcome": {
+          "supply": 3
+        },
+        "chance": 0.5,
+        "failureOutcome": {
+          "hope": -1
+        }
+      },
+      {
+        "label": "Fill from the millrace",
+        "outcome": {
+          "supply": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": "ruins-timber-vault",
+    "text": "Behind collapsed masonry, a wooden vault door holds. Whatever it sealed has survived.",
+    "requiredTags": [
+      "wood",
+      "abandoned",
+      "stone"
+    ],
+    "biomes": [
+      "ruins"
+    ],
+    "choices": [
+      {
+        "label": "Force the door",
+        "outcome": {
+          "supply": 3
+        },
+        "chance": 0.6,
+        "failureOutcome": {
+          "health": -1
+        }
+      },
+      {
+        "label": "Note the landmark",
+        "outcome": {
+          "hope": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": "wastes-sand-altar",
+    "text": "Sand has half-buried a low altar ring. The wind keeps the offering bowl clean.",
+    "requiredTags": [
+      "sand",
+      "ancient"
+    ],
+    "biomes": [
+      "wastes"
+    ],
+    "choices": [
+      {
+        "label": "Leave something — any scrap will do",
+        "outcome": {
+          "hope": 2
+        }
+      },
+      {
+        "label": "Sift the sand around it",
+        "outcome": {
+          "supply": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": "wastes-dune-overhang",
+    "text": "A dune has frozen mid-collapse into a rough overhang. The shade beneath is real.",
+    "requiredTags": [
+      "sand",
+      "elevated"
+    ],
+    "biomes": [
+      "wastes"
+    ],
+    "choices": [
+      {
+        "label": "Rest through the worst heat",
+        "outcome": {
+          "health": 1,
+          "hope": 1
+        }
+      },
+      {
+        "label": "Press on before it shifts",
+        "outcome": {}
+      }
+    ]
+  },
+  {
+    "id": "wastes-sand-hollow",
+    "text": "Wind-scooped hollow in the dune face, big enough to shelter in. The walls are quiet.",
+    "requiredTags": [
+      "sand",
+      "hollow"
+    ],
+    "biomes": [
+      "wastes"
+    ],
+    "choices": [
+      {
+        "label": "Shelter and sleep",
+        "outcome": {
+          "health": 1
+        }
+      },
+      {
+        "label": "Dig deeper — something feels buried here",
+        "outcome": {
+          "supply": 2
+        },
+        "chance": 0.4,
+        "failureOutcome": {
+          "hope": -1
+        }
+      }
+    ]
   }
 ]
