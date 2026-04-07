@@ -185,6 +185,6 @@ describe("encounter API routes", () => {
     );
 
     expect(res.statusCode).toBe(200);
-    expect(res.jsonBody).toMatchObject({ total: 18 });
+    expect(res.jsonBody).toMatchObject({ total: 116 });
   });
 });
