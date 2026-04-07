@@ -166,14 +166,14 @@ export interface GameState {
   stats: GameStats;
 }
 
-export const STARTING_SUPPLY = 6;
+export const STARTING_SUPPLY = 7;
 export const MAX_SUPPLY = 10;
 export const STARTING_HOPE = 5;
 export const MAX_HOPE = 5;
 export const STARTING_HEALTH = 3;
 export const MAX_HEALTH = 5;
-export const SEARING_ADVANCE_RATE = 4;
-export const HOPE_DECAY_INTERVAL = 6;
+export const SEARING_ADVANCE_RATE = 5;
+export const HOPE_DECAY_INTERVAL = 7;
 
 export interface SerializedHexTile {
   readonly coord: CubeCoord;

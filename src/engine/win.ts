@@ -1,8 +1,8 @@
 import type { CubeCoord } from "./hex";
 import type { Relic, SearingState } from "./state";
 
-export const PILLARS_DISTANCE_THRESHOLD = 20;
-export const GEAR_RELIC_THRESHOLD = 5;
+export const PILLARS_DISTANCE_THRESHOLD = 18;
+export const GEAR_RELIC_THRESHOLD = 4;
 
 // Proximity band thresholds: distance ahead of the Searing at which each band fires.
 // Player starts ~10 units ahead; win requires 20. Bands fire at 12, 15, 18.
