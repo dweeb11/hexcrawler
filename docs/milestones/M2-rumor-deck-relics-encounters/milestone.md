@@ -17,7 +17,7 @@
 - [x] Task 3: Relic Effect Application in Turn Resolution
 - [x] Task 4: Rumor Discovery and Weighted Hex Generation
 - [x] Task 5: Rumor Step Triggering in Turn Resolution
-- [ ] Task 6: Journal UI Panel
+- [x] Task 6: Journal UI Panel
 - [ ] Task 7: Encounter Content — Common (1-tag) Encounters
 - [ ] Task 8: Encounter Content — Uncommon (2-tag) and Rare (3-tag) Encounters
 - [ ] Task 9: Rumor Chain Content and Data

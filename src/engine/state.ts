@@ -15,6 +15,12 @@ export interface Choice {
   readonly outcome: ResourceDelta;
   readonly chance?: number;
   readonly failureOutcome?: ResourceDelta;
+  readonly discoversRumor?: string; // rumor ID to discover on choice
+}
+
+export interface RumorWeights {
+  biomeWeights?: Partial<Record<Biome, number>>;
+  tagWeights?: Record<string, number>;
 }
 
 export interface Encounter {
