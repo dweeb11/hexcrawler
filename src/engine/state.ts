@@ -25,6 +25,65 @@ export interface Encounter {
   readonly choices: Choice[];
 }
 
+// --- Relic Types ---
+
+export type RelicEffectType =
+  | "max_resource"
+  | "forage_bonus"
+  | "searing_resist"
+  | "hope_decay_slow"
+  | "move_discount";
+
+export interface RelicEffect {
+  type: RelicEffectType;
+  resource?: "supply" | "hope" | "health";
+  bonus?: number;
+  chance?: number;
+  extraTurns?: number;
+  intervalBonus?: number;
+}
+
+export interface Relic {
+  id: string;
+  name: string;
+  description: string;
+  effect: RelicEffect;
+}
+
+// --- Rumor Types ---
+
+export interface RumorStep {
+  stepIndex: number;
+  encounterId: string; // references an encounter by ID
+  hint: string; // narrative hint toward next step
+  hintTags: string[]; // tags the hint implies
+  hintBiomes?: Biome[]; // biomes the hint implies
+}
+
+export interface Rumor {
+  id: string;
+  title: string;
+  steps: RumorStep[];
+  reward: Relic | null;
+  hopeBonus: number;
+}
+
+export interface ActiveRumor {
+  rumorId: string;
+  currentStep: number;
+}
+
+export interface CompletedRumor {
+  rumorId: string;
+  completedAtTurn: number;
+}
+
+export interface RumorState {
+  available: Rumor[];
+  active: ActiveRumor[];
+  completed: CompletedRumor[];
+}
+
 export interface HexTile {
   readonly coord: CubeCoord;
   readonly biome: Biome;
@@ -78,6 +137,9 @@ export interface GameState {
   readonly log: LogEntry[];
   readonly status: "playing" | "won" | "lost";
   readonly encounters: Encounter[];
+  // NEW in M2:
+  rumors: RumorState;
+  relics: Relic[]; // collected relics
 }
 
 export const STARTING_SUPPLY = 6;
@@ -108,9 +170,16 @@ export interface SerializedGameState {
   readonly log: LogEntry[];
   readonly status: "playing" | "won" | "lost";
   readonly encounters: Encounter[];
+  // NEW in M2
+  rumors: RumorState;
+  relics: Relic[];
 }
 
-export function createInitialState(encounters: Encounter[], rng: RNG): GameState {
+export function createInitialState(
+  encounters: Encounter[],
+  rng: RNG,
+  rumors: Rumor[] = []
+): GameState {
   const startCoord = cubeCoord(0, 0, 0);
   const startHex: HexTile = {
     coord: startCoord,
@@ -150,6 +219,12 @@ export function createInitialState(encounters: Encounter[], rng: RNG): GameState
     ],
     status: "playing",
     encounters,
+    rumors: {
+      available: rumors,
+      active: [],
+      completed: [],
+    },
+    relics: [],
   };
 }
 
@@ -177,13 +252,17 @@ export function serializeState(state: GameState): SerializedGameState {
     log: state.log.slice(-50),
     status: state.status,
     encounters: state.encounters,
+    rumors: state.rumors,
+    relics: state.relics,
   };
 }
 
-export function deserializeState(data: SerializedGameState): GameState {
+export function deserializeState(data: any): GameState {
   const map = new Map<string, HexTile>();
 
-  for (const [key, tile] of Object.entries(data.map)) {
+  for (const [key, tile] of Object.entries(
+    data.map as Record<string, SerializedHexTile>
+  )) {
     map.set(key, {
       coord: tile.coord,
       biome: tile.biome,
@@ -204,5 +283,7 @@ export function deserializeState(data: SerializedGameState): GameState {
     log: data.log,
     status: data.status,
     encounters: data.encounters,
+    rumors: data.rumors ?? { available: [], active: [], completed: [] },
+    relics: data.relics ?? [],
   };
 }

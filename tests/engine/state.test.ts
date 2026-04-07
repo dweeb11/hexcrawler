@@ -6,6 +6,8 @@ import {
   serializeState,
   type Encounter,
   type GameState,
+  type Relic,
+  type Rumor,
 } from "../../src/engine/state";
 import { seededRng } from "../helpers";
 
@@ -97,5 +99,63 @@ describe("serializeState / deserializeState", () => {
     const restored = deserializeState(JSON.parse(JSON.stringify(serialized)));
     expect(restored.log.length).toBeLessThanOrEqual(50);
     expect(restored.log[restored.log.length - 1]?.text).toBe("Entry 99");
+  });
+
+  it("round-trips state with rumors and relics", () => {
+    const rng = seededRng(42);
+    const relic: Relic = {
+      id: "ember-compass",
+      name: "The Ember Compass",
+      description: "Points toward warmth",
+      effect: { type: "forage_bonus", chance: 0.15 },
+    };
+    const rumor: Rumor = {
+      id: "whispering-well",
+      title: "The Whispering Well",
+      steps: [
+        {
+          stepIndex: 0,
+          encounterId: "ww-step-1",
+          hint: "Look for ancient water sources",
+          hintTags: ["water", "ancient"],
+        },
+      ],
+      reward: relic,
+      hopeBonus: 3,
+    };
+
+    const state = createInitialState([], rng, [rumor]);
+    const withProgress: GameState = {
+      ...state,
+      rumors: {
+        ...state.rumors,
+        active: [{ rumorId: "whispering-well", currentStep: 0 }],
+      },
+      relics: [relic],
+    };
+
+    const restored = deserializeState(
+      JSON.parse(JSON.stringify(serializeState(withProgress)))
+    );
+    expect(restored.rumors.available).toHaveLength(1);
+    expect(restored.rumors.active).toHaveLength(1);
+    expect(restored.relics).toHaveLength(1);
+    expect(restored.relics[0].id).toBe("ember-compass");
+  });
+
+  it("deserializes M1 saves without rumors/relics gracefully", () => {
+    const rng = seededRng(42);
+    const state = createInitialState([], rng);
+    const serialized = serializeState(state);
+
+    // Simulate M1 save that lacks rumor/relic fields
+    const m1Save = { ...serialized } as Record<string, unknown>;
+    delete m1Save.rumors;
+    delete m1Save.relics;
+
+    const restored = deserializeState(m1Save);
+    expect(restored.rumors.available).toEqual([]);
+    expect(restored.rumors.active).toEqual([]);
+    expect(restored.relics).toEqual([]);
   });
 });
