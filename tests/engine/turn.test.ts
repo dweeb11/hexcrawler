@@ -225,7 +225,11 @@ describe("rumor step triggering", () => {
 describe("resolveTurn searing and loss flow", () => {
   it("advances the searing on the configured turn", () => {
     const { state, rng } = makeState();
-    const next = resolveTurn({ ...state, turn: 3 }, { type: "push", direction: 0 }, rng);
+    const next = resolveTurn(
+      { ...state, turn: state.searing.advanceRate - 1 },
+      { type: "push", direction: 0 },
+      rng
+    );
     expect(next.searing.line).not.toBe(state.searing.line);
   });
 

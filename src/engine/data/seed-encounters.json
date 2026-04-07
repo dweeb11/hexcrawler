@@ -242,6 +242,7 @@
   {
     "id": "forest-camp",
     "text": "An abandoned campsite. The fire pit is cold but the lean-to still stands.",
+    "shadowText": "An abandoned campsite waits in silence. The cold pit looks freshly stirred, though no one is here.",
     "requiredTags": [
       "sheltered"
     ],
@@ -475,6 +476,7 @@
   {
     "id": "forest-stream",
     "text": "A clear stream cuts through the undergrowth. The water looks clean.",
+    "shadowText": "A clear stream runs black under the brush. Your reflection moves a breath too late.",
     "requiredTags": [
       "water"
     ],
@@ -580,6 +582,7 @@
   {
     "id": "mountain-cave",
     "text": "A cave mouth yawns in the rock face. Wind moans from inside.",
+    "shadowText": "A cave mouth gapes like a wound in the stone. The wind sounds like a warning in your own voice.",
     "requiredTags": [
       "hollow"
     ],
@@ -1553,6 +1556,7 @@
   {
     "id": "ruins-fallen-wing",
     "text": "A fallen wing of the city lies open to the sky.",
+    "shadowText": "A fallen wing of the city lies split open. The sky above it feels close enough to crush you.",
     "requiredTags": [
       "abandoned"
     ],
@@ -1740,6 +1744,7 @@
   {
     "id": "settlement-abandoned",
     "text": "Empty buildings. Doors swing on hinges. Whoever lived here left in a hurry.",
+    "shadowText": "Empty buildings watch from dark windows. Doors swing on their own, as if someone just passed.",
     "requiredTags": [
       "abandoned"
     ],

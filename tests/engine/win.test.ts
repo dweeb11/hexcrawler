@@ -43,7 +43,7 @@ describe("frostProximityBand", () => {
 
   it("returns 3 at and above band 3 threshold", () => {
     expect(frostProximityBand(FROST_PROXIMITY_THRESHOLDS[2])).toBe(3);
-    expect(frostProximityBand(PILLARS_DISTANCE_THRESHOLD - 1)).toBe(3);
+    expect(frostProximityBand(FROST_PROXIMITY_THRESHOLDS[2] + 1)).toBe(3);
   });
 });
 
