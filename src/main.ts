@@ -189,6 +189,61 @@ async function main(): Promise<void> {
     }
   });
 
+  // Touch input for mobile
+  let touchStartX = 0;
+  let touchStartY = 0;
+
+  canvas.addEventListener("touchstart", (event) => {
+    event.preventDefault();
+    const touch = event.touches[0];
+    touchStartX = touch.clientX;
+    touchStartY = touch.clientY;
+  }, { passive: false });
+
+  canvas.addEventListener("touchend", (event) => {
+    event.preventDefault();
+    const touch = event.changedTouches[0];
+
+    // Ignore swipes — only handle taps (< 10px movement)
+    if (Math.abs(touch.clientX - touchStartX) > 10 || Math.abs(touch.clientY - touchStartY) > 10) {
+      return;
+    }
+
+    const rect = canvas.getBoundingClientRect();
+    const x = touch.clientX - rect.left;
+    const y = touch.clientY - rect.top;
+
+    if (state.mode.type === "gameover") {
+      restart();
+      return;
+    }
+
+    if (state.mode.type === "camp") {
+      applyAction({ type: "dismiss" });
+      return;
+    }
+
+    if (state.mode.type === "encounter") {
+      // Encounter choices are drawn at y=320 with 54px spacing in canvas CSS coordinates
+      const CHOICE_START_Y = 320;
+      const CHOICE_HEIGHT = 54;
+      const choiceIndex = Math.floor((y - CHOICE_START_Y) / CHOICE_HEIGHT);
+      if (choiceIndex >= 0 && choiceIndex < state.mode.encounter.choices.length) {
+        applyAction({ type: "choose", choiceIndex });
+      }
+      return;
+    }
+
+    if (state.mode.type === "map") {
+      const world = screenToWorld(camera, x, y);
+      const clicked = pixelToHex(world.x, world.y);
+      const action = clickedNeighborToAction(state.player.hex, clicked);
+      if (action) {
+        applyAction(action);
+      }
+    }
+  }, { passive: false });
+
   window.requestAnimationFrame(frame);
 }
 
@@ -216,16 +271,38 @@ function showContinuePrompt(
       width / 2,
       height / 2 + 20,
     );
+    ctx.font = "13px monospace";
+    ctx.fillStyle = "#888";
+    ctx.fillText(
+      "Tap right to Continue  |  Tap left for New Game",
+      width / 2,
+      height / 2 + 52,
+    );
     ctx.restore();
+
+    const cleanup = (result: boolean) => {
+      document.removeEventListener("keydown", handler);
+      canvas.removeEventListener("touchend", touchHandler);
+      resolve(result);
+    };
 
     const handler = (event: KeyboardEvent) => {
       const key = event.key.toLowerCase();
       if (key === "c" || key === "n") {
-        document.removeEventListener("keydown", handler);
-        resolve(key === "c");
+        cleanup(key === "c");
       }
     };
+
+    const touchHandler = (event: TouchEvent) => {
+      event.preventDefault();
+      const touch = event.changedTouches[0];
+      const rect = canvas.getBoundingClientRect();
+      const x = touch.clientX - rect.left;
+      cleanup(x > rect.width / 2);
+    };
+
     document.addEventListener("keydown", handler);
+    canvas.addEventListener("touchend", touchHandler, { passive: false });
   });
 }
 

@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>The Waning Light</title>
     <style>
       * {
@@ -58,7 +58,8 @@
         background: none;
         border: none;
         color: #666;
-        padding: 4px 8px;
+        padding: 10px 12px;
+        min-height: 44px;
         cursor: pointer;
         font-family: monospace;
       }
@@ -93,6 +94,33 @@
       .log-system {
         color: #888;
         font-style: italic;
+      }
+
+      @media (max-width: 768px) {
+        body {
+          overflow-y: auto;
+          touch-action: none;
+        }
+
+        #app {
+          flex-direction: column;
+          height: auto;
+          min-height: 100dvh;
+        }
+
+        #game-canvas {
+          flex: none;
+          width: 100vw;
+          height: 65vh;
+        }
+
+        #side-panels {
+          width: 100%;
+          border-left: none;
+          border-top: 1px solid #333;
+          height: 35vh;
+          max-height: 35vh;
+        }
       }
     </style>
   </head>
