@@ -33,6 +33,7 @@ function drawMapLegend(
     { label: "ACTIONS", style: "header" as const },
     { label: "R  Rest (+Health)", style: "normal" as const },
     { label: "F  Forage (+Supply)", style: "normal" as const },
+    { label: "J  Journal", style: "normal" as const },
   ];
 
   const totalHeight = lines.length * lineHeight + 8;

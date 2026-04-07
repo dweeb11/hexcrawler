@@ -10,6 +10,7 @@ import { screenToWorld } from "./renderer/camera";
 import { getActiveHint, type HintId } from "./ui/hints";
 import { clearLog, updateLog } from "./ui/log";
 import { clickedNeighborToAction, keyToAction } from "./ui/input";
+import { toggleJournal, updateJournal, setJournalTab } from "./ui/journal";
 
 const HINTS_KEY = "waning-light-hints";
 const VALID_HINT_IDS: HintId[] = ["first-turn", "low-supply", "first-encounter"];
@@ -45,7 +46,16 @@ function createRng(seed: number): () => number {
 async function main(): Promise<void> {
   const canvas = document.getElementById("game-canvas");
   const logPanel = document.getElementById("log-panel");
-  if (!(canvas instanceof HTMLCanvasElement) || !(logPanel instanceof HTMLElement)) {
+  const journalPanel = document.getElementById("journal-panel");
+  const journalContent = document.getElementById("journal-content");
+  const journalTabs = document.querySelectorAll(".journal-tab");
+
+  if (
+    !(canvas instanceof HTMLCanvasElement) ||
+    !(logPanel instanceof HTMLElement) ||
+    !(journalPanel instanceof HTMLElement) ||
+    !(journalContent instanceof HTMLElement)
+  ) {
     throw new Error("Missing required app elements.");
   }
 
@@ -137,10 +147,28 @@ async function main(): Promise<void> {
       return;
     }
 
+    if (event.key.toLowerCase() === "j" && state.mode.type === "map") {
+      toggleJournal(journalPanel, logPanel);
+      updateJournal(journalContent, state);
+      return;
+    }
+
     const action = keyToAction(event.key, state.mode);
     if (action) {
       applyAction(action);
     }
+  });
+
+  journalTabs.forEach((tab) => {
+    tab.addEventListener("click", () => {
+      journalTabs.forEach((t) => t.classList.remove("active"));
+      tab.classList.add("active");
+      const tabName = tab.getAttribute("data-tab");
+      if (tabName === "rumors" || tabName === "relics") {
+        setJournalTab(tabName);
+        updateJournal(journalContent, state);
+      }
+    });
   });
 
   canvas.addEventListener("click", (event) => {

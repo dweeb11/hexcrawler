@@ -28,13 +28,44 @@
         flex: 1;
       }
 
-      #log-panel {
+      #side-panels {
         width: 300px;
+        border-left: 1px solid #333;
+        display: flex;
+        flex-direction: column;
+      }
+
+      #log-panel,
+      #journal-panel {
         overflow-y: auto;
         padding: 8px;
-        border-left: 1px solid #333;
         font-size: 13px;
         line-height: 1.4;
+        flex: 1;
+      }
+
+      .hidden {
+        display: none;
+      }
+
+      #journal-tabs {
+        display: flex;
+        border-bottom: 1px solid #333;
+        margin-bottom: 8px;
+      }
+
+      .journal-tab {
+        background: none;
+        border: none;
+        color: #666;
+        padding: 4px 8px;
+        cursor: pointer;
+        font-family: monospace;
+      }
+
+      .journal-tab.active {
+        color: #c0c0c0;
+        border-bottom: 1px solid #c0c0c0;
       }
 
       .log-entry {
@@ -68,7 +99,16 @@
   <body>
     <div id="app">
       <canvas id="game-canvas"></canvas>
-      <div id="log-panel"></div>
+      <div id="side-panels">
+        <div id="log-panel"></div>
+        <div id="journal-panel" class="hidden">
+          <div id="journal-tabs">
+            <button class="journal-tab active" data-tab="rumors">Rumors</button>
+            <button class="journal-tab" data-tab="relics">Relics</button>
+          </div>
+          <div id="journal-content"></div>
+        </div>
+      </div>
     </div>
     <script type="module" src="/src/main.ts"></script>
   </body>
