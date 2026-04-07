@@ -1,5 +1,6 @@
 import { fetchEncounters } from "./api/encounters";
 import { coordKey } from "./engine/hex";
+import { ALL_RUMORS } from "./engine/data/rumors";
 import { clearSave, hasSave, loadGame, saveGame } from "./ui/save";
 import { pixelToHex, setupCanvas } from "./renderer/canvas";
 import { createCamera } from "./renderer/camera";
@@ -92,20 +93,20 @@ async function main(): Promise<void> {
         state = saved;
       } else {
         clearSave();
-        state = createInitialState(encounters, rng);
+        state = createInitialState(encounters, rng, ALL_RUMORS);
       }
     } else {
       clearSave();
-      state = createInitialState(encounters, rng);
+      state = createInitialState(encounters, rng, ALL_RUMORS);
     }
   } else {
-    state = createInitialState(encounters, rng);
+    state = createInitialState(encounters, rng, ALL_RUMORS);
   }
 
   const restart = () => {
     seed = Date.now();
     rng = createRng(seed);
-    state = createInitialState(encounters, rng);
+    state = createInitialState(encounters, rng, ALL_RUMORS);
     clearSave();
     clearLog(logPanel);
   };
