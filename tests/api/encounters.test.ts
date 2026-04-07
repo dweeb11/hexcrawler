@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import seedEncounters from "../../src/engine/data/seed-encounters.json";
 
 const execute = vi.fn();
 
@@ -185,6 +186,6 @@ describe("encounter API routes", () => {
     );
 
     expect(res.statusCode).toBe(200);
-    expect(res.jsonBody).toMatchObject({ total: 18 });
+    expect(res.jsonBody).toMatchObject({ total: seedEncounters.length });
   });
 });
