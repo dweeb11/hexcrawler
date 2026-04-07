@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { coordKey, cubeCoord } from "../../src/engine/hex";
-import { createInitialState, type Action, type Encounter, type GameState } from "../../src/engine/state";
+import { createInitialState, type Action, type Encounter, type GameState, type Rumor } from "../../src/engine/state";
 import { resolveTurn } from "../../src/engine/turn";
 import { seededRng } from "../helpers";
 
@@ -112,6 +112,57 @@ describe("resolveTurn encounter flow", () => {
 
     expect(next.mode.type).toBe("map");
     expect(next.player.hope).toBeGreaterThan(3);
+  });
+});
+
+describe("rumor step triggering", () => {
+  it("triggers a rumor step encounter when hex tags match active rumor", () => {
+    const rumorEncounter: Encounter = {
+      id: "ww-step-0",
+      text: "You find the whispering well",
+      requiredTags: ["water", "ancient"],
+      choices: [{ label: "Drink", outcome: { hope: 2 } }],
+    };
+    const rumor: Rumor = {
+      id: "whispering-well",
+      title: "The Whispering Well",
+      steps: [{
+        stepIndex: 0,
+        encounterId: "ww-step-0",
+        hint: "Seek ancient water",
+        hintTags: ["water", "ancient"],
+      }],
+      reward: null,
+      hopeBonus: 3,
+    };
+
+    const { state, rng } = makeState();
+    const target = cubeCoord(1, 0, -1);
+    const stateWithRumor: GameState = {
+      ...state,
+      encounters: [...state.encounters, rumorEncounter],
+      rumors: {
+        available: [rumor],
+        active: [{ rumorId: "whispering-well", currentStep: 0 }],
+        completed: [],
+      },
+      map: new Map(state.map).set(coordKey(target), {
+        coord: target,
+        biome: "forest",
+        tags: new Set(["water", "ancient", "wood"]),
+        encounter: null, // normal encounter irrelevant — rumor takes priority
+        revealed: true,
+        consumed: false,
+        visited: false,
+      }),
+    };
+
+    const next = resolveTurn(stateWithRumor, { type: "push", direction: 0 }, rng);
+    // Should enter encounter mode with the rumor step encounter
+    expect(next.mode.type).toBe("encounter");
+    if (next.mode.type === "encounter") {
+      expect(next.mode.encounter.id).toBe("ww-step-0");
+    }
   });
 });
 

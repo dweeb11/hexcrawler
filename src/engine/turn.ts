@@ -10,11 +10,19 @@ import {
   getForageBonus,
 } from "./relics";
 import {
+  findNextRumorStep,
+  advanceRumor,
+  completeRumor,
+  discoverRumor,
+} from "./rumors";
+import {
   type Action,
   type GameState,
   type LogEntry,
   type LogType,
   type RNG,
+  type RumorState,
+  type Relic,
 } from "./state";
 
 function appendLog(state: GameState, text: string, type: LogType = "narrative"): GameState {
@@ -134,6 +142,26 @@ function handlePush(state: GameState, action: Extract<Action, { type: "push" }>,
     `You push onward into ${enteredTile.biome}. (-1 Supply)`,
     "resource",
   );
+  const rumorMatch = findNextRumorStep(
+    state.rumors,
+    enteredTile.tags,
+    enteredTile.biome,
+  );
+  if (rumorMatch) {
+    const rumorEncounter = state.encounters.find(
+      (e) => e.id === rumorMatch.step.encounterId,
+    );
+    if (rumorEncounter) {
+      return {
+        ...nextState,
+        mode: {
+          type: "encounter",
+          encounter: rumorEncounter,
+          hex: enteredTile.coord,
+        },
+      };
+    }
+  }
 
   if (enteredTile.encounter) {
     const clearedTile = { ...enteredTile, encounter: null };
@@ -176,7 +204,7 @@ function handlePause(state: GameState, action: Extract<Action, { type: "pause" }
       currentHex.biome,
       currentHex.tags,
       rng,
-      getForageBonus(state.relics)
+      getForageBonus(state.relics),
     );
     nextState = {
       ...nextState,
@@ -210,6 +238,43 @@ function handlePause(state: GameState, action: Extract<Action, { type: "pause" }
   };
 }
 
+function checkRumorAdvancement(
+  state: GameState,
+  encounterId: string,
+): { rumors: RumorState; reward: Relic | null; hopeBonus: number } | null {
+  const activeRumor = state.rumors.active.find((active) => {
+    const rumor = state.rumors.available.find((r) => r.id === active.rumorId);
+    return rumor?.steps[active.currentStep]?.encounterId === encounterId;
+  });
+
+  if (!activeRumor) return null;
+
+  const rumor = state.rumors.available.find((r) => r.id === activeRumor.rumorId);
+  if (!rumor) return null;
+
+  const nextStep = activeRumor.currentStep + 1;
+  if (nextStep >= rumor.steps.length) {
+    // completed
+    return {
+      rumors: completeRumor(state.rumors, rumor.id, state.turn),
+      reward: rumor.reward,
+      hopeBonus: rumor.hopeBonus,
+    };
+  }
+  // advanced
+  const newActive = { ...activeRumor, currentStep: nextStep };
+  return {
+    rumors: {
+      ...state.rumors,
+      active: state.rumors.active.map((a) =>
+        a.rumorId === newActive.rumorId ? newActive : a,
+      ),
+    },
+    reward: null,
+    hopeBonus: 0,
+  };
+}
+
 function handleChoose(state: GameState, action: Extract<Action, { type: "choose" }>, rng: RNG): GameState {
   if (state.mode.type !== "encounter") {
     return state;
@@ -226,6 +291,37 @@ function handleChoose(state: GameState, action: Extract<Action, { type: "choose"
     player: applyDelta(state.player, outcome.delta, state.relics),
     mode: { type: "map" },
   };
+
+  if (choice.discoversRumor) {
+    nextState = {
+      ...nextState,
+      rumors: discoverRumor(nextState.rumors, choice.discoversRumor),
+    };
+    const rumor = nextState.rumors.available.find(
+      (r) => r.id === choice.discoversRumor,
+    );
+    if (rumor) {
+      nextState = appendLog(
+        nextState,
+        `A new lead: "${rumor.title}"`,
+        "narrative",
+      );
+    }
+  }
+
+  const rumorAdvance = checkRumorAdvancement(state, state.mode.encounter.id);
+  if (rumorAdvance) {
+    nextState = {
+      ...nextState,
+      rumors: rumorAdvance.rumors,
+      ...(rumorAdvance.reward
+        ? { relics: [...nextState.relics, rumorAdvance.reward] }
+        : {}),
+      player: rumorAdvance.hopeBonus
+        ? applyDelta(nextState.player, { hope: rumorAdvance.hopeBonus })
+        : nextState.player,
+    };
+  }
 
   const text = outcome.succeeded
     ? `You choose "${choice.label}" and it pays off.`
