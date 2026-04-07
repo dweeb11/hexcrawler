@@ -95,15 +95,9 @@ function applyEndOfTurnEffects(state: GameState): GameState {
 
 function handlePush(state: GameState, action: Extract<Action, { type: "push" }>, rng: RNG): GameState {
   const moveDiscount = getMoveDiscount(state.relics);
-  if (rng() < moveDiscount) {
-    return appendLog(
-      state,
-      "Your footing is light and your pack feels weightless. The way is free.",
-      "narrative",
-    );
-  }
+  const isFreeMove = rng() < moveDiscount;
 
-  if (state.player.supply <= 0) {
+  if (!isFreeMove && state.player.supply <= 0) {
     return appendLog(
       state,
       "You have no Supply left. Pause and forage, or pause and rest.",
@@ -114,7 +108,7 @@ function handlePush(state: GameState, action: Extract<Action, { type: "push" }>,
   const destination = neighbor(state.player.hex, action.direction);
   let nextState: GameState = {
     ...state,
-    player: applyDelta(state.player, { supply: -1 }, state.relics),
+    player: applyDelta(state.player, { supply: isFreeMove ? 0 : -1 }, state.relics),
   };
 
   const map = new Map(nextState.map);
@@ -139,9 +133,24 @@ function handlePush(state: GameState, action: Extract<Action, { type: "push" }>,
   };
   nextState = appendLog(
     nextState,
-    `You push onward into ${enteredTile.biome}. (-1 Supply)`,
+    isFreeMove
+      ? `You push onward into ${enteredTile.biome}. The way is free.`
+      : `You push onward into ${enteredTile.biome}. (-1 Supply)`,
     "resource",
   );
+
+  // Entering an already-consumed hex is an immediate loss, even if an encounter exists there.
+  if (enteredTile.consumed || isConsumed(enteredTile.coord, nextState.searing)) {
+    return {
+      ...nextState,
+      status: "lost",
+      mode: {
+        type: "gameover",
+        reason: "The Searing catches you. There is no shelter from the light.",
+      },
+    };
+  }
+
   const rumorMatch = findNextRumorStep(
     state.rumors,
     enteredTile.tags,

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { coordKey, cubeCoord } from "../../src/engine/hex";
-import { createInitialState, type Action, type Encounter, type GameState, type Rumor } from "../../src/engine/state";
+import { coordKey, cubeCoord, neighbor } from "../../src/engine/hex";
+import { createInitialState, type Action, type Encounter, type GameState, type Relic, type Rumor } from "../../src/engine/state";
 import { resolveTurn } from "../../src/engine/turn";
 import { seededRng } from "../helpers";
 
@@ -42,6 +42,27 @@ describe("resolveTurn push flow", () => {
     expect(coordKey(next.player.hex)).toBe(coordKey(emptyState.player.hex));
     expect(next.log.length).toBeGreaterThan(emptyState.log.length);
   });
+
+  it("moves without spending supply when a move-discount relic procs", () => {
+    const { state } = makeState();
+    const guaranteedFreeMoveRelic: Relic = {
+      id: "free-step",
+      name: "Free Step",
+      description: "Move without spending supply.",
+      effect: { type: "move_discount", chance: 1 },
+    };
+    const next = resolveTurn(
+      {
+        ...state,
+        relics: [guaranteedFreeMoveRelic],
+      },
+      { type: "push", direction: 0 },
+      () => 0,
+    );
+
+    expect(coordKey(next.player.hex)).not.toBe(coordKey(state.player.hex));
+    expect(next.player.supply).toBe(state.player.supply);
+  });
 });
 
 describe("resolveTurn pause flow", () => {
@@ -71,7 +92,7 @@ describe("resolveTurn encounter flow", () => {
       choices: [{ label: "OK", outcome: { hope: 1 } }],
     };
     const { state, rng } = makeState();
-    const target = cubeCoord(1, 0, -1);
+    const target = neighbor(state.player.hex, 0);
     const next = resolveTurn(
       {
         ...state,
@@ -137,7 +158,7 @@ describe("rumor step triggering", () => {
     };
 
     const { state, rng } = makeState();
-    const target = cubeCoord(1, 0, -1);
+    const target = neighbor(state.player.hex, 0);
     const stateWithRumor: GameState = {
       ...state,
       encounters: [...state.encounters, rumorEncounter],
@@ -179,6 +200,42 @@ describe("resolveTurn searing and loss flow", () => {
       {
         ...state,
         player: { ...state.player, health: 0 },
+      },
+      { type: "push", direction: 0 },
+      rng,
+    );
+
+    expect(next.status).toBe("lost");
+    expect(next.mode.type).toBe("gameover");
+  });
+
+  it("triggers immediate game over when entering a consumed hex with an encounter", () => {
+    const encounter: Encounter = {
+      id: "test",
+      text: "Too late.",
+      requiredTags: [],
+      choices: [{ label: "OK", outcome: {} }],
+    };
+    const { state, rng } = makeState();
+    const target = neighbor(state.player.hex, 0);
+    const next = resolveTurn(
+      {
+        ...state,
+        searing: {
+          ...state.searing,
+          axis: "q",
+          direction: 1,
+          line: target.q,
+        },
+        map: new Map(state.map).set(coordKey(target), {
+          coord: target,
+          biome: "forest",
+          tags: new Set(["wood"]),
+          encounter,
+          revealed: true,
+          consumed: true,
+          visited: false,
+        }),
       },
       { type: "push", direction: 0 },
       rng,
