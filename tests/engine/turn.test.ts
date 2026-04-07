@@ -432,4 +432,100 @@ describe("resolveTurn win flow", () => {
       expect(next.mode.reason.toLowerCase()).toContain("gear");
     }
   });
+
+  it("sets outcome=win_pillars on Pillars of Frost win", () => {
+    const { state, rng } = makeState();
+    const thresholdQ = state.searing.line + PILLARS_DISTANCE_THRESHOLD;
+    const startHex = cubeCoord(thresholdQ - 1, -(thresholdQ - 1), 0);
+    const next = resolveTurn(
+      {
+        ...state,
+        searing: { ...state.searing, axis: "q", direction: 1, advanceRate: 999 },
+        player: { ...state.player, hex: startHex },
+        map: new Map(state.map).set(coordKey(startHex), {
+          coord: startHex,
+          biome: "forest",
+          tags: new Set(["wood"]),
+          encounter: null,
+          revealed: true,
+          consumed: false,
+          visited: true,
+        }),
+      },
+      { type: "push", direction: 0 },
+      rng,
+    );
+    expect(next.status).toBe("won");
+    if (next.mode.type === "gameover") {
+      expect(next.mode.outcome).toBe("win_pillars");
+    }
+  });
+
+  it("sets outcome=loss_health on health depletion", () => {
+    const { state, rng } = makeState();
+    const next = resolveTurn(
+      { ...state, player: { ...state.player, health: 0 } },
+      { type: "push", direction: 0 },
+      rng,
+    );
+    expect(next.status).toBe("lost");
+    if (next.mode.type === "gameover") {
+      expect(next.mode.outcome).toBe("loss_health");
+    }
+  });
+});
+
+describe("stats tracking", () => {
+  it("increments hexesExplored when entering a new hex", () => {
+    const { state, rng } = makeState();
+    expect(state.stats.hexesExplored).toBe(0);
+    const next = resolveTurn(state, { type: "push", direction: 0 }, rng);
+    expect(next.stats.hexesExplored).toBe(1);
+  });
+
+  it("does not increment hexesExplored when revisiting a hex", () => {
+    const { state, rng } = makeState();
+    const target = neighbor(state.player.hex, 0);
+    const targetKey = coordKey(target);
+    const visitedMap = new Map(state.map).set(targetKey, {
+      coord: target,
+      biome: "forest",
+      tags: new Set(["wood"]),
+      encounter: null,
+      revealed: true,
+      consumed: false,
+      visited: true,
+    });
+    const alreadyVisited = { ...state, map: visitedMap };
+    const next = resolveTurn(alreadyVisited, { type: "push", direction: 0 }, rng);
+    expect(next.stats.hexesExplored).toBe(0);
+  });
+
+  it("increments encountersResolved when choosing in an encounter", () => {
+    const encounter: Encounter = {
+      id: "stat-test",
+      text: "A choice awaits.",
+      requiredTags: [],
+      choices: [{ label: "Choose", outcome: {} }],
+    };
+    const { state, rng } = makeState();
+    expect(state.stats.encountersResolved).toBe(0);
+    const next = resolveTurn(
+      { ...state, mode: { type: "encounter", encounter, hex: state.player.hex } },
+      { type: "choose", choiceIndex: 0 },
+      rng,
+    );
+    expect(next.stats.encountersResolved).toBe(1);
+  });
+
+  it("initializes all stats to zero", () => {
+    const { state } = makeState();
+    expect(state.stats).toEqual({
+      hexesExplored: 0,
+      encountersResolved: 0,
+      rumorsDiscovered: 0,
+      rumorsCompleted: 0,
+      relicsCollected: 0,
+    });
+  });
 });
