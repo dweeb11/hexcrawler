@@ -5,7 +5,11 @@ import { applyDelta, checkLoss, forageResult } from "./resources";
 import { advanceSearing, isConsumed, shouldAdvance } from "./searing";
 import { rollNightIncident } from "./data/incidents";
 import {
-  HOPE_DECAY_INTERVAL,
+  getHopeDecayInterval,
+  getMoveDiscount,
+  getForageBonus,
+} from "./relics";
+import {
   type Action,
   type GameState,
   type LogEntry,
@@ -19,7 +23,6 @@ function appendLog(state: GameState, text: string, type: LogType = "narrative"):
     log: [...state.log, { turn: state.turn, text, type }],
   };
 }
-
 function markConsumedTiles(state: GameState): GameState {
   const nextMap = new Map<string, (typeof state.map extends Map<string, infer T> ? T : never)>();
   for (const [key, tile] of state.map.entries()) {
@@ -60,11 +63,12 @@ function applyLossChecks(state: GameState): GameState {
 
 function applyEndOfTurnEffects(state: GameState): GameState {
   let nextState = state;
+  const hopeDecayInterval = getHopeDecayInterval(state.relics);
 
-  if (nextState.turn > 0 && nextState.turn % HOPE_DECAY_INTERVAL === 0) {
+  if (nextState.turn > 0 && nextState.turn % hopeDecayInterval === 0) {
     nextState = {
       ...nextState,
-      player: applyDelta(nextState.player, { hope: -1 }),
+      player: applyDelta(nextState.player, { hope: -1 }, nextState.relics),
     };
     nextState = appendLog(nextState, "The road wears at your resolve. (-1 Hope)", "resource");
   }
@@ -82,6 +86,15 @@ function applyEndOfTurnEffects(state: GameState): GameState {
 }
 
 function handlePush(state: GameState, action: Extract<Action, { type: "push" }>, rng: RNG): GameState {
+  const moveDiscount = getMoveDiscount(state.relics);
+  if (rng() < moveDiscount) {
+    return appendLog(
+      state,
+      "Your footing is light and your pack feels weightless. The way is free.",
+      "narrative",
+    );
+  }
+
   if (state.player.supply <= 0) {
     return appendLog(
       state,
@@ -93,7 +106,7 @@ function handlePush(state: GameState, action: Extract<Action, { type: "push" }>,
   const destination = neighbor(state.player.hex, action.direction);
   let nextState: GameState = {
     ...state,
-    player: applyDelta(state.player, { supply: -1 }),
+    player: applyDelta(state.player, { supply: -1 }, state.relics),
   };
 
   const map = new Map(nextState.map);
@@ -155,14 +168,19 @@ function handlePause(state: GameState, action: Extract<Action, { type: "pause" }
   if (action.activity === "rest") {
     nextState = {
       ...nextState,
-      player: applyDelta(nextState.player, { health: 1 }),
+      player: applyDelta(nextState.player, { health: 1 }, nextState.relics),
     };
     resultText = "You rest beneath scant shelter and recover 1 Health.";
   } else {
-    const forage = forageResult(currentHex.biome, currentHex.tags, rng);
+    const forage = forageResult(
+      currentHex.biome,
+      currentHex.tags,
+      rng,
+      getForageBonus(state.relics)
+    );
     nextState = {
       ...nextState,
-      player: applyDelta(nextState.player, forage.delta),
+      player: applyDelta(nextState.player, forage.delta, nextState.relics),
     };
     resultText = forage.text;
   }
@@ -172,7 +190,7 @@ function handlePause(state: GameState, action: Extract<Action, { type: "pause" }
   if (incident) {
     nextState = {
       ...nextState,
-      player: applyDelta(nextState.player, incident.delta),
+      player: applyDelta(nextState.player, incident.delta, nextState.relics),
     };
     incidentLog = { turn: nextState.turn, text: incident.text, type: "narrative" };
   }
@@ -205,7 +223,7 @@ function handleChoose(state: GameState, action: Extract<Action, { type: "choose"
   const outcome = resolveChoice(choice, rng);
   let nextState: GameState = {
     ...state,
-    player: applyDelta(state.player, outcome.delta),
+    player: applyDelta(state.player, outcome.delta, state.relics),
     mode: { type: "map" },
   };
 
@@ -216,7 +234,6 @@ function handleChoose(state: GameState, action: Extract<Action, { type: "choose"
 
   return applyEndOfTurnEffects(nextState);
 }
-
 function handleDismiss(state: GameState): GameState {
   if (state.mode.type !== "camp") {
     return state;

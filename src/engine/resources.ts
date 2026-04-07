@@ -1,5 +1,6 @@
-import type { Biome, Player, RNG, ResourceDelta } from "./state";
+import type { Biome, Player, RNG, ResourceDelta, Relic } from "./state";
 import { MAX_HEALTH, MAX_HOPE, MAX_SUPPLY } from "./state";
+import { getMaxResource } from "./relics";
 
 const FORAGE_TABLE: Record<Biome, { chance: number; yield: number }> = {
   forest: { chance: 0.7, yield: 2 },
@@ -13,22 +14,29 @@ function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value));
 }
 
-export function clampResources(player: Player): Player {
+export function clampResources(player: Player, relics: Relic[] = []): Player {
   return {
     ...player,
-    supply: clamp(player.supply, 0, MAX_SUPPLY),
-    hope: clamp(player.hope, 0, MAX_HOPE),
-    health: clamp(player.health, 0, MAX_HEALTH),
+    supply: clamp(player.supply, 0, getMaxResource("supply", relics)),
+    hope: clamp(player.hope, 0, getMaxResource("hope", relics)),
+    health: clamp(player.health, 0, getMaxResource("health", relics)),
   };
 }
 
-export function applyDelta(player: Player, delta: ResourceDelta): Player {
-  return clampResources({
-    ...player,
-    supply: player.supply + (delta.supply ?? 0),
-    hope: player.hope + (delta.hope ?? 0),
-    health: player.health + (delta.health ?? 0),
-  });
+export function applyDelta(
+  player: Player,
+  delta: ResourceDelta,
+  relics: Relic[] = []
+): Player {
+  return clampResources(
+    {
+      ...player,
+      supply: player.supply + (delta.supply ?? 0),
+      hope: player.hope + (delta.hope ?? 0),
+      health: player.health + (delta.health ?? 0),
+    },
+    relics
+  );
 }
 
 export function checkLoss(player: Player): string | null {
@@ -49,9 +57,14 @@ export interface ForageResult {
   readonly text: string;
 }
 
-export function forageResult(biome: Biome, tags: Set<string>, rng: RNG): ForageResult {
+export function forageResult(
+  biome: Biome,
+  tags: Set<string>,
+  rng: RNG,
+  forageBonus = 0
+): ForageResult {
   const table = FORAGE_TABLE[biome];
-  let chance = table.chance;
+  let chance = table.chance + forageBonus;
   let yieldAmount = table.yield;
 
   if (tags.has("water")) {
