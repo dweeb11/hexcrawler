@@ -125,6 +125,24 @@ describe("encounter density", () => {
     expect(woodHexes).toBeGreaterThan(0);
   });
 
+  it("falls back to zero-tag encounters when no tag match exists", () => {
+    const fallbackEncounter: Encounter = {
+      id: "any-fallback",
+      text: "You find old tracks in the dust.",
+      requiredTags: [],
+      choices: [{ label: "Follow", outcome: { hope: 1 } }],
+    };
+
+    const tile = generateHex(
+      cubeCoord(1, 0, -1),
+      new Map(),
+      [fallbackEncounter],
+      seededRng(123),
+    );
+
+    expect(tile.encounter?.id).toBe("any-fallback");
+  });
+
   it("prefers higher tag-count encounters over lower", () => {
     // Create a hex that has all three tags
     const neighborCoord = cubeCoord(0, 1, -1);

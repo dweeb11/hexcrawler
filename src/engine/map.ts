@@ -128,14 +128,23 @@ export function pickEncounter(
   rng: RNG,
 ): Encounter | null {
   const matching = findMatchingEncounters(encounters, tags, biome);
-  if (matching.length === 0) return null;
+  const fallbackPool =
+    matching.length > 0
+      ? matching
+      : encounters.filter(
+          (encounter) =>
+            encounter.requiredTags.length === 0 &&
+            (!encounter.biomes || encounter.biomes.length === 0 || encounter.biomes.includes(biome)),
+        );
+
+  if (fallbackPool.length === 0) return null;
 
   // Sort by requiredTags length descending — rarer encounters first
-  matching.sort((a, b) => b.requiredTags.length - a.requiredTags.length);
+  fallbackPool.sort((a, b) => b.requiredTags.length - a.requiredTags.length);
 
   // Group by tag count
-  const maxTags = matching[0].requiredTags.length;
-  const topTier = matching.filter((e) => e.requiredTags.length === maxTags);
+  const maxTags = fallbackPool[0].requiredTags.length;
+  const topTier = fallbackPool.filter((e) => e.requiredTags.length === maxTags);
 
   // Pick randomly from the top tier
   return topTier[Math.floor(rng() * topTier.length)];

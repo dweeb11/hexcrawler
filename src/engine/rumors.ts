@@ -1,15 +1,10 @@
 // src/engine/rumors.ts
-import type { Biome, Rumor, RumorState, RumorStep, ActiveRumor } from "./state";
+import type { ActiveRumor, Biome, Rumor, RumorState, RumorStep, RumorWeights } from "./state";
 
 export interface RumorStepMatch {
   rumor: Rumor;
   step: RumorStep;
   active: ActiveRumor;
-}
-
-export interface RumorWeights {
-  tagWeights: Record<string, number>;
-  biomeWeights: Record<string, number>;
 }
 
 const RUMOR_TAG_WEIGHT_BONUS = 0.25;  // +25% weight per hint tag
@@ -52,7 +47,7 @@ export function findNextRumorStep(
 
 export function applyRumorWeights(rumorState: RumorState): RumorWeights {
   const tagWeights: Record<string, number> = {};
-  const biomeWeights: Record<string, number> = {};
+  const biomeWeights: Partial<Record<Biome, number>> = {};
 
   for (const active of rumorState.active) {
     const rumor = rumorState.available.find((r) => r.id === active.rumorId);
