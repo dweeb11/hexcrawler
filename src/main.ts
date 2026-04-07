@@ -10,7 +10,7 @@ import { createInitialState, MAX_SUPPLY, type Action, type GameState } from "./e
 import { resolveTurn } from "./engine/turn";
 import { screenToWorld } from "./renderer/camera";
 import { getActiveHint, type HintId } from "./ui/hints";
-import { clearLog, updateLog } from "./ui/log";
+import { applyHopeStyling, clearLog, updateLog } from "./ui/log";
 import {
   playMove,
   playEncounterOpen,
@@ -252,6 +252,7 @@ async function main(): Promise<void> {
     );
     camera = render(ctx, state, camera, activeHint);
     updateLog(logPanel, state.log);
+    applyHopeStyling(logPanel, state.player.hope);
     window.requestAnimationFrame(frame);
   };
 

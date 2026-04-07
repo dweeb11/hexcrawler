@@ -27,3 +27,13 @@ export function updateLog(panel: HTMLElement, entries: LogEntry[]): void {
 export function clearLog(panel: HTMLElement): void {
   panel.replaceChildren();
 }
+
+export function applyHopeStyling(panel: HTMLElement, hope: number): void {
+  if (hope <= 1) {
+    panel.dataset.hopeLevel = "critical";
+  } else if (hope <= 2) {
+    panel.dataset.hopeLevel = "low";
+  } else {
+    delete panel.dataset.hopeLevel;
+  }
+}
