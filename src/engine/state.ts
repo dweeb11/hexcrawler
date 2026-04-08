@@ -19,8 +19,8 @@ export interface Choice {
 }
 
 export interface RumorWeights {
-  biomeWeights?: Partial<Record<Biome, number>>;
-  tagWeights?: Record<string, number>;
+  biomeWeights: Partial<Record<Biome, number>>;
+  tagWeights: Record<string, number>;
 }
 
 export interface Encounter {

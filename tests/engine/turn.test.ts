@@ -1,7 +1,14 @@
 import { describe, expect, it } from "vitest";
 
 import { coordKey, cubeCoord, neighbor } from "../../src/engine/hex";
-import { createInitialState, type Action, type Encounter, type GameState, type Relic, type Rumor } from "../../src/engine/state";
+import {
+  createInitialState,
+  type Action,
+  type Encounter,
+  type GameState,
+  type Relic,
+  type Rumor,
+} from "../../src/engine/state";
 import { resolveTurn } from "../../src/engine/turn";
 import { FROST_PROXIMITY_THRESHOLDS, GEAR_RELIC_THRESHOLD, PILLARS_DISTANCE_THRESHOLD } from "../../src/engine/win";
 import { seededRng } from "../helpers";
@@ -42,6 +49,55 @@ describe("resolveTurn push flow", () => {
 
     expect(coordKey(next.player.hex)).toBe(coordKey(emptyState.player.hex));
     expect(next.log.length).toBeGreaterThan(emptyState.log.length);
+  });
+
+  it("biases generated hex tags toward active rumor hints", () => {
+    const rumor: Rumor = {
+      id: "water-lead",
+      title: "Whispers of Water",
+      steps: [
+        {
+          stepIndex: 0,
+          encounterId: "water-step-0",
+          hint: "Follow signs of water",
+          hintTags: ["water"],
+        },
+      ],
+      reward: null,
+      hopeBonus: 1,
+    };
+    const encounter: Encounter = {
+      id: "always",
+      text: "Always available",
+      requiredTags: [],
+      choices: [{ label: "Continue", outcome: {} }],
+    };
+    const { state } = makeState();
+    const baseState: GameState = { ...state, encounters: [encounter] };
+    const weightedState: GameState = {
+      ...baseState,
+      rumors: {
+        available: [rumor],
+        active: [{ rumorId: "water-lead", currentStep: 0 }],
+        completed: [],
+      },
+    };
+
+    let baseWaterCount = 0;
+    let weightedWaterCount = 0;
+
+    for (let seed = 1; seed <= 200; seed += 1) {
+      const baseNext = resolveTurn(baseState, { type: "push", direction: 0 }, seededRng(seed));
+      const weightedNext = resolveTurn(weightedState, { type: "push", direction: 0 }, seededRng(seed));
+
+      const baseTile = baseNext.map.get(coordKey(baseNext.player.hex));
+      const weightedTile = weightedNext.map.get(coordKey(weightedNext.player.hex));
+
+      if (baseTile?.tags.has("water")) baseWaterCount += 1;
+      if (weightedTile?.tags.has("water")) weightedWaterCount += 1;
+    }
+
+    expect(weightedWaterCount).toBeGreaterThan(baseWaterCount);
   });
 
   it("moves without spending supply when a move-discount relic procs", () => {
@@ -219,6 +275,112 @@ describe("rumor step triggering", () => {
     if (next.mode.type === "encounter") {
       expect(next.mode.encounter.id).toBe("ww-step-0");
     }
+  });
+});
+
+describe("rumor advancement on encounter resolution", () => {
+  it("advances active rumor to the next step after resolving its encounter", () => {
+    const firstStepEncounter: Encounter = {
+      id: "ww-step-0",
+      text: "You find the whispering well.",
+      requiredTags: [],
+      choices: [{ label: "Listen", outcome: {} }],
+    };
+    const rumor: Rumor = {
+      id: "whispering-well",
+      title: "The Whispering Well",
+      steps: [
+        {
+          stepIndex: 0,
+          encounterId: "ww-step-0",
+          hint: "Seek ancient water",
+          hintTags: ["water", "ancient"],
+        },
+        {
+          stepIndex: 1,
+          encounterId: "ww-step-1",
+          hint: "Seek old stone",
+          hintTags: ["stone"],
+        },
+      ],
+      reward: null,
+      hopeBonus: 2,
+    };
+    const { state, rng } = makeState();
+    const inEncounter: GameState = {
+      ...state,
+      mode: { type: "encounter", encounter: firstStepEncounter, hex: cubeCoord(1, 0, -1) },
+      rumors: {
+        available: [rumor],
+        active: [{ rumorId: "whispering-well", currentStep: 0 }],
+        completed: [],
+      },
+    };
+
+    const next = resolveTurn(inEncounter, { type: "choose", choiceIndex: 0 }, rng);
+
+    expect(next.rumors.active).toEqual([{ rumorId: "whispering-well", currentStep: 1 }]);
+    expect(next.rumors.completed).toEqual([]);
+  });
+
+  it("completes final rumor step and grants relic reward plus hope bonus", () => {
+    const finalStepEncounter: Encounter = {
+      id: "ww-step-1",
+      text: "You unearth a relic from the well's chamber.",
+      requiredTags: [],
+      choices: [{ label: "Take it", outcome: {} }],
+    };
+    const relicReward: Relic = {
+      id: "well-sigil",
+      name: "Well Sigil",
+      description: "An old token that strengthens resolve.",
+      effect: {
+        type: "max_resource",
+        resource: "hope",
+        bonus: 1,
+      },
+    };
+    const rumor: Rumor = {
+      id: "whispering-well",
+      title: "The Whispering Well",
+      steps: [
+        {
+          stepIndex: 0,
+          encounterId: "ww-step-0",
+          hint: "Seek ancient water",
+          hintTags: ["water", "ancient"],
+        },
+        {
+          stepIndex: 1,
+          encounterId: "ww-step-1",
+          hint: "Seek old stone",
+          hintTags: ["stone"],
+        },
+      ],
+      reward: relicReward,
+      hopeBonus: 3,
+    };
+    const { state, rng } = makeState();
+    const inFinalStep: GameState = {
+      ...state,
+      mode: { type: "encounter", encounter: finalStepEncounter, hex: cubeCoord(1, 0, -1) },
+      player: { ...state.player, hope: 3 },
+      rumors: {
+        available: [rumor],
+        active: [{ rumorId: "whispering-well", currentStep: 1 }],
+        completed: [],
+      },
+      relics: [],
+    };
+
+    const next = resolveTurn(inFinalStep, { type: "choose", choiceIndex: 0 }, rng);
+
+    expect(next.rumors.active).toEqual([]);
+    expect(next.rumors.completed).toEqual([
+      { rumorId: "whispering-well", completedAtTurn: inFinalStep.turn },
+    ]);
+    expect(next.relics).toContainEqual(relicReward);
+    expect(next.player.hope).toBe(5);
   });
 });
 

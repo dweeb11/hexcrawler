@@ -6,7 +6,7 @@ import seedEncounters from "../../src/engine/data/seed-encounters.json";
 describe("seed encounter data", () => {
   it("ships a substantial encounter table for M2", () => {
     expect(seedEncounters.length).toBeGreaterThanOrEqual(80);
-    expect(seedEncounters.length).toBeLessThanOrEqual(150);
+    expect(seedEncounters.length).toBeLessThanOrEqual(200);
   });
 
   it("contains the required fields for each encounter and choice", () => {

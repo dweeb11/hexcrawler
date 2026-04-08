@@ -15,6 +15,7 @@ import {
   advanceRumor,
   completeRumor,
   discoverRumor,
+  applyRumorWeights,
 } from "./rumors";
 import { checkPillarsOfFrost, checkRestartTheGear, frostProximityBand, frostProximityDistance } from "./win";
 import {
@@ -174,7 +175,11 @@ function handlePush(state: GameState, action: Extract<Action, { type: "push" }>,
   const key = coordKey(destination);
 
   if (!map.has(key)) {
-    map.set(key, generateHex(destination, map, nextState.encounters, rng, nextState.searing));
+    const rumorWeights = applyRumorWeights(state.rumors);
+    map.set(
+      key,
+      generateHex(destination, map, nextState.encounters, rng, nextState.searing, rumorWeights),
+    );
   }
 
   const destinationTile = map.get(key);
