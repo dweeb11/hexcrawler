@@ -5,7 +5,8 @@ import seedEncounters from "../../src/engine/data/seed-encounters.json";
 
 describe("seed encounter data", () => {
   it("ships a substantial encounter table for M2", () => {
-    expect(seedEncounters.length).toBeGreaterThanOrEqual(45);
+    expect(seedEncounters.length).toBeGreaterThanOrEqual(80);
+    expect(seedEncounters.length).toBeLessThanOrEqual(200);
   });
 
   it("contains the required fields for each encounter and choice", () => {
@@ -37,5 +38,29 @@ describe("seed encounter data", () => {
       ).length;
       expect(commonCount).toBeGreaterThanOrEqual(8);
     }
+  });
+
+  it("includes substantial uncommon and rare pools", () => {
+    const uncommonCount = seedEncounters.filter((encounter) => encounter.requiredTags.length === 2).length;
+    const rareCount = seedEncounters.filter((encounter) => encounter.requiredTags.length === 3).length;
+    expect(uncommonCount).toBeGreaterThanOrEqual(30);
+    expect(rareCount).toBeGreaterThanOrEqual(10);
+  });
+
+  it("includes rumor step encounters and discovery hooks", () => {
+    const rumorIds = new Set<string>();
+    for (const encounter of seedEncounters) {
+      for (const choice of encounter.choices) {
+        if ("discoversRumor" in choice && typeof choice.discoversRumor === "string") {
+          rumorIds.add(choice.discoversRumor);
+        }
+      }
+    }
+
+    expect(rumorIds.size).toBeGreaterThanOrEqual(4);
+    expect(seedEncounters.some((encounter) => encounter.id === "ww-step-0")).toBe(true);
+    expect(seedEncounters.some((encounter) => encounter.id === "ao-step-0")).toBe(true);
+    expect(seedEncounters.some((encounter) => encounter.id === "pl-step-0")).toBe(true);
+    expect(seedEncounters.some((encounter) => encounter.id === "da-step-0")).toBe(true);
   });
 });

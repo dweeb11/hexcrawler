@@ -114,7 +114,6 @@ function drawGameOverLegend(
 export function drawLegend(
   ctx: CanvasRenderingContext2D,
   canvasWidth: number,
-  _canvasHeight: number,
   mode: LegendMode,
 ): void {
   const padding = 12;

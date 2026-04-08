@@ -101,6 +101,8 @@ export default function viteApiPlugin(): Plugin {
           // Route: /api/encounters
           // Route: /api/encounters/[id]
           // Route: /api/seed
+          // Route: /api/analytics
+          // Route: /api/analytics/stats
           const pathname = url.split("?")[0];
 
           let handler: RouteHandler;
@@ -118,6 +120,14 @@ export default function viteApiPlugin(): Plugin {
           } else if (pathname === "/api/seed") {
             handler = await server.ssrLoadModule(
               "/api/seed.ts",
+            ) as RouteHandler;
+          } else if (pathname === "/api/analytics") {
+            handler = await server.ssrLoadModule(
+              "/api/analytics/index.ts",
+            ) as RouteHandler;
+          } else if (pathname === "/api/analytics/stats") {
+            handler = await server.ssrLoadModule(
+              "/api/analytics/stats.ts",
             ) as RouteHandler;
           } else {
             res.statusCode = 404;

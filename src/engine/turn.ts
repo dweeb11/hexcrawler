@@ -1,7 +1,8 @@
 import { coordKey, neighbor } from "./hex";
 import { resolveChoice } from "./encounters";
+import { encounterForHope } from "./encounters";
 import { generateHex } from "./map";
-import { applyDelta, checkLoss, forageResult } from "./resources";
+import { applyDelta, forageResult } from "./resources";
 import { advanceSearing, isConsumed, shouldAdvance } from "./searing";
 import { rollNightIncident } from "./data/incidents";
 import {
@@ -16,15 +17,23 @@ import {
   discoverRumor,
   applyRumorWeights,
 } from "./rumors";
+import { checkPillarsOfFrost, checkRestartTheGear, frostProximityBand, frostProximityDistance } from "./win";
 import {
   type Action,
   type GameState,
+  type GameStats,
   type LogEntry,
   type LogType,
   type RNG,
   type RumorState,
   type Relic,
 } from "./state";
+
+const FROST_PROXIMITY_MESSAGES: Record<1 | 2 | 3, string> = {
+  1: "A faint chill drifts from the north. The air is colder here.",
+  2: "Ice crystals trace the stones at your feet. The cold deepens.",
+  3: "The temperature plummets. Frost coats everything. The Pillars must be close.",
+};
 
 function appendLog(state: GameState, text: string, type: LogType = "narrative"): GameState {
   return {
@@ -53,21 +62,71 @@ function applyLossChecks(state: GameState): GameState {
       status: "lost",
       mode: {
         type: "gameover",
-        reason: "The Searing catches you. There is no shelter from the light.",
+        reason: "The Searing catches you. In the end, you could not outrun the sun.",
+        outcome: "loss_searing",
       },
     };
   }
 
-  const lossReason = checkLoss(state.player);
-  if (!lossReason) {
+  if (state.player.health <= 0) {
+    return {
+      ...state,
+      status: "lost",
+      mode: {
+        type: "gameover",
+        reason: "Your body gives out. The Twilight Strip claims another.",
+        outcome: "loss_health",
+      },
+    };
+  }
+
+  if (state.player.hope <= 0) {
+    return {
+      ...state,
+      status: "lost",
+      mode: {
+        type: "gameover",
+        reason: "The light inside you fades. You sit down, and do not rise.",
+        outcome: "loss_hope",
+      },
+    };
+  }
+
+  return state;
+}
+
+function applyWinChecks(state: GameState): GameState {
+  if (state.status !== "playing") {
     return state;
   }
 
-  return {
-    ...state,
-    status: "lost",
-    mode: { type: "gameover", reason: lossReason },
-  };
+  if (checkPillarsOfFrost(state.player.hex, state.searing)) {
+    return {
+      ...state,
+      status: "won",
+      mode: {
+        type: "gameover",
+        reason:
+          "You stand before the Pillars of Frost, monuments to a world that was. The Searing is far behind. You are safe — for now.",
+        outcome: "win_pillars",
+      },
+    };
+  }
+
+  if (checkRestartTheGear(state.relics)) {
+    return {
+      ...state,
+      status: "won",
+      mode: {
+        type: "gameover",
+        reason:
+          "The Gear turns. The mechanism groans to life. The sun shudders — and moves. You have restarted the world.",
+        outcome: "win_gear",
+      },
+    };
+  }
+
+  return state;
 }
 
 function applyEndOfTurnEffects(state: GameState): GameState {
@@ -91,20 +150,14 @@ function applyEndOfTurnEffects(state: GameState): GameState {
     nextState = markConsumedTiles(nextState);
   }
 
-  return applyLossChecks(nextState);
+  return applyWinChecks(applyLossChecks(nextState));
 }
 
 function handlePush(state: GameState, action: Extract<Action, { type: "push" }>, rng: RNG): GameState {
   const moveDiscount = getMoveDiscount(state.relics);
-  if (rng() < moveDiscount) {
-    return appendLog(
-      state,
-      "Your footing is light and your pack feels weightless. The way is free.",
-      "narrative",
-    );
-  }
+  const isFreeMove = rng() < moveDiscount;
 
-  if (state.player.supply <= 0) {
+  if (!isFreeMove && state.player.supply <= 0) {
     return appendLog(
       state,
       "You have no Supply left. Pause and forage, or pause and rest.",
@@ -115,7 +168,7 @@ function handlePush(state: GameState, action: Extract<Action, { type: "push" }>,
   const destination = neighbor(state.player.hex, action.direction);
   let nextState: GameState = {
     ...state,
-    player: applyDelta(state.player, { supply: -1 }, state.relics),
+    player: applyDelta(state.player, { supply: isFreeMove ? 0 : -1 }, state.relics),
   };
 
   const map = new Map(nextState.map);
@@ -134,6 +187,7 @@ function handlePush(state: GameState, action: Extract<Action, { type: "push" }>,
     return appendLog(nextState, "The path ahead refuses to resolve.", "system");
   }
 
+  const isNewHex = !destinationTile.visited;
   const enteredTile = { ...destinationTile, visited: true };
   map.set(key, enteredTile);
 
@@ -141,12 +195,38 @@ function handlePush(state: GameState, action: Extract<Action, { type: "push" }>,
     ...nextState,
     map,
     player: { ...nextState.player, hex: destination },
+    ...(isNewHex
+      ? { stats: { ...nextState.stats, hexesExplored: nextState.stats.hexesExplored + 1 } }
+      : {}),
   };
   nextState = appendLog(
     nextState,
-    `You push onward into ${enteredTile.biome}. (-1 Supply)`,
+    isFreeMove
+      ? `You push onward into ${enteredTile.biome}. The way is free.`
+      : `You push onward into ${enteredTile.biome}. (-1 Supply)`,
     "resource",
   );
+
+  // Frost proximity: emit a signal when crossing into a new band (closer to the Pillars).
+  const oldBand = frostProximityBand(frostProximityDistance(state.player.hex, state.searing));
+  const newBand = frostProximityBand(frostProximityDistance(destination, state.searing));
+  if (newBand > oldBand) {
+    nextState = appendLog(nextState, FROST_PROXIMITY_MESSAGES[newBand as 1 | 2 | 3], "narrative");
+  }
+
+  // Entering an already-consumed hex is an immediate loss, even if an encounter exists there.
+  if (enteredTile.consumed || isConsumed(enteredTile.coord, nextState.searing)) {
+    return {
+      ...nextState,
+      status: "lost",
+      mode: {
+        type: "gameover",
+        reason: "The Searing catches you. In the end, you could not outrun the sun.",
+        outcome: "loss_searing",
+      },
+    };
+  }
+
   const rumorMatch = findNextRumorStep(
     state.rumors,
     enteredTile.tags,
@@ -157,11 +237,12 @@ function handlePush(state: GameState, action: Extract<Action, { type: "push" }>,
       (e) => e.id === rumorMatch.step.encounterId,
     );
     if (rumorEncounter) {
+      const resolvedEncounter = encounterForHope(rumorEncounter, nextState.player.hope);
       return {
         ...nextState,
         mode: {
           type: "encounter",
-          encounter: rumorEncounter,
+          encounter: resolvedEncounter,
           hex: enteredTile.coord,
         },
       };
@@ -169,6 +250,7 @@ function handlePush(state: GameState, action: Extract<Action, { type: "push" }>,
   }
 
   if (enteredTile.encounter) {
+    const resolvedEncounter = encounterForHope(enteredTile.encounter, nextState.player.hope);
     const clearedTile = { ...enteredTile, encounter: null };
     map.set(key, clearedTile);
     return {
@@ -176,12 +258,12 @@ function handlePush(state: GameState, action: Extract<Action, { type: "push" }>,
       map: new Map(map),
       mode: {
         type: "encounter",
-        encounter: enteredTile.encounter,
+        encounter: resolvedEncounter,
         hex: destination,
       },
       log: [
         ...nextState.log,
-        { turn: nextState.turn, text: enteredTile.encounter.text, type: "narrative" },
+        { turn: nextState.turn, text: resolvedEncounter.text, type: "narrative" },
       ],
     };
   }
@@ -295,12 +377,14 @@ function handleChoose(state: GameState, action: Extract<Action, { type: "choose"
     ...state,
     player: applyDelta(state.player, outcome.delta, state.relics),
     mode: { type: "map" },
+    stats: { ...state.stats, encountersResolved: state.stats.encountersResolved + 1 },
   };
 
   if (choice.discoversRumor) {
     nextState = {
       ...nextState,
       rumors: discoverRumor(nextState.rumors, choice.discoversRumor),
+      stats: { ...nextState.stats, rumorsDiscovered: nextState.stats.rumorsDiscovered + 1 },
     };
     const rumor = nextState.rumors.available.find(
       (r) => r.id === choice.discoversRumor,
@@ -316,6 +400,10 @@ function handleChoose(state: GameState, action: Extract<Action, { type: "choose"
 
   const rumorAdvance = checkRumorAdvancement(state, state.mode.encounter.id);
   if (rumorAdvance) {
+    const rumorCompleted = rumorAdvance.rumors.completed.length > state.rumors.completed.length;
+    const statsUpdate: Partial<GameStats> = {};
+    if (rumorCompleted) statsUpdate.rumorsCompleted = nextState.stats.rumorsCompleted + 1;
+    if (rumorAdvance.reward) statsUpdate.relicsCollected = nextState.stats.relicsCollected + 1;
     nextState = {
       ...nextState,
       rumors: rumorAdvance.rumors,
@@ -325,6 +413,7 @@ function handleChoose(state: GameState, action: Extract<Action, { type: "choose"
       player: rumorAdvance.hopeBonus
         ? applyDelta(nextState.player, { hope: rumorAdvance.hopeBonus })
         : nextState.player,
+      stats: { ...nextState.stats, ...statsUpdate },
     };
   }
 

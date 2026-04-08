@@ -5,6 +5,8 @@ export interface ChoiceResult {
   readonly succeeded: boolean;
 }
 
+export const SHADOW_HOPE_THRESHOLD = 2;
+
 export function findMatchingEncounters(
   encounters: Encounter[],
   tags: Set<string>,
@@ -27,4 +29,19 @@ export function resolveChoice(choice: Choice, rng: RNG): ChoiceResult {
   }
 
   return { delta: choice.failureOutcome ?? {}, succeeded: false };
+}
+
+export function encounterForHope(encounter: Encounter, hope: number): Encounter {
+  if (hope > SHADOW_HOPE_THRESHOLD) {
+    return encounter;
+  }
+
+  if (!encounter.shadowText) {
+    return encounter;
+  }
+
+  return {
+    ...encounter,
+    text: encounter.shadowText,
+  };
 }

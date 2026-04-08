@@ -1,7 +1,482 @@
 [
   {
+    "id": "any-fallback-embers",
+    "text": "Cold embers and old footprints mark a brief stop in the ash.",
+    "requiredTags": [],
+    "choices": [
+      {
+        "label": "Warm your hands",
+        "outcome": {
+          "hope": 1
+        }
+      },
+      {
+        "label": "Rake for scraps",
+        "outcome": {
+          "supply": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": "any-old-road",
+    "text": "Paving stones from a road that once connected cities. Parts of it still hold.",
+    "requiredTags": [
+      "ancient",
+      "stone"
+    ],
+    "choices": [
+      {
+        "label": "Follow it",
+        "outcome": {
+          "supply": 1
+        }
+      },
+      {
+        "label": "Leave the path",
+        "outcome": {}
+      }
+    ]
+  },
+  {
+    "id": "ao-step-0",
+    "text": "A charred sighting post points toward a mountain lens array that still glints at dusk.",
+    "requiredTags": [
+      "scarred",
+      "elevated"
+    ],
+    "biomes": [
+      "mountain"
+    ],
+    "choices": [
+      {
+        "label": "Align the marker",
+        "outcome": {
+          "hope": 1
+        }
+      },
+      {
+        "label": "Salvage sight wire",
+        "outcome": {
+          "supply": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": "ao-step-1",
+    "text": "Inside an ancient stone dome, a cracked star map records the Searing's first advance.",
+    "requiredTags": [
+      "ancient",
+      "stone"
+    ],
+    "biomes": [
+      "ruins",
+      "mountain"
+    ],
+    "choices": [
+      {
+        "label": "Copy the map",
+        "outcome": {
+          "hope": 1
+        }
+      },
+      {
+        "label": "Take brass bearings",
+        "outcome": {
+          "supply": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": "ao-step-2",
+    "text": "At the observatory apex, scorched mirrors finally focus and reveal a safe corridor.",
+    "requiredTags": [
+      "elevated",
+      "scarred",
+      "ancient"
+    ],
+    "choices": [
+      {
+        "label": "Fix the final mirror",
+        "outcome": {
+          "hope": 2
+        }
+      },
+      {
+        "label": "Pack mirror shards",
+        "outcome": {
+          "supply": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": "da-step-0",
+    "text": "Waterlogged tablets near a flooded road mention an archive drowned in the first wave.",
+    "requiredTags": [
+      "flooded",
+      "stone"
+    ],
+    "biomes": [
+      "wastes",
+      "ruins"
+    ],
+    "choices": [
+      {
+        "label": "Transcribe the tablets",
+        "outcome": {
+          "hope": 1
+        }
+      },
+      {
+        "label": "Recover wax cases",
+        "outcome": {
+          "supply": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": "da-step-1",
+    "text": "Past an abandoned quay, a sealed door of black wood resists the tide.",
+    "requiredTags": [
+      "abandoned",
+      "water"
+    ],
+    "choices": [
+      {
+        "label": "Pry the hinges",
+        "outcome": {
+          "supply": 2
+        },
+        "chance": 0.6,
+        "failureOutcome": {
+          "health": -1
+        }
+      },
+      {
+        "label": "Search nearby lockers",
+        "outcome": {
+          "supply": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": "da-step-2",
+    "text": "In a flooded archive hall, stone shelves still hold ledgers wrapped in oilcloth.",
+    "requiredTags": [
+      "flooded",
+      "ancient",
+      "stone"
+    ],
+    "choices": [
+      {
+        "label": "Carry the ledgers out",
+        "outcome": {
+          "hope": 2
+        }
+      },
+      {
+        "label": "Take sealed ration tins",
+        "outcome": {
+          "supply": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": "forest-bramble-run",
+    "text": "A narrow run of brambles hides game trails.",
+    "requiredTags": [
+      "overgrown"
+    ],
+    "biomes": [
+      "forest"
+    ],
+    "choices": [
+      {
+        "label": "Set snares",
+        "outcome": {
+          "supply": 1
+        },
+        "chance": 0.7,
+        "failureOutcome": {}
+      },
+      {
+        "label": "Cut a path",
+        "outcome": {
+          "health": -1,
+          "hope": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": "forest-brook-altar",
+    "text": "A carved stump altar sits beside a cold brook.",
+    "requiredTags": [
+      "water",
+      "sacred"
+    ],
+    "biomes": [
+      "forest"
+    ],
+    "choices": [
+      {
+        "label": "Leave an offering",
+        "outcome": {
+          "hope": 2
+        }
+      },
+      {
+        "label": "Wash and refill",
+        "outcome": {
+          "supply": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": "forest-camp",
+    "text": "An abandoned campsite. The fire pit is cold but the lean-to still stands.",
+    "shadowText": "An abandoned campsite waits in silence. The cold pit looks freshly stirred, though no one is here.",
+    "requiredTags": [
+      "sheltered"
+    ],
+    "biomes": [
+      "forest"
+    ],
+    "choices": [
+      {
+        "label": "Rest here",
+        "outcome": {
+          "health": 1,
+          "hope": 1
+        }
+      },
+      {
+        "label": "Scavenge",
+        "outcome": {
+          "supply": 2
+        }
+      }
+    ]
+  },
+  {
+    "id": "forest-copse-haven",
+    "text": "An old copse makes a natural shelter from ash wind.",
+    "requiredTags": [
+      "sheltered"
+    ],
+    "biomes": [
+      "forest"
+    ],
+    "choices": [
+      {
+        "label": "Rest here",
+        "outcome": {
+          "health": 1
+        }
+      },
+      {
+        "label": "Tidy the camp",
+        "outcome": {
+          "hope": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": "forest-hallowed-grove",
+    "text": "Ancient pines ring a grove where no wind dares enter.",
+    "requiredTags": [
+      "ancient",
+      "sacred"
+    ],
+    "biomes": [
+      "forest"
+    ],
+    "choices": [
+      {
+        "label": "Speak your oath",
+        "outcome": {
+          "hope": 2
+        }
+      },
+      {
+        "label": "Gather resin",
+        "outcome": {
+          "supply": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": "forest-hidden-roost",
+    "text": "A sheltered roost hangs over a streambed, warm despite the dusk.",
+    "requiredTags": [
+      "sheltered",
+      "water"
+    ],
+    "biomes": [
+      "forest"
+    ],
+    "choices": [
+      {
+        "label": "Rest briefly",
+        "outcome": {
+          "health": 1
+        }
+      },
+      {
+        "label": "Set snare lines",
+        "outcome": {
+          "supply": 1
+        },
+        "chance": 0.7,
+        "failureOutcome": {}
+      }
+    ]
+  },
+  {
+    "id": "forest-mist-pool",
+    "text": "A misty pool reflects branches like ink lines.",
+    "requiredTags": [
+      "water"
+    ],
+    "biomes": [
+      "forest"
+    ],
+    "choices": [
+      {
+        "label": "Drink carefully",
+        "outcome": {
+          "hope": 1
+        }
+      },
+      {
+        "label": "Fill canteens",
+        "outcome": {
+          "supply": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": "forest-old-raincatch",
+    "text": "An ancient raincatch tower still gathers clean water between broken slats.",
+    "requiredTags": [
+      "water",
+      "wood"
+    ],
+    "biomes": [
+      "forest"
+    ],
+    "choices": [
+      {
+        "label": "Refill skins",
+        "outcome": {
+          "supply": 2
+        }
+      },
+      {
+        "label": "Climb for a lookout",
+        "outcome": {
+          "hope": 1
+        },
+        "chance": 0.7,
+        "failureOutcome": {
+          "health": -1
+        }
+      }
+    ]
+  },
+  {
+    "id": "forest-old-stand",
+    "text": "A stand of towering cedar muffles every sound.",
+    "requiredTags": [
+      "wood"
+    ],
+    "biomes": [
+      "forest"
+    ],
+    "choices": [
+      {
+        "label": "Gather dry bark",
+        "outcome": {
+          "supply": 1
+        }
+      },
+      {
+        "label": "Lean and breathe",
+        "outcome": {
+          "hope": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": "forest-overrun-sanctum",
+    "text": "Roots have swallowed a tiny sanctum hidden under ivy.",
+    "requiredTags": [
+      "overgrown",
+      "sacred"
+    ],
+    "biomes": [
+      "forest"
+    ],
+    "choices": [
+      {
+        "label": "Clear a space",
+        "outcome": {
+          "hope": 1,
+          "supply": -1
+        }
+      },
+      {
+        "label": "Search the alcove",
+        "outcome": {
+          "supply": 2
+        },
+        "chance": 0.6,
+        "failureOutcome": {
+          "health": -1
+        }
+      }
+    ]
+  },
+  {
+    "id": "forest-shrine",
+    "text": "A moss-covered shrine. Offerings of dried flowers still rest at its base.",
+    "requiredTags": [
+      "sacred"
+    ],
+    "biomes": [
+      "forest"
+    ],
+    "choices": [
+      {
+        "label": "Pray",
+        "outcome": {
+          "hope": 2
+        }
+      },
+      {
+        "label": "Search for supplies",
+        "outcome": {
+          "supply": 1,
+          "hope": -1
+        }
+      }
+    ]
+  },
+  {
     "id": "forest-stream",
     "text": "A clear stream cuts through the undergrowth. The water looks clean.",
+    "shadowText": "A clear stream runs black under the brush. Your reflection moves a breath too late.",
     "requiredTags": [
       "water"
     ],
@@ -19,6 +494,35 @@
         "label": "Fill waterskin",
         "outcome": {
           "supply": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": "forest-sunken-waystone",
+    "text": "A waystone leans from marsh water, its carvings still sharp.",
+    "requiredTags": [
+      "water",
+      "overgrown"
+    ],
+    "biomes": [
+      "forest"
+    ],
+    "choices": [
+      {
+        "label": "Clean the runes",
+        "outcome": {
+          "hope": 1
+        }
+      },
+      {
+        "label": "Dig around the base",
+        "outcome": {
+          "supply": 2
+        },
+        "chance": 0.55,
+        "failureOutcome": {
+          "health": -1
         }
       }
     ]
@@ -50,51 +554,27 @@
     ]
   },
   {
-    "id": "forest-shrine",
-    "text": "A moss-covered shrine. Offerings of dried flowers still rest at its base.",
+    "id": "forest-whisper-trail",
+    "text": "A ring of wet stones marks an old trail through ferns. Someone scratched a spiral into the largest rock.",
     "requiredTags": [
-      "sacred"
+      "water",
+      "ancient"
     ],
     "biomes": [
       "forest"
     ],
     "choices": [
       {
-        "label": "Pray",
+        "label": "Trace the spiral",
         "outcome": {
-          "hope": 2
-        }
-      },
-      {
-        "label": "Search for supplies",
-        "outcome": {
-          "supply": 1,
-          "hope": -1
-        }
-      }
-    ]
-  },
-  {
-    "id": "forest-camp",
-    "text": "An abandoned campsite. The fire pit is cold but the lean-to still stands.",
-    "requiredTags": [
-      "sheltered"
-    ],
-    "biomes": [
-      "forest"
-    ],
-    "choices": [
-      {
-        "label": "Rest here",
-        "outcome": {
-          "health": 1,
           "hope": 1
-        }
+        },
+        "discoversRumor": "whispering-well"
       },
       {
-        "label": "Scavenge",
+        "label": "Move on quietly",
         "outcome": {
-          "supply": 2
+          "supply": 1
         }
       }
     ]
@@ -102,6 +582,7 @@
   {
     "id": "mountain-cave",
     "text": "A cave mouth yawns in the rock face. Wind moans from inside.",
+    "shadowText": "A cave mouth gapes like a wound in the stone. The wind sounds like a warning in your own voice.",
     "requiredTags": [
       "hollow"
     ],
@@ -122,6 +603,296 @@
       {
         "label": "Pass by",
         "outcome": {}
+      }
+    ]
+  },
+  {
+    "id": "mountain-echo-vault",
+    "text": "An echoing vault cuts deep into the mountainside.",
+    "requiredTags": [
+      "hollow",
+      "stone"
+    ],
+    "biomes": [
+      "mountain"
+    ],
+    "choices": [
+      {
+        "label": "Call into the dark",
+        "outcome": {
+          "hope": 1
+        }
+      },
+      {
+        "label": "Probe side tunnels",
+        "outcome": {
+          "supply": 2
+        },
+        "chance": 0.6,
+        "failureOutcome": {
+          "health": -1
+        }
+      }
+    ]
+  },
+  {
+    "id": "mountain-elder-steps",
+    "text": "Stone steps climb into cloud where old cairns still stand.",
+    "requiredTags": [
+      "ancient",
+      "elevated"
+    ],
+    "biomes": [
+      "mountain"
+    ],
+    "choices": [
+      {
+        "label": "Leave a cairn-stone",
+        "outcome": {
+          "hope": 2
+        }
+      },
+      {
+        "label": "Search nearby crevices",
+        "outcome": {
+          "supply": 1
+        },
+        "chance": 0.65,
+        "failureOutcome": {
+          "health": -1
+        }
+      }
+    ]
+  },
+  {
+    "id": "mountain-fire-cut",
+    "text": "A blackened fire-cut scar splits the slope.",
+    "requiredTags": [
+      "scarred"
+    ],
+    "biomes": [
+      "mountain"
+    ],
+    "choices": [
+      {
+        "label": "Cross quickly",
+        "outcome": {
+          "hope": 1
+        }
+      },
+      {
+        "label": "Recover metal pins",
+        "outcome": {
+          "supply": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": "mountain-glacier-ridge",
+    "text": "Wind-scoured ridge ice catches the moonlight in sharp shards.",
+    "requiredTags": [
+      "ice",
+      "elevated"
+    ],
+    "biomes": [
+      "mountain"
+    ],
+    "choices": [
+      {
+        "label": "Chip ice for water",
+        "outcome": {
+          "supply": 1
+        }
+      },
+      {
+        "label": "Cross the ridge quickly",
+        "outcome": {
+          "hope": 1
+        },
+        "chance": 0.7,
+        "failureOutcome": {
+          "health": -1
+        }
+      }
+    ]
+  },
+  {
+    "id": "mountain-hermit-fire",
+    "text": "A sheltered shelf holds the remains of a hermit fire-circle.",
+    "requiredTags": [
+      "sheltered",
+      "stone"
+    ],
+    "biomes": [
+      "mountain"
+    ],
+    "choices": [
+      {
+        "label": "Rebuild the fire ring",
+        "outcome": {
+          "health": 1
+        }
+      },
+      {
+        "label": "Search the cache niche",
+        "outcome": {
+          "supply": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": "mountain-high-rim",
+    "text": "From the high rim, the fire-line looks almost still.",
+    "requiredTags": [
+      "elevated"
+    ],
+    "biomes": [
+      "mountain"
+    ],
+    "choices": [
+      {
+        "label": "Plot your next push",
+        "outcome": {
+          "hope": 1
+        }
+      },
+      {
+        "label": "Anchor rope",
+        "outcome": {
+          "supply": -1,
+          "health": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": "mountain-ice",
+    "text": "A frozen waterfall, beautiful and alien. Ice crystals catch what little light remains.",
+    "requiredTags": [
+      "ice"
+    ],
+    "biomes": [
+      "mountain"
+    ],
+    "choices": [
+      {
+        "label": "Harvest ice",
+        "outcome": {
+          "supply": 1
+        }
+      },
+      {
+        "label": "Contemplate",
+        "outcome": {
+          "hope": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": "mountain-ice-chasm",
+    "text": "A chasm exhales frost and reflects your lantern in broken sheets.",
+    "requiredTags": [
+      "ice",
+      "hollow"
+    ],
+    "biomes": [
+      "mountain"
+    ],
+    "choices": [
+      {
+        "label": "Harvest blue ice",
+        "outcome": {
+          "supply": 2
+        }
+      },
+      {
+        "label": "Descend on rope",
+        "outcome": {
+          "hope": 2
+        },
+        "chance": 0.5,
+        "failureOutcome": {
+          "health": -2
+        }
+      }
+    ]
+  },
+  {
+    "id": "mountain-lost-niche",
+    "text": "A lost niche in the rock offers a brief hollow refuge.",
+    "requiredTags": [
+      "hollow"
+    ],
+    "biomes": [
+      "mountain"
+    ],
+    "choices": [
+      {
+        "label": "Camp in the niche",
+        "outcome": {
+          "health": 1
+        }
+      },
+      {
+        "label": "Check old packs",
+        "outcome": {
+          "supply": 1
+        },
+        "chance": 0.6,
+        "failureOutcome": {
+          "health": -1
+        }
+      }
+    ]
+  },
+  {
+    "id": "mountain-rime-shelf",
+    "text": "Rime clings to a narrow shelf in glittering ridges.",
+    "requiredTags": [
+      "ice"
+    ],
+    "biomes": [
+      "mountain"
+    ],
+    "choices": [
+      {
+        "label": "Cut ice",
+        "outcome": {
+          "supply": 1
+        }
+      },
+      {
+        "label": "Hold still in the cold",
+        "outcome": {
+          "hope": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": "mountain-scree-path",
+    "text": "A scree path snakes upward between frost-bitten stones.",
+    "requiredTags": [
+      "stone"
+    ],
+    "biomes": [
+      "mountain"
+    ],
+    "choices": [
+      {
+        "label": "Climb steadily",
+        "outcome": {
+          "hope": 1
+        }
+      },
+      {
+        "label": "Search cracks",
+        "outcome": {
+          "supply": 1
+        }
       }
     ]
   },
@@ -150,25 +921,663 @@
     ]
   },
   {
-    "id": "mountain-ice",
-    "text": "A frozen waterfall, beautiful and alien. Ice crystals catch what little light remains.",
+    "id": "mountain-watch-crag",
+    "text": "A ruined watch-crag overlooks the burning horizon.",
     "requiredTags": [
-      "ice"
+      "elevated",
+      "scarred"
     ],
     "biomes": [
       "mountain"
     ],
     "choices": [
       {
-        "label": "Harvest ice",
+        "label": "Mark a safer route",
+        "outcome": {
+          "hope": 1
+        }
+      },
+      {
+        "label": "Salvage pitons",
+        "outcome": {
+          "supply": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": "pl-step-0",
+    "text": "Pilgrim sigils painted on a sheltered post point toward a forgotten procession road.",
+    "requiredTags": [
+      "sheltered",
+      "sacred"
+    ],
+    "biomes": [
+      "settlement",
+      "forest"
+    ],
+    "choices": [
+      {
+        "label": "Relight the pilgrim wick",
+        "outcome": {
+          "hope": 1
+        }
+      },
+      {
+        "label": "Take spare oil",
+        "outcome": {
+          "supply": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": "pl-step-1",
+    "text": "A lantern niche carved in old stone still burns with smokeless flame.",
+    "requiredTags": [
+      "stone",
+      "sacred"
+    ],
+    "choices": [
+      {
+        "label": "Carry the flame forward",
+        "outcome": {
+          "hope": 1
+        }
+      },
+      {
+        "label": "Warm and rest",
+        "outcome": {
+          "health": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": "pl-step-2",
+    "text": "At an overgrown shrine court, the pilgrim lantern flares and reveals a hidden reliquary.",
+    "requiredTags": [
+      "overgrown",
+      "sacred",
+      "ancient"
+    ],
+    "choices": [
+      {
+        "label": "Open the reliquary",
+        "outcome": {
+          "hope": 2
+        }
+      },
+      {
+        "label": "Gather candle stubs",
+        "outcome": {
+          "supply": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": "rare-ashen-sanctum",
+    "text": "A sanctum of scorched timber and carved idols remains somehow unburned.",
+    "requiredTags": [
+      "wood",
+      "sacred",
+      "scarred"
+    ],
+    "choices": [
+      {
+        "label": "Keep vigil",
+        "outcome": {
+          "health": 1,
+          "hope": 1
+        }
+      },
+      {
+        "label": "Take idol fragments",
+        "outcome": {
+          "supply": 1,
+          "hope": -1
+        }
+      }
+    ]
+  },
+  {
+    "id": "rare-buried-forum",
+    "text": "A forum of ancient columns protrudes from deep sand drifts.",
+    "requiredTags": [
+      "sand",
+      "stone",
+      "ancient"
+    ],
+    "choices": [
+      {
+        "label": "Address the empty seats",
+        "outcome": {
+          "hope": 3
+        }
+      },
+      {
+        "label": "Excavate trade vaults",
+        "outcome": {
+          "supply": 2
+        },
+        "chance": 0.55,
+        "failureOutcome": {
+          "health": -1
+        }
+      }
+    ]
+  },
+  {
+    "id": "rare-citadel-garden",
+    "text": "Within a shattered citadel, an overgrown garden still bears fruit.",
+    "requiredTags": [
+      "overgrown",
+      "stone",
+      "sheltered"
+    ],
+    "choices": [
+      {
+        "label": "Harvest carefully",
+        "outcome": {
+          "supply": 2
+        }
+      },
+      {
+        "label": "Sleep under arches",
+        "outcome": {
+          "health": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": "rare-ember-cathedral",
+    "text": "A cathedral of fused stone and sacred banners glows faintly from within.",
+    "requiredTags": [
+      "stone",
+      "sacred",
+      "scarred"
+    ],
+    "choices": [
+      {
+        "label": "Kneel at the transept",
+        "outcome": {
+          "hope": 3
+        }
+      },
+      {
+        "label": "Recover reliquary steel",
+        "outcome": {
+          "supply": 2
+        },
+        "chance": 0.5,
+        "failureOutcome": {
+          "health": -2
+        }
+      }
+    ]
+  },
+  {
+    "id": "rare-flood-lantern-yard",
+    "text": "Lantern poles rise from black water where pilgrims once gathered.",
+    "requiredTags": [
+      "flooded",
+      "sacred",
+      "abandoned"
+    ],
+    "choices": [
+      {
+        "label": "Light one lantern",
+        "outcome": {
+          "hope": 3
+        }
+      },
+      {
+        "label": "Drag a cache chest free",
+        "outcome": {
+          "supply": 2
+        },
+        "chance": 0.6,
+        "failureOutcome": {
+          "health": -1
+        }
+      }
+    ]
+  },
+  {
+    "id": "rare-frost-ward",
+    "text": "A ring of frost-etched monoliths circles a warding sigil.",
+    "requiredTags": [
+      "ice",
+      "sacred",
+      "stone"
+    ],
+    "choices": [
+      {
+        "label": "Refresh the sigil",
+        "outcome": {
+          "hope": 2
+        }
+      },
+      {
+        "label": "Cut frost glass",
+        "outcome": {
+          "supply": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": "rare-howling-vault",
+    "text": "Wind howls through a vaulted hall lined with iron masks.",
+    "requiredTags": [
+      "hollow",
+      "stone",
+      "scarred"
+    ],
+    "choices": [
+      {
+        "label": "Wear a mask",
+        "outcome": {
+          "hope": 2
+        }
+      },
+      {
+        "label": "Search side niches",
+        "outcome": {
+          "supply": 2
+        },
+        "chance": 0.55,
+        "failureOutcome": {
+          "health": -1
+        }
+      }
+    ]
+  },
+  {
+    "id": "rare-ice-archive",
+    "text": "An archive chamber sleeps in blue ice, pages sealed in crystal.",
+    "requiredTags": [
+      "ice",
+      "ancient",
+      "hollow"
+    ],
+    "choices": [
+      {
+        "label": "Read frozen folios",
+        "outcome": {
+          "hope": 2
+        }
+      },
+      {
+        "label": "Melt and salvage",
+        "outcome": {
+          "supply": 2
+        },
+        "chance": 0.55,
+        "failureOutcome": {
+          "health": -1
+        }
+      }
+    ]
+  },
+  {
+    "id": "rare-overgrown-observatory",
+    "text": "An observatory dome wrapped in roots watches a sky full of ash.",
+    "requiredTags": [
+      "overgrown",
+      "ancient",
+      "elevated"
+    ],
+    "choices": [
+      {
+        "label": "Chart the night",
+        "outcome": {
+          "hope": 2
+        }
+      },
+      {
+        "label": "Climb the split dome",
+        "outcome": {
+          "supply": 1
+        },
+        "chance": 0.55,
+        "failureOutcome": {
+          "health": -1
+        }
+      }
+    ]
+  },
+  {
+    "id": "rare-silent-harbor",
+    "text": "Stone quays and ruined cranes sit in still floodwater with no birds.",
+    "requiredTags": [
+      "water",
+      "stone",
+      "abandoned"
+    ],
+    "choices": [
+      {
+        "label": "Cast a listening line",
+        "outcome": {
+          "hope": 2
+        }
+      },
+      {
+        "label": "Strip crane cable",
+        "outcome": {
+          "supply": 2
+        },
+        "chance": 0.5,
+        "failureOutcome": {
+          "health": -2
+        }
+      }
+    ]
+  },
+  {
+    "id": "rare-sky-causeway",
+    "text": "A broken causeway hangs high over the wastes, half-swallowed by cloud.",
+    "requiredTags": [
+      "elevated",
+      "stone",
+      "scarred"
+    ],
+    "choices": [
+      {
+        "label": "Cross to the far spur",
+        "outcome": {
+          "hope": 2
+        }
+      },
+      {
+        "label": "Harvest anchor chain",
+        "outcome": {
+          "supply": 2
+        },
+        "chance": 0.5,
+        "failureOutcome": {
+          "health": -2
+        }
+      }
+    ]
+  },
+  {
+    "id": "rare-sunken-cloister",
+    "text": "A cloister floor lies under knee-deep water, frescoes wavering below.",
+    "requiredTags": [
+      "flooded",
+      "sacred",
+      "ancient"
+    ],
+    "choices": [
+      {
+        "label": "Recover icon tiles",
         "outcome": {
           "supply": 1
         }
       },
       {
-        "label": "Contemplate",
+        "label": "Meditate in the nave",
+        "outcome": {
+          "hope": 3
+        }
+      }
+    ]
+  },
+  {
+    "id": "ruins-archive-ash",
+    "text": "Ash-dusted shelves still hold fragments of old records.",
+    "requiredTags": [
+      "ancient"
+    ],
+    "biomes": [
+      "ruins"
+    ],
+    "choices": [
+      {
+        "label": "Read what remains",
         "outcome": {
           "hope": 1
+        }
+      },
+      {
+        "label": "Take binding cord",
+        "outcome": {
+          "supply": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": "ruins-barricaded-cellar",
+    "text": "Boards and masonry seal an abandoned cellar door.",
+    "requiredTags": [
+      "abandoned",
+      "stone"
+    ],
+    "biomes": [
+      "ruins"
+    ],
+    "choices": [
+      {
+        "label": "Break through",
+        "outcome": {
+          "supply": 2
+        },
+        "chance": 0.65,
+        "failureOutcome": {
+          "health": -1
+        }
+      },
+      {
+        "label": "Camp outside",
+        "outcome": {
+          "health": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": "ruins-broken-apse",
+    "text": "The apse walls still hold soot-dark icons.",
+    "requiredTags": [
+      "sacred"
+    ],
+    "biomes": [
+      "ruins"
+    ],
+    "choices": [
+      {
+        "label": "Light a wick",
+        "outcome": {
+          "hope": 1
+        }
+      },
+      {
+        "label": "Recover candlewax",
+        "outcome": {
+          "supply": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": "ruins-broken-aqueduct",
+    "text": "An ancient aqueduct drips steadily into shattered cisterns.",
+    "requiredTags": [
+      "ancient",
+      "water"
+    ],
+    "biomes": [
+      "ruins"
+    ],
+    "choices": [
+      {
+        "label": "Catch the water",
+        "outcome": {
+          "supply": 1
+        }
+      },
+      {
+        "label": "Follow the channel",
+        "outcome": {
+          "hope": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": "ruins-cellar",
+    "text": "A trapdoor leads to a cellar beneath the rubble.",
+    "requiredTags": [
+      "hollow"
+    ],
+    "biomes": [
+      "ruins"
+    ],
+    "choices": [
+      {
+        "label": "Descend",
+        "outcome": {
+          "supply": 3
+        },
+        "chance": 0.7,
+        "failureOutcome": {
+          "health": -1
+        }
+      },
+      {
+        "label": "Leave it",
+        "outcome": {}
+      }
+    ]
+  },
+  {
+    "id": "ruins-charred-lens",
+    "text": "A cracked glass lens sits in an iron frame blackened by heat. It still points toward the high ridges.",
+    "requiredTags": [
+      "ancient",
+      "scarred"
+    ],
+    "biomes": [
+      "ruins"
+    ],
+    "choices": [
+      {
+        "label": "Align the lens",
+        "outcome": {
+          "hope": 1
+        },
+        "discoversRumor": "ashen-observatory"
+      },
+      {
+        "label": "Pocket the fittings",
+        "outcome": {
+          "supply": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": "ruins-choir-vault",
+    "text": "A sacred vault beneath the chapel still rings with old hymns.",
+    "requiredTags": [
+      "sacred",
+      "hollow"
+    ],
+    "biomes": [
+      "ruins"
+    ],
+    "choices": [
+      {
+        "label": "Join the last verse",
+        "outcome": {
+          "hope": 2
+        }
+      },
+      {
+        "label": "Pry open reliquary drawers",
+        "outcome": {
+          "supply": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": "ruins-courtyard-stone",
+    "text": "Loose courtyard stones frame a dry mosaic floor.",
+    "requiredTags": [
+      "stone"
+    ],
+    "biomes": [
+      "ruins"
+    ],
+    "choices": [
+      {
+        "label": "Study the mosaic",
+        "outcome": {
+          "hope": 1
+        }
+      },
+      {
+        "label": "Lift tile edges",
+        "outcome": {
+          "supply": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": "ruins-cracked-hall",
+    "text": "A cracked hall echoes every footstep twice.",
+    "requiredTags": [
+      "scarred"
+    ],
+    "biomes": [
+      "ruins"
+    ],
+    "choices": [
+      {
+        "label": "Keep your pace",
+        "outcome": {
+          "hope": 1
+        }
+      },
+      {
+        "label": "Pry open floorbox",
+        "outcome": {
+          "supply": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": "ruins-fallen-wing",
+    "text": "A fallen wing of the city lies open to the sky.",
+    "shadowText": "A fallen wing of the city lies split open. The sky above it feels close enough to crush you.",
+    "requiredTags": [
+      "abandoned"
+    ],
+    "biomes": [
+      "ruins"
+    ],
+    "choices": [
+      {
+        "label": "Move through quickly",
+        "outcome": {
+          "hope": 1
+        }
+      },
+      {
+        "label": "Search alcoves",
+        "outcome": {
+          "supply": 1
+        },
+        "chance": 0.65,
+        "failureOutcome": {
+          "health": -1
         }
       }
     ]
@@ -202,32 +1611,6 @@
     ]
   },
   {
-    "id": "ruins-cellar",
-    "text": "A trapdoor leads to a cellar beneath the rubble.",
-    "requiredTags": [
-      "hollow"
-    ],
-    "biomes": [
-      "ruins"
-    ],
-    "choices": [
-      {
-        "label": "Descend",
-        "outcome": {
-          "supply": 3
-        },
-        "chance": 0.7,
-        "failureOutcome": {
-          "health": -1
-        }
-      },
-      {
-        "label": "Leave it",
-        "outcome": {}
-      }
-    ]
-  },
-  {
     "id": "ruins-monument",
     "text": "A monument to someone forgotten. The inscription is almost legible.",
     "requiredTags": [
@@ -249,6 +1632,440 @@
         "outcome": {
           "supply": 2,
           "hope": -1
+        }
+      }
+    ]
+  },
+  {
+    "id": "ruins-ossuary-garden",
+    "text": "Overgrown memorial stones ring an ossuary half-open to the sky.",
+    "requiredTags": [
+      "overgrown",
+      "ancient"
+    ],
+    "biomes": [
+      "ruins"
+    ],
+    "choices": [
+      {
+        "label": "Read the names",
+        "outcome": {
+          "hope": 2
+        }
+      },
+      {
+        "label": "Collect dry herbs",
+        "outcome": {
+          "supply": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": "ruins-pilgrim-hostel",
+    "text": "A sheltered hostel wing survived where pilgrims once slept.",
+    "requiredTags": [
+      "sheltered",
+      "ancient"
+    ],
+    "biomes": [
+      "ruins"
+    ],
+    "choices": [
+      {
+        "label": "Sleep in a dry room",
+        "outcome": {
+          "health": 1
+        }
+      },
+      {
+        "label": "Search the lockers",
+        "outcome": {
+          "supply": 1
+        },
+        "chance": 0.7,
+        "failureOutcome": {}
+      }
+    ]
+  },
+  {
+    "id": "ruins-sunken-court",
+    "text": "Floodwater fills a collapsed courtyard of cracked statues.",
+    "requiredTags": [
+      "stone",
+      "flooded"
+    ],
+    "biomes": [
+      "ruins"
+    ],
+    "choices": [
+      {
+        "label": "Wade for coin molds",
+        "outcome": {
+          "supply": 2
+        },
+        "chance": 0.6,
+        "failureOutcome": {
+          "health": -1
+        }
+      },
+      {
+        "label": "Observe the statues",
+        "outcome": {
+          "hope": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": "ruins-undercroft-door",
+    "text": "A half-open undercroft door leads to dry air.",
+    "requiredTags": [
+      "hollow"
+    ],
+    "biomes": [
+      "ruins"
+    ],
+    "choices": [
+      {
+        "label": "Rest below",
+        "outcome": {
+          "health": 1
+        }
+      },
+      {
+        "label": "Take old linens",
+        "outcome": {
+          "supply": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": "settlement-abandoned",
+    "text": "Empty buildings. Doors swing on hinges. Whoever lived here left in a hurry.",
+    "shadowText": "Empty buildings watch from dark windows. Doors swing on their own, as if someone just passed.",
+    "requiredTags": [
+      "abandoned"
+    ],
+    "biomes": [
+      "settlement"
+    ],
+    "choices": [
+      {
+        "label": "Scavenge thoroughly",
+        "outcome": {
+          "supply": 3
+        },
+        "chance": 0.8,
+        "failureOutcome": {
+          "supply": 1
+        }
+      },
+      {
+        "label": "Quick search",
+        "outcome": {
+          "supply": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": "settlement-cistern-archive",
+    "text": "A narrow archive room is built above a sealed cistern.",
+    "requiredTags": [
+      "stone",
+      "water"
+    ],
+    "biomes": [
+      "settlement"
+    ],
+    "choices": [
+      {
+        "label": "Copy route notes",
+        "outcome": {
+          "hope": 1
+        }
+      },
+      {
+        "label": "Lift the cistern grate",
+        "outcome": {
+          "supply": 2
+        },
+        "chance": 0.6,
+        "failureOutcome": {
+          "health": -1
+        }
+      }
+    ]
+  },
+  {
+    "id": "settlement-healer",
+    "text": "A healer's hut, still occupied. They look you over with tired eyes.",
+    "requiredTags": [
+      "inhabited",
+      "sheltered"
+    ],
+    "biomes": [
+      "settlement"
+    ],
+    "choices": [
+      {
+        "label": "Accept healing",
+        "outcome": {
+          "health": 2,
+          "supply": -1
+        }
+      },
+      {
+        "label": "Decline",
+        "outcome": {}
+      }
+    ]
+  },
+  {
+    "id": "settlement-lantern-cairn",
+    "text": "At the edge of a hamlet, an old cairn shelters a cold pilgrim lantern wrapped in prayer cloth.",
+    "requiredTags": [
+      "inhabited",
+      "sacred"
+    ],
+    "biomes": [
+      "settlement"
+    ],
+    "choices": [
+      {
+        "label": "Relight the lantern",
+        "outcome": {
+          "hope": 1
+        },
+        "discoversRumor": "pilgrim-lantern"
+      },
+      {
+        "label": "Trade for dried rations",
+        "outcome": {
+          "supply": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": "settlement-market-lane",
+    "text": "A narrow market lane still trades by lantern.",
+    "requiredTags": [
+      "inhabited"
+    ],
+    "biomes": [
+      "settlement"
+    ],
+    "choices": [
+      {
+        "label": "Trade stories",
+        "outcome": {
+          "hope": 1
+        }
+      },
+      {
+        "label": "Trade scraps",
+        "outcome": {
+          "supply": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": "settlement-old-workshop",
+    "text": "An old workshop creaks under relic-era beams.",
+    "requiredTags": [
+      "wood",
+      "stone"
+    ],
+    "biomes": [
+      "settlement"
+    ],
+    "choices": [
+      {
+        "label": "Repair your kit",
+        "outcome": {
+          "health": 1
+        }
+      },
+      {
+        "label": "Scavenge parts",
+        "outcome": {
+          "supply": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": "settlement-prayer-corner",
+    "text": "A small prayer corner is kept clean despite the dust.",
+    "requiredTags": [
+      "sacred"
+    ],
+    "biomes": [
+      "settlement"
+    ],
+    "choices": [
+      {
+        "label": "Offer thanks",
+        "outcome": {
+          "hope": 1
+        }
+      },
+      {
+        "label": "Light spare wick",
+        "outcome": {
+          "supply": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": "settlement-river-shrine",
+    "text": "A shrine bridge spans a narrow river through town.",
+    "requiredTags": [
+      "water",
+      "sacred"
+    ],
+    "biomes": [
+      "settlement"
+    ],
+    "choices": [
+      {
+        "label": "Cross with pilgrims",
+        "outcome": {
+          "hope": 1
+        }
+      },
+      {
+        "label": "Collect offerings",
+        "outcome": {
+          "supply": 1,
+          "hope": -1
+        }
+      }
+    ]
+  },
+  {
+    "id": "settlement-roof-roost",
+    "text": "A sheltered rooftop roost overlooks crowded lanes.",
+    "requiredTags": [
+      "sheltered",
+      "inhabited"
+    ],
+    "biomes": [
+      "settlement"
+    ],
+    "choices": [
+      {
+        "label": "Sleep in shifts",
+        "outcome": {
+          "health": 1
+        }
+      },
+      {
+        "label": "Watch traffic for leads",
+        "outcome": {
+          "hope": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": "settlement-shade-yard",
+    "text": "Canvas shades turn a dusty yard into a shelter pocket.",
+    "requiredTags": [
+      "sheltered"
+    ],
+    "biomes": [
+      "settlement"
+    ],
+    "choices": [
+      {
+        "label": "Catch a short sleep",
+        "outcome": {
+          "health": 1
+        }
+      },
+      {
+        "label": "Patch a seam",
+        "outcome": {
+          "hope": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": "settlement-stockpile-shed",
+    "text": "A stockpile shed of old timber leans but stands.",
+    "requiredTags": [
+      "wood"
+    ],
+    "biomes": [
+      "settlement"
+    ],
+    "choices": [
+      {
+        "label": "Reinforce beams",
+        "outcome": {
+          "hope": 1
+        }
+      },
+      {
+        "label": "Take kindling",
+        "outcome": {
+          "supply": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": "settlement-stone-kiln",
+    "text": "An old stone kiln still warms at dusk.",
+    "requiredTags": [
+      "stone"
+    ],
+    "biomes": [
+      "settlement"
+    ],
+    "choices": [
+      {
+        "label": "Warm your hands",
+        "outcome": {
+          "hope": 1
+        }
+      },
+      {
+        "label": "Bake hard bread",
+        "outcome": {
+          "supply": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": "settlement-stone-well",
+    "text": "A communal well is ringed with cracked stone and old prayers.",
+    "requiredTags": [
+      "water",
+      "inhabited"
+    ],
+    "biomes": [
+      "settlement"
+    ],
+    "choices": [
+      {
+        "label": "Share a story",
+        "outcome": {
+          "hope": 1
+        }
+      },
+      {
+        "label": "Buy a skin refill",
+        "outcome": {
+          "supply": 1
         }
       }
     ]
@@ -280,61 +2097,249 @@
     ]
   },
   {
-    "id": "settlement-healer",
-    "text": "A healer's hut, still occupied. They look you over with tired eyes.",
+    "id": "settlement-warded-gate",
+    "text": "Char marks stain the gate where citizens painted sacred wards.",
     "requiredTags": [
       "inhabited",
+      "scarred"
+    ],
+    "biomes": [
+      "settlement"
+    ],
+    "choices": [
+      {
+        "label": "Help repaint wards",
+        "outcome": {
+          "hope": 2
+        }
+      },
+      {
+        "label": "Trade for lamp oil",
+        "outcome": {
+          "supply": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": "settlement-waterline",
+    "text": "A safe waterline runs under marked stones.",
+    "requiredTags": [
+      "water"
+    ],
+    "biomes": [
+      "settlement"
+    ],
+    "choices": [
+      {
+        "label": "Refill quietly",
+        "outcome": {
+          "supply": 1
+        }
+      },
+      {
+        "label": "Help carry pails",
+        "outcome": {
+          "hope": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": "uncommon-cairn-spring",
+    "text": "A cairn circles a warm spring untouched by frost.",
+    "requiredTags": [
+      "water",
+      "stone"
+    ],
+    "choices": [
+      {
+        "label": "Bathe wounds",
+        "outcome": {
+          "health": 1
+        }
+      },
+      {
+        "label": "Fill every flask",
+        "outcome": {
+          "supply": 2
+        }
+      }
+    ]
+  },
+  {
+    "id": "uncommon-copper-ruin",
+    "text": "Ancient copper pipes snake through a scarred ruin floor.",
+    "requiredTags": [
+      "ancient",
+      "stone"
+    ],
+    "choices": [
+      {
+        "label": "Trace the flow",
+        "outcome": {
+          "hope": 1
+        }
+      },
+      {
+        "label": "Cut salvage lengths",
+        "outcome": {
+          "supply": 2
+        },
+        "chance": 0.6,
+        "failureOutcome": {
+          "health": -1
+        }
+      }
+    ]
+  },
+  {
+    "id": "uncommon-drowned-bell",
+    "text": "A bell tower rises from flooded stone and rings when the wind shifts.",
+    "requiredTags": [
+      "flooded",
+      "ancient"
+    ],
+    "choices": [
+      {
+        "label": "Ring it once",
+        "outcome": {
+          "hope": 2
+        }
+      },
+      {
+        "label": "Dive the base",
+        "outcome": {
+          "supply": 2
+        },
+        "chance": 0.6,
+        "failureOutcome": {
+          "health": -1
+        }
+      }
+    ]
+  },
+  {
+    "id": "uncommon-hearth-crypt",
+    "text": "A crypt beneath a hearth still holds dry air and old bundles.",
+    "requiredTags": [
+      "sheltered",
+      "hollow"
+    ],
+    "choices": [
+      {
+        "label": "Rest in silence",
+        "outcome": {
+          "health": 1
+        }
+      },
+      {
+        "label": "Open the bundles",
+        "outcome": {
+          "supply": 1
+        },
+        "chance": 0.75,
+        "failureOutcome": {
+          "hope": -1
+        }
+      }
+    ]
+  },
+  {
+    "id": "uncommon-ivy-basilica",
+    "text": "Vines climb the shell of a basilica where one candle still burns.",
+    "requiredTags": [
+      "overgrown",
+      "sacred"
+    ],
+    "choices": [
+      {
+        "label": "Tend the flame",
+        "outcome": {
+          "hope": 2
+        }
+      },
+      {
+        "label": "Strip copper fittings",
+        "outcome": {
+          "supply": 1,
+          "hope": -1
+        }
+      }
+    ]
+  },
+  {
+    "id": "uncommon-slate-bridge",
+    "text": "A bridge of slate spans a yawning hollow and trembles underfoot.",
+    "requiredTags": [
+      "elevated",
+      "hollow"
+    ],
+    "choices": [
+      {
+        "label": "Cross carefully",
+        "outcome": {
+          "hope": 1
+        }
+      },
+      {
+        "label": "Secure rope lines",
+        "outcome": {
+          "supply": -1,
+          "health": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": "uncommon-warded-well",
+    "text": "A public well is ringed with chalk wards and old warning knots.",
+    "requiredTags": [
+      "water",
+      "inhabited"
+    ],
+    "choices": [
+      {
+        "label": "Honor the ward",
+        "outcome": {
+          "hope": 1
+        }
+      },
+      {
+        "label": "Draw deeply",
+        "outcome": {
+          "supply": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": "uncommon-windbreak-yard",
+    "text": "A yard of leaning timber walls forms a hard-won windbreak.",
+    "requiredTags": [
+      "wood",
       "sheltered"
     ],
-    "biomes": [
-      "settlement"
-    ],
     "choices": [
       {
-        "label": "Accept healing",
+        "label": "Camp here",
         "outcome": {
-          "health": 2,
-          "supply": -1
+          "health": 1
         }
       },
       {
-        "label": "Decline",
-        "outcome": {}
-      }
-    ]
-  },
-  {
-    "id": "settlement-abandoned",
-    "text": "Empty buildings. Doors swing on hinges. Whoever lived here left in a hurry.",
-    "requiredTags": [
-      "abandoned"
-    ],
-    "biomes": [
-      "settlement"
-    ],
-    "choices": [
-      {
-        "label": "Scavenge thoroughly",
+        "label": "Rebuild a panel",
         "outcome": {
-          "supply": 3
-        },
-        "chance": 0.8,
-        "failureOutcome": {
-          "supply": 1
-        }
-      },
-      {
-        "label": "Quick search",
-        "outcome": {
-          "supply": 1
+          "hope": 1
         }
       }
     ]
   },
   {
-    "id": "wastes-mirage",
-    "text": "Heat shimmer or real water? It's hard to tell in this light.",
+    "id": "wastes-ash-sanctuary",
+    "text": "A tiny sanctuary stands against the wind, half-buried but intact.",
     "requiredTags": [
+      "sacred",
       "sand"
     ],
     "biomes": [
@@ -342,18 +2347,40 @@
     ],
     "choices": [
       {
-        "label": "Investigate",
+        "label": "Take shelter",
         "outcome": {
-          "supply": 2
-        },
-        "chance": 0.4,
-        "failureOutcome": {
-          "hope": -1
+          "health": 1
         }
       },
       {
-        "label": "Ignore",
-        "outcome": {}
+        "label": "Read wall prayers",
+        "outcome": {
+          "hope": 2
+        }
+      }
+    ]
+  },
+  {
+    "id": "wastes-black-glass",
+    "text": "Black glass fields crunch under your boots.",
+    "requiredTags": [
+      "scarred"
+    ],
+    "biomes": [
+      "wastes"
+    ],
+    "choices": [
+      {
+        "label": "Cross with care",
+        "outcome": {
+          "hope": 1
+        }
+      },
+      {
+        "label": "Collect shards",
+        "outcome": {
+          "supply": 1
+        }
       }
     ]
   },
@@ -386,6 +2413,182 @@
     ]
   },
   {
+    "id": "wastes-brine-pocket",
+    "text": "A shallow brine pocket sits between cracked flats.",
+    "requiredTags": [
+      "flooded"
+    ],
+    "biomes": [
+      "wastes"
+    ],
+    "choices": [
+      {
+        "label": "Distill a little",
+        "outcome": {
+          "supply": 1
+        }
+      },
+      {
+        "label": "Mark it on your map",
+        "outcome": {
+          "hope": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": "wastes-burn-scar",
+    "text": "The ground is scarred glass where heat once pooled.",
+    "requiredTags": [
+      "scarred",
+      "sand"
+    ],
+    "biomes": [
+      "wastes"
+    ],
+    "choices": [
+      {
+        "label": "Cross quickly",
+        "outcome": {
+          "hope": 1
+        }
+      },
+      {
+        "label": "Chip vitrified shards",
+        "outcome": {
+          "supply": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": "wastes-cold-pocket",
+    "text": "A cold pocket survives where the wind pools in a pit.",
+    "requiredTags": [
+      "ice"
+    ],
+    "biomes": [
+      "wastes"
+    ],
+    "choices": [
+      {
+        "label": "Rest in the cold",
+        "outcome": {
+          "health": 1
+        }
+      },
+      {
+        "label": "Pack ice chips",
+        "outcome": {
+          "supply": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": "wastes-collapsed-bunker",
+    "text": "An abandoned bunker mouth sags beneath blown sand.",
+    "requiredTags": [
+      "abandoned",
+      "hollow"
+    ],
+    "biomes": [
+      "wastes"
+    ],
+    "choices": [
+      {
+        "label": "Crawl inside",
+        "outcome": {
+          "supply": 2
+        },
+        "chance": 0.6,
+        "failureOutcome": {
+          "health": -1
+        }
+      },
+      {
+        "label": "Mark and bypass",
+        "outcome": {
+          "hope": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": "wastes-dry-dune",
+    "text": "A long dune of dry sand hums in the wind.",
+    "requiredTags": [
+      "sand"
+    ],
+    "biomes": [
+      "wastes"
+    ],
+    "choices": [
+      {
+        "label": "Traverse the ridge",
+        "outcome": {
+          "hope": 1
+        }
+      },
+      {
+        "label": "Dig wind pockets",
+        "outcome": {
+          "supply": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": "wastes-empty-outpost",
+    "text": "An empty outpost still has standing walls.",
+    "requiredTags": [
+      "abandoned"
+    ],
+    "biomes": [
+      "wastes"
+    ],
+    "choices": [
+      {
+        "label": "Sweep for signs",
+        "outcome": {
+          "hope": 1
+        }
+      },
+      {
+        "label": "Collect nails",
+        "outcome": {
+          "supply": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": "wastes-flood-markers",
+    "text": "Half-buried marker posts emerge from silt and brine. One bears map-glyphs for a lost archive.",
+    "requiredTags": [
+      "flooded",
+      "abandoned"
+    ],
+    "biomes": [
+      "wastes"
+    ],
+    "choices": [
+      {
+        "label": "Copy the glyphs",
+        "outcome": {
+          "hope": 1
+        },
+        "discoversRumor": "drowned-archives"
+      },
+      {
+        "label": "Harvest driftwood",
+        "outcome": {
+          "supply": 1
+        }
+      }
+    ]
+  },
+  {
     "id": "wastes-frost",
     "text": "A pocket of impossible cold. Frost coats everything in a thin shell.",
     "requiredTags": [
@@ -411,6 +2614,353 @@
     ]
   },
   {
+    "id": "wastes-ice-pocket",
+    "text": "A pocket of old ice survives in a hollow of black sand.",
+    "requiredTags": [
+      "ice",
+      "hollow"
+    ],
+    "biomes": [
+      "wastes"
+    ],
+    "choices": [
+      {
+        "label": "Cut ice blocks",
+        "outcome": {
+          "supply": 1
+        }
+      },
+      {
+        "label": "Rest in the cool",
+        "outcome": {
+          "health": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": "wastes-mirage",
+    "text": "Heat shimmer or real water? It's hard to tell in this light.",
+    "requiredTags": [
+      "sand"
+    ],
+    "biomes": [
+      "wastes"
+    ],
+    "choices": [
+      {
+        "label": "Investigate",
+        "outcome": {
+          "supply": 2
+        },
+        "chance": 0.4,
+        "failureOutcome": {
+          "hope": -1
+        }
+      },
+      {
+        "label": "Ignore",
+        "outcome": {}
+      }
+    ]
+  },
+  {
+    "id": "wastes-salt-channel",
+    "text": "A flooded salt channel glimmers under drifting ash.",
+    "requiredTags": [
+      "flooded",
+      "sand"
+    ],
+    "biomes": [
+      "wastes"
+    ],
+    "choices": [
+      {
+        "label": "Distill brine slowly",
+        "outcome": {
+          "supply": 1
+        }
+      },
+      {
+        "label": "Search the banks",
+        "outcome": {
+          "supply": 2
+        },
+        "chance": 0.55,
+        "failureOutcome": {
+          "health": -1
+        }
+      }
+    ]
+  },
+  {
+    "id": "wastes-submerged-road",
+    "text": "A stone road vanishes under flood silt then rises again.",
+    "requiredTags": [
+      "flooded",
+      "stone"
+    ],
+    "biomes": [
+      "wastes"
+    ],
+    "choices": [
+      {
+        "label": "Follow the stones",
+        "outcome": {
+          "hope": 1
+        }
+      },
+      {
+        "label": "Pry loose road plates",
+        "outcome": {
+          "supply": 2
+        },
+        "chance": 0.5,
+        "failureOutcome": {
+          "health": -1
+        }
+      }
+    ]
+  },
+  {
+    "id": "ww-step-0",
+    "text": "You find the first Whispering Well marker: wet stones carved with names of the missing.",
+    "requiredTags": [
+      "water",
+      "ancient"
+    ],
+    "biomes": [
+      "forest"
+    ],
+    "choices": [
+      {
+        "label": "Listen at the rim",
+        "outcome": {
+          "hope": 1
+        }
+      },
+      {
+        "label": "Map the carvings",
+        "outcome": {
+          "supply": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": "ww-step-1",
+    "text": "Beneath ruined arches, water echoes through buried conduits toward the old well mouth.",
+    "requiredTags": [
+      "stone",
+      "water"
+    ],
+    "biomes": [
+      "ruins"
+    ],
+    "choices": [
+      {
+        "label": "Follow the echo",
+        "outcome": {
+          "hope": 1
+        }
+      },
+      {
+        "label": "Clear the intake grate",
+        "outcome": {
+          "supply": 1
+        },
+        "chance": 0.7,
+        "failureOutcome": {
+          "health": -1
+        }
+      }
+    ]
+  },
+  {
+    "id": "ww-step-2",
+    "text": "In a sacred hollow chamber, the Whispering Well answers your oath with a steady pulse of heat.",
+    "requiredTags": [
+      "hollow",
+      "sacred"
+    ],
+    "choices": [
+      {
+        "label": "Swear to carry the voice",
+        "outcome": {
+          "hope": 2
+        }
+      },
+      {
+        "label": "Draw one sealed flask",
+        "outcome": {
+          "supply": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": "forest-fallen-timbers",
+    "text": "A stand of ancient pines lies windthrown across the path, their trunks still sound.",
+    "requiredTags": [
+      "wood",
+      "overgrown"
+    ],
+    "biomes": [
+      "forest"
+    ],
+    "choices": [
+      {
+        "label": "Strip fallen bark for tinder and cordage",
+        "outcome": {
+          "supply": 2
+        }
+      },
+      {
+        "label": "Rest under the root-mass",
+        "outcome": {
+          "health": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": "settlement-charred-mill",
+    "text": "A watermill's wheel still turns despite charred beams above the axle.",
+    "requiredTags": [
+      "wood",
+      "water"
+    ],
+    "biomes": [
+      "settlement"
+    ],
+    "choices": [
+      {
+        "label": "Work the mill for salvageable grain",
+        "outcome": {
+          "supply": 3
+        },
+        "chance": 0.5,
+        "failureOutcome": {
+          "hope": -1
+        }
+      },
+      {
+        "label": "Fill from the millrace",
+        "outcome": {
+          "supply": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": "ruins-timber-vault",
+    "text": "Behind collapsed masonry, a wooden vault door holds. Whatever it sealed has survived.",
+    "requiredTags": [
+      "wood",
+      "abandoned",
+      "stone"
+    ],
+    "biomes": [
+      "ruins"
+    ],
+    "choices": [
+      {
+        "label": "Force the door",
+        "outcome": {
+          "supply": 3
+        },
+        "chance": 0.6,
+        "failureOutcome": {
+          "health": -1
+        }
+      },
+      {
+        "label": "Note the landmark",
+        "outcome": {
+          "hope": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": "wastes-sand-altar",
+    "text": "Sand has half-buried a low altar ring. The wind keeps the offering bowl clean.",
+    "requiredTags": [
+      "sand",
+      "ancient"
+    ],
+    "biomes": [
+      "wastes"
+    ],
+    "choices": [
+      {
+        "label": "Leave something \u2014 any scrap will do",
+        "outcome": {
+          "hope": 2
+        }
+      },
+      {
+        "label": "Sift the sand around it",
+        "outcome": {
+          "supply": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": "wastes-dune-overhang",
+    "text": "A dune has frozen mid-collapse into a rough overhang. The shade beneath is real.",
+    "requiredTags": [
+      "sand",
+      "elevated"
+    ],
+    "biomes": [
+      "wastes"
+    ],
+    "choices": [
+      {
+        "label": "Rest through the worst heat",
+        "outcome": {
+          "health": 1,
+          "hope": 1
+        }
+      },
+      {
+        "label": "Press on before it shifts",
+        "outcome": {}
+      }
+    ]
+  },
+  {
+    "id": "wastes-sand-hollow",
+    "text": "Wind-scooped hollow in the dune face, big enough to shelter in. The walls are quiet.",
+    "requiredTags": [
+      "sand",
+      "hollow"
+    ],
+    "biomes": [
+      "wastes"
+    ],
+    "choices": [
+      {
+        "label": "Shelter and sleep",
+        "outcome": {
+          "health": 1
+        }
+      },
+      {
+        "label": "Dig deeper \u2014 something feels buried here",
+        "outcome": {
+          "supply": 2
+        },
+        "chance": 0.4,
+        "failureOutcome": {
+          "hope": -1
+        }
+      }
+    ]
+  },
+  {
     "id": "any-traveler",
     "text": "Another Cinder-Seeker, heading the same direction. They nod in recognition.",
     "requiredTags": [
@@ -429,26 +2979,6 @@
         "outcome": {
           "hope": 1
         }
-      }
-    ]
-  },
-  {
-    "id": "any-old-road",
-    "text": "Paving stones from a road that once connected cities. Parts of it still hold.",
-    "requiredTags": [
-      "ancient",
-      "stone"
-    ],
-    "choices": [
-      {
-        "label": "Follow it",
-        "outcome": {
-          "supply": 1
-        }
-      },
-      {
-        "label": "Leave the path",
-        "outcome": {}
       }
     ]
   },

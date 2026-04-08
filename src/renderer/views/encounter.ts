@@ -1,5 +1,6 @@
 import { type GameState, type ResourceDelta } from "../../engine/state";
 import { COLORS } from "../glyphs";
+import { drawHintOverlay, type ActiveHint } from "../hint-overlay";
 import { drawLegend } from "../legend";
 
 function formatDelta(delta: ResourceDelta): string {
@@ -14,7 +15,7 @@ export function renderEncounter(
   state: GameState,
   width: number,
   height: number,
-  activeHint: { id: string; text: string } | null,
+  activeHint: ActiveHint | null,
 ): void {
   if (state.mode.type !== "encounter") {
     return;
@@ -54,21 +55,10 @@ export function renderEncounter(
     y += 54;
   });
 
-  drawLegend(ctx, width, height, "encounter");
+  drawLegend(ctx, width, "encounter");
 
   if (activeHint) {
-    ctx.font = "13px monospace";
-    const hintWidth = ctx.measureText(activeHint.text).width + 40;
-    const hintX = (width - hintWidth) / 2;
-    const hintY = height - 50;
-    ctx.fillStyle = "rgba(40, 40, 20, 0.9)";
-    ctx.fillRect(hintX, hintY, hintWidth, 30);
-    ctx.strokeStyle = "#da4";
-    ctx.strokeRect(hintX, hintY, hintWidth, 30);
-    ctx.fillStyle = "#da4";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText(activeHint.text, width / 2, hintY + 16);
+    drawHintOverlay(ctx, activeHint, width, height);
   }
 
   ctx.restore();

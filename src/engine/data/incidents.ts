@@ -46,7 +46,7 @@ const INCIDENTS: NightIncident[] = [
   },
 ] as const;
 
-const QUIET_NIGHT_CHANCE = 0.6;
+const QUIET_NIGHT_CHANCE = 0.7;
 
 export interface IncidentResult {
   readonly id: string;
