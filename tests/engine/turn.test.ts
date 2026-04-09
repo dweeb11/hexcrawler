@@ -445,6 +445,25 @@ describe("resolveTurn searing and loss flow", () => {
     expect(next.status).toBe("lost");
     expect(next.mode.type).toBe("gameover");
   });
+
+  it("triggers game over immediately when the player is already on a consumed hex", () => {
+    const { state, rng } = makeState();
+    const next = resolveTurn(
+      {
+        ...state,
+        player: { ...state.player, hex: { q: 0, r: 0, s: 0 } },
+        searing: { ...state.searing, axis: "q", direction: 1, line: 0 },
+      },
+      { type: "pause", activity: "rest" },
+      rng,
+    );
+
+    expect(next.status).toBe("lost");
+    expect(next.mode.type).toBe("gameover");
+    if (next.mode.type === "gameover") {
+      expect(next.mode.reason).toContain("Searing catches you");
+    }
+  });
 });
 
 describe("frost proximity signals", () => {

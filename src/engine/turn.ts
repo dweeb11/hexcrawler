@@ -440,15 +440,20 @@ export function resolveTurn(state: GameState, action: Action, rng: RNG): GameSta
     return state;
   }
 
+  const checkedState = applyLossChecks(state);
+  if (checkedState.status !== "playing") {
+    return checkedState;
+  }
+
   if (action.type === "choose") {
-    return handleChoose(state, action, rng);
+    return handleChoose(checkedState, action, rng);
   }
 
   if (action.type === "dismiss") {
-    return handleDismiss(state);
+    return handleDismiss(checkedState);
   }
 
-  const advancedState = { ...state, turn: state.turn + 1 };
+  const advancedState = { ...checkedState, turn: checkedState.turn + 1 };
 
   if (action.type === "push") {
     return handlePush(advancedState, action, rng);
