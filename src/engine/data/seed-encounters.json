@@ -157,9 +157,9 @@
         }
       },
       {
-        "label": "Search nearby lockers",
+        "label": "Decode the tide marks",
         "outcome": {
-          "supply": 1
+          "hope": 1
         }
       }
     ]
@@ -551,7 +551,8 @@
         "label": "Go around",
         "outcome": {}
       }
-    ]
+    ],
+    "shadowText": "The brush is impossibly dense. Something rustles deeper in, then goes completely still. It is waiting."
   },
   {
     "id": "forest-whisper-trail",
@@ -918,7 +919,8 @@
           "health": 1
         }
       }
-    ]
+    ],
+    "shadowText": "From this height the Searing looks like a sunrise. It looks like something you once loved."
   },
   {
     "id": "mountain-watch-crag",
@@ -1551,7 +1553,8 @@
           "supply": 1
         }
       }
-    ]
+    ],
+    "shadowText": "A cracked hall echoes every footstep twice. One of the echoes arrives a moment before you step."
   },
   {
     "id": "ruins-fallen-wing",
@@ -1608,7 +1611,8 @@
           "supply": 1
         }
       }
-    ]
+    ],
+    "shadowText": "Most are ash. One is open to a page about this exact road. Someone read it here, not long ago."
   },
   {
     "id": "ruins-monument",
@@ -1763,9 +1767,9 @@
         }
       },
       {
-        "label": "Quick search",
+        "label": "Read what they left behind",
         "outcome": {
-          "supply": 1
+          "hope": 1
         }
       }
     ]
@@ -2410,7 +2414,8 @@
           "health": -1
         }
       }
-    ]
+    ],
+    "shadowText": "The bones form an arrow. It points toward where you came from."
   },
   {
     "id": "wastes-brine-pocket",
@@ -2662,7 +2667,8 @@
         "label": "Ignore",
         "outcome": {}
       }
-    ]
+    ],
+    "shadowText": "Heat shimmer. There is no water. There is a figure standing in the shimmer that is not made of heat."
   },
   {
     "id": "wastes-salt-channel",
@@ -2678,17 +2684,13 @@
       {
         "label": "Distill brine slowly",
         "outcome": {
-          "supply": 1
+          "supply": 2
         }
       },
       {
-        "label": "Search the banks",
+        "label": "Walk the bank in silence",
         "outcome": {
-          "supply": 2
-        },
-        "chance": 0.55,
-        "failureOutcome": {
-          "health": -1
+          "hope": 1
         }
       }
     ]
@@ -2845,9 +2847,9 @@
         }
       },
       {
-        "label": "Fill from the millrace",
+        "label": "Watch the wheel turn",
         "outcome": {
-          "supply": 1
+          "hope": 1
         }
       }
     ]
@@ -2997,7 +2999,8 @@
           "hope": 1
         }
       }
-    ]
+    ],
+    "shadowText": "Ash drifts like snow. For a moment, the world is quiet. Then you realize you cannot hear your own footsteps."
   },
   {
     "id": "any-cairn",
@@ -3018,7 +3021,8 @@
         "chance": 0.5,
         "failureOutcome": {}
       }
-    ]
+    ],
+    "shadowText": "A small cairn marks the path of someone who came before. It was built for you. You do not know how you know this."
   },
   {
     "id": "forest-woodland-cache",
@@ -3071,7 +3075,7 @@
   },
   {
     "id": "forest-briar-run",
-    "text": "Briars choke the old trail, but game paths thread through.",
+    "text": "Old thorn-hedges have reclaimed a formal garden wall. Someone carved marks into the stonework that the briars nearly hide.",
     "requiredTags": [
       "overgrown"
     ],
@@ -3080,19 +3084,15 @@
     ],
     "choices": [
       {
-        "label": "Cut through",
+        "label": "Force a gap and search inside",
         "outcome": {
           "supply": 1
-        },
-        "chance": 0.7,
-        "failureOutcome": {
-          "health": -1
         }
       },
       {
-        "label": "Follow animal tracks",
+        "label": "Study the carved marks",
         "outcome": {
-          "hope": 1
+          "hope": 2
         }
       }
     ]
@@ -3171,7 +3171,7 @@
   },
   {
     "id": "mountain-rime-pocket",
-    "text": "Rime coats a shaded cleft where meltwater freezes nightly.",
+    "text": "Water seeps from cracks in the rock face and freezes in silent layers, building walls of translucent ice year by year.",
     "requiredTags": [
       "ice"
     ],
@@ -3180,13 +3180,13 @@
     ],
     "choices": [
       {
-        "label": "Chip ice for later",
+        "label": "Chip off clean layers",
         "outcome": {
           "supply": 1
         }
       },
       {
-        "label": "Warm your hands and move on",
+        "label": "Trace the frozen strata",
         "outcome": {
           "hope": 1
         }
@@ -3344,7 +3344,8 @@
           "hope": 1
         }
       }
-    ]
+    ],
+    "shadowText": "Hundreds of votive niches, all dark. One candle is warm. You did not light it."
   },
   {
     "id": "ruins-hollow-crypt",
@@ -3372,7 +3373,8 @@
           "hope": 1
         }
       }
-    ]
+    ],
+    "shadowText": "The crypt smells of old smoke, not rot. Someone has been here recently enough that the ash is still warm."
   },
   {
     "id": "ruins-battle-scars",
@@ -3575,7 +3577,7 @@
   },
   {
     "id": "wastes-glass-ridge",
-    "text": "Black glass ridges cut the horizon where fire once passed.",
+    "text": "From the top of the glass ridge, you can see exactly how far the Searing has come. The horizon it owns is wider than you expected.",
     "requiredTags": [
       "scarred"
     ],
@@ -3584,18 +3586,16 @@
     ],
     "choices": [
       {
-        "label": "Harvest shards carefully",
+        "label": "Plot the edge on your map",
         "outcome": {
-          "supply": 2
-        },
-        "chance": 0.6,
-        "failureOutcome": {
-          "health": -1
+          "hope": 2
         }
       },
       {
-        "label": "Keep to the ash flats",
-        "outcome": {}
+        "label": "Harvest shards on the way down",
+        "outcome": {
+          "supply": 1
+        }
       }
     ]
   },
@@ -3625,7 +3625,7 @@
   },
   {
     "id": "wastes-cold-sink",
-    "text": "A pocket of still air carries a bitter, unnatural cold.",
+    "text": "Still air pools in a depression that should not be this cold. The ash here is undisturbed \u2014 something keeps it that way.",
     "requiredTags": [
       "ice"
     ],
@@ -3634,9 +3634,9 @@
     ],
     "choices": [
       {
-        "label": "Cool your burns",
+        "label": "Stand motionless and listen",
         "outcome": {
-          "health": 1
+          "hope": 1
         }
       },
       {
@@ -3671,6 +3671,72 @@
         "label": "Mark it for later",
         "outcome": {
           "hope": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": "forest-relic-timber",
+    "text": "A massive felled trunk, older than any settlement nearby, bears a chain of runes carved collar to collar along its length.",
+    "requiredTags": [
+      "wood",
+      "ancient"
+    ],
+    "choices": [
+      {
+        "label": "Trace the full rune-chain",
+        "outcome": {
+          "hope": 2
+        }
+      },
+      {
+        "label": "Cut wedges from the sound heartwood",
+        "outcome": {
+          "supply": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": "wastes-burial-post",
+    "text": "A lone burial post leans in open sand, wound in sun-bleached prayer strips that still hold their knots.",
+    "requiredTags": [
+      "sand",
+      "sacred"
+    ],
+    "choices": [
+      {
+        "label": "Tie a new strip and speak a name",
+        "outcome": {
+          "hope": 2
+        }
+      },
+      {
+        "label": "Dig below the post",
+        "outcome": {
+          "supply": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": "wastes-drowned-road",
+    "text": "An ancient pilgrim road vanishes under dark water, its carved waymarkers still visible just below the surface.",
+    "requiredTags": [
+      "flooded",
+      "ancient"
+    ],
+    "choices": [
+      {
+        "label": "Wade the old road",
+        "outcome": {
+          "hope": 1
+        }
+      },
+      {
+        "label": "Drag a waymarker free",
+        "outcome": {
+          "supply": 2
         }
       }
     ]

@@ -109,7 +109,7 @@ export const ALL_RUMORS: Rumor[] = [
       {
         stepIndex: 2,
         encounterId: "da-step-2",
-        hint: "The final hall is flooded, ancient, and built of stone.",
+        hint: "The deepest records lie in a hall the flood never fully surrendered.",
         hintTags: ["flooded", "ancient", "stone"],
       },
     ],
