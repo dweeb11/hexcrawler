@@ -256,14 +256,21 @@ async function main(): Promise<void> {
   };
 
   document.addEventListener("keydown", (event) => {
+    const normalizedKey = event.key.toLowerCase();
+
     if (state.mode.type === "gameover" && event.key === "Enter") {
       restart();
       return;
     }
 
-    if (event.key.toLowerCase() === "j" && state.mode.type === "map") {
+    if (normalizedKey === "j" && state.status === "playing") {
+      event.preventDefault();
       toggleJournal(journalPanel, logPanel);
       updateJournal(journalContent, state);
+      return;
+    }
+
+    if (!journalPanel.classList.contains("hidden")) {
       return;
     }
 
