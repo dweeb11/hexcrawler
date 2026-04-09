@@ -256,6 +256,10 @@ async function main(): Promise<void> {
   };
 
   document.addEventListener("keydown", (event) => {
+    if (event.repeat) {
+      return;
+    }
+
     const normalizedKey = event.key.toLowerCase();
 
     if (state.mode.type === "gameover" && event.key === "Enter") {
