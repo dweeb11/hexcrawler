@@ -55,10 +55,7 @@
       "Bash(git cherry-pick:*)",
       "Bash(PATH=\"$PATH:/Applications/Obsidian.app/Contents/MacOS\" obsidian daily:read:*)",
       "WebSearch",
-      "Bash(git merge:*)",
-      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\(len\\(d\\), 'encounters on HEAD'\\)\")",
-      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\(len\\(d\\), 'encounters on main'\\)\")",
-      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\(len\\(d\\), 'encounters at merge base'\\); ids=set\\(e['id'] for e in d\\); print\\('base IDs:', sorted\\(ids\\)[:10], '...'\\)\")"
+      "Bash(git merge:*)"
     ]
   }
 }
