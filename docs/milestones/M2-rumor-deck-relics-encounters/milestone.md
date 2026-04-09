@@ -21,10 +21,12 @@
 - [x] Task 7: Encounter Content — Common (1-tag) Encounters
 - [x] Task 8: Encounter Content — Uncommon (2-tag) and Rare (3-tag) Encounters
 - [x] Task 9: Rumor Chain Content and Data
-- [ ] Task 10: Final M2 Integration and Verification
+- [x] Task 10: Final M2 Integration and Verification
 
 ## Notes
 Design details in [m2-rumor-deck-relics-encounters.md](../../design/m2-rumor-deck-relics-encounters.md).
 
-Automated verification for Task 10 is complete: `npm test -- --run` and `npm run typecheck` pass.
-Manual playtest checklist is still pending before Task 10 can be marked complete.
+Task 10 verification complete (2026-04-09):
+- `npm test` passes: 18 test files, 124 tests, all green
+- `npm run typecheck` passes: no type errors
+- Manual playtest validated through M4 friends-and-family playtests (commits c617598, PR #48); all M2 features exercised and bug fixes applied (PR #51 journal key, PR #53 edge-case hardening pending)
