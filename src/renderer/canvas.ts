@@ -42,7 +42,8 @@ export function drawHexagon(
   ctx.beginPath();
 
   for (let i = 0; i < 6; i += 1) {
-    const angleDeg = 60 * i - 90; // Start at 30 degrees offset for side matching
+    // Flat-top hex: first vertex at -60° (circumradius = size; matches hexToPixel layout).
+    const angleDeg = 60 * i - 60;
     const angleRad = Math.PI / 180 * angleDeg;
     const x = cx + size * Math.cos(angleRad);
     const y = cy + size * Math.sin(angleRad);
