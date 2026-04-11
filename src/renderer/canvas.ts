@@ -41,11 +41,13 @@ export function drawHexagon(
 ): void {
   ctx.beginPath();
 
-  for (let index = 0; index < 6; index += 1) {
-    const angle = (Math.PI / 180) * (60 * index + 30);
-    const x = cx + size * Math.cos(angle);
-    const y = cy + size * Math.sin(angle);
-    if (index === 0) {
+  for (let i = 0; i < 6; i += 1) {
+    const angleDeg = 60 * i - 90; // Start at 30 degrees offset for side matching
+    const angleRad = Math.PI / 180 * angleDeg;
+    const x = cx + size * Math.cos(angleRad);
+    const y = cy + size * Math.sin(angleRad);
+
+    if (i === 0) {
       ctx.moveTo(x, y);
     } else {
       ctx.lineTo(x, y);
