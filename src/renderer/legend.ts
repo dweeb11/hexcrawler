@@ -26,9 +26,9 @@ function drawMapLegend(
 ): void {
   const lines = [
     { label: "MOVEMENT", style: "header" as const },
-    { label: "  Q   W", style: "normal" as const },
-    { label: "A   @   E", style: "normal" as const },
-    { label: "  S   D", style: "normal" as const },
+    { label: "  Q W E ", style: "normal" as const },
+    { label: "    @   ", style: "normal" as const },
+    { label: "  A S D ", style: "normal" as const },
     { label: "", style: "spacer" as const },
     { label: "ACTIONS", style: "header" as const },
     { label: "R  Rest (+Health)", style: "normal" as const },
