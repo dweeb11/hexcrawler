@@ -1,13 +1,14 @@
 import { coordKey, HEX_DIRECTIONS, type CubeCoord, type HexDirection } from "../engine/hex";
 import type { Action, GameMode } from "../engine/state";
 
+// Matches flat-top hexToPixel: W/S pure N/S; Q/E/A/D diagonals (see legend in renderer/legend.ts).
 const KEY_TO_DIRECTION: Record<string, HexDirection> = {
-  e: 0,
-  w: 1,
-  q: 2,
-  a: 3,
-  s: 4,
-  d: 5,
+  q: 3,
+  w: 2,
+  e: 1,
+  a: 4,
+  s: 5,
+  d: 0,
 };
 
 export function keyToAction(key: string, mode: GameMode): Action | null {
