@@ -2,6 +2,11 @@ import { cubeCoord, type CubeCoord } from "../engine/hex";
 
 export const HEX_SIZE = 34;
 
+/**
+ * Flat-top axial layout (same cube (q,r,s) as engine/hex.ts).
+ * Not pointy-top: pointy would use x ∝ (q + r/2) and y ∝ r only.
+ * Must stay inverse-consistent with pixelToHex and aligned with drawHexagon (-60° loop).
+ */
 export function hexToPixel(coord: CubeCoord): { x: number; y: number } {
   return {
     x: HEX_SIZE * 1.5 * coord.q,
@@ -9,6 +14,7 @@ export function hexToPixel(coord: CubeCoord): { x: number; y: number } {
   };
 }
 
+/** Inverse of hexToPixel (flat-top); used for click picking. */
 export function pixelToHex(px: number, py: number): CubeCoord {
   const q = (2 / 3 * px) / HEX_SIZE;
   const r = (-1 / 3 * px + Math.sqrt(3) / 3 * py) / HEX_SIZE;
