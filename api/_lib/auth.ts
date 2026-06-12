@@ -82,17 +82,43 @@ export function verifySessionToken(token: string): boolean {
   }
 }
 
+function safeDecodeCookieValue(value: string): string | null {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return null;
+  }
+}
+
 export function parseCookies(header: string | undefined): Record<string, string> {
   if (!header) {
     return {};
   }
 
-  return Object.fromEntries(
-    header.split(";").map((part) => {
-      const [key, ...rest] = part.trim().split("=");
-      return [key, decodeURIComponent(rest.join("="))];
-    }),
-  );
+  const cookies: Record<string, string> = {};
+  for (const part of header.split(";")) {
+    const trimmed = part.trim();
+    if (!trimmed) {
+      continue;
+    }
+
+    const separatorIndex = trimmed.indexOf("=");
+    if (separatorIndex === -1) {
+      continue;
+    }
+
+    const key = trimmed.slice(0, separatorIndex).trim();
+    if (!key) {
+      continue;
+    }
+
+    const decoded = safeDecodeCookieValue(trimmed.slice(separatorIndex + 1));
+    if (decoded !== null) {
+      cookies[key] = decoded;
+    }
+  }
+
+  return cookies;
 }
 
 function cookieSecureFlag(): boolean {

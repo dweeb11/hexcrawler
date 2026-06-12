@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   SESSION_COOKIE_NAME,
   createSessionToken,
+  parseCookies,
   requireAuth,
   verifyPassphrase,
 } from "../../api/_lib/auth";
@@ -128,5 +129,23 @@ describe("admin auth", () => {
 
     expect(res.statusCode).toBe(200);
     expect(res.getHeader("Set-Cookie")).toContain("Max-Age=0");
+  });
+
+  it("ignores malformed cookie values instead of throwing", () => {
+    expect(parseCookies(`${SESSION_COOKIE_NAME}=%`)).toEqual({});
+    expect(parseCookies("valid=ok; broken=%")).toEqual({ valid: "ok" });
+  });
+
+  it("rejects auth when the session cookie value is malformed", () => {
+    const res = createResponse();
+    const allowed = requireAuth(
+      {
+        headers: { cookie: `${SESSION_COOKIE_NAME}=%` },
+      } as never,
+      res as never,
+    );
+
+    expect(allowed).toBe(false);
+    expect(res.statusCode).toBe(401);
   });
 });

@@ -187,14 +187,36 @@ export function renderEncountersPanel(mount: HTMLElement, context: EncountersPan
 
   importButton.addEventListener("click", async () => {
     status.textContent = "Importing seed encounters…";
-    const seed = (await import("../../engine/data/seed-encounters.json")).default as Encounter[];
-    for (const encounter of seed) {
-      await requestJson("/api/encounters", {
-        method: "POST",
-        body: JSON.stringify(encounter),
-      }).catch(() => null);
+    try {
+      const seed = (await import("../../engine/data/seed-encounters.json")).default as Encounter[];
+      let imported = 0;
+      const failures: string[] = [];
+
+      for (const encounter of seed) {
+        try {
+          await requestJson("/api/encounters", {
+            method: "POST",
+            body: JSON.stringify(encounter),
+          });
+          imported += 1;
+        } catch (error) {
+          failures.push(`${encounter.id}: ${String(error)}`);
+        }
+      }
+
+      await onReload();
+
+      if (failures.length === 0) {
+        status.textContent = `Imported ${imported} encounters.`;
+        return;
+      }
+
+      const preview = failures.slice(0, 5).join("\n");
+      const overflow = failures.length > 5 ? `\n… and ${failures.length - 5} more` : "";
+      status.textContent = `Imported ${imported}/${seed.length}. Failures:\n${preview}${overflow}`;
+    } catch (error) {
+      status.textContent = String(error);
     }
-    await onReload();
   });
 
   form.addEventListener("submit", async (event) => {
