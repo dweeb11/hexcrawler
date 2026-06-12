@@ -6,7 +6,7 @@ import {
   requirePassphraseConfigured,
   setSessionCookie,
   verifyPassphrase,
-} from "../_lib/auth";
+} from "../_lib/auth.js";
 
 async function handleLogin(req: VercelRequest, res: VercelResponse): Promise<void> {
   if (req.method !== "POST") {

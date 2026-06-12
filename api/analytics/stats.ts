@@ -1,7 +1,7 @@
 import type { Row } from "@libsql/client/web";
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { ensureTable } from "./index";
-import { getDb, requireAuth } from "../encounters/index";
+import { ensureTable } from "./index.js";
+import { getDb, requireAuth } from "../encounters/index.js";
 
 interface StatsResponse {
   totalGames: number;

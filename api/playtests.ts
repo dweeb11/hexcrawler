@@ -1,6 +1,6 @@
 import type { InStatement } from "@libsql/client/web";
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { getDb } from "./encounters/index";
+import { getDb } from "./encounters/index.js";
 
 async function ensurePlaytestsTable(): Promise<void> {
   const db = getDb();

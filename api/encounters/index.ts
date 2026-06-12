@@ -1,8 +1,8 @@
 import { createClient, type Client, type Row, type InStatement } from "@libsql/client/web";
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { requireAuth } from "../_lib/auth";
+import { requireAuth } from "../_lib/auth.js";
 
-export { requireAuth } from "../_lib/auth";
+export { requireAuth } from "../_lib/auth.js";
 
 let client: Client | null = null;
 

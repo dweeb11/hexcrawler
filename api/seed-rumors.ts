@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { getDb, ensureTable, type ApiRumorStep } from "./_lib/rumors";
-import { requireAuth } from "./_lib/auth";
+import { getDb, ensureTable, type ApiRumorStep } from "./_lib/rumors.js";
+import { requireAuth } from "./_lib/auth.js";
 import rumorsSeed from "../src/engine/data/rumors-seed.json";
 
 interface SeedRumor {
