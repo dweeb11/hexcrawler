@@ -1,0 +1,128 @@
+[
+  {
+    "id": "whispering-well",
+    "title": "The Whispering Well",
+    "premise": "",
+    "steps": [
+      {
+        "stepIndex": 0,
+        "stepTitle": "",
+        "encounterId": "ww-step-0",
+        "journalHint": "The first marker lies where old forest stones keep clean water.",
+        "hintTags": ["water", "ancient"],
+        "hintBiomes": ["forest"]
+      },
+      {
+        "stepIndex": 1,
+        "stepTitle": "",
+        "encounterId": "ww-step-1",
+        "journalHint": "Seek ruined masonry where underground channels still run.",
+        "hintTags": ["stone", "water"],
+        "hintBiomes": ["ruins"]
+      },
+      {
+        "stepIndex": 2,
+        "stepTitle": "",
+        "encounterId": "ww-step-2",
+        "journalHint": "The well waits in a sacred hollow that heat forgot.",
+        "hintTags": ["hollow", "sacred"]
+      }
+    ],
+    "rewardId": "well-sigil",
+    "hopeBonus": 3
+  },
+  {
+    "id": "ashen-observatory",
+    "title": "Ashen Observatory",
+    "premise": "",
+    "steps": [
+      {
+        "stepIndex": 0,
+        "stepTitle": "",
+        "encounterId": "ao-step-0",
+        "journalHint": "A scorched marker points to high ground in the mountains.",
+        "hintTags": ["scarred", "elevated"],
+        "hintBiomes": ["mountain"]
+      },
+      {
+        "stepIndex": 1,
+        "stepTitle": "",
+        "encounterId": "ao-step-1",
+        "journalHint": "Find the old stone dome where the first maps were cut.",
+        "hintTags": ["ancient", "stone"],
+        "hintBiomes": ["ruins", "mountain"]
+      },
+      {
+        "stepIndex": 2,
+        "stepTitle": "",
+        "encounterId": "ao-step-2",
+        "journalHint": "The final mirror stands where scars and altitude meet.",
+        "hintTags": ["elevated", "scarred", "ancient"]
+      }
+    ],
+    "rewardId": "starseer-lens",
+    "hopeBonus": 2
+  },
+  {
+    "id": "pilgrim-lantern",
+    "title": "Pilgrim Lantern",
+    "premise": "",
+    "steps": [
+      {
+        "stepIndex": 0,
+        "stepTitle": "",
+        "encounterId": "pl-step-0",
+        "journalHint": "Pilgrim marks hide in sheltered places blessed by old rites.",
+        "hintTags": ["sheltered", "sacred"],
+        "hintBiomes": ["settlement", "forest"]
+      },
+      {
+        "stepIndex": 1,
+        "stepTitle": "",
+        "encounterId": "pl-step-1",
+        "journalHint": "Carry the flame to carved stone altars.",
+        "hintTags": ["stone", "sacred"]
+      },
+      {
+        "stepIndex": 2,
+        "stepTitle": "",
+        "encounterId": "pl-step-2",
+        "journalHint": "Its reliquary lies in an overgrown sacred court.",
+        "hintTags": ["overgrown", "sacred", "ancient"]
+      }
+    ],
+    "rewardId": "cinder-prayer",
+    "hopeBonus": 3
+  },
+  {
+    "id": "drowned-archives",
+    "title": "Drowned Archives",
+    "premise": "",
+    "steps": [
+      {
+        "stepIndex": 0,
+        "stepTitle": "",
+        "encounterId": "da-step-0",
+        "journalHint": "Start where floodwater crosses broken stone roads.",
+        "hintTags": ["flooded", "stone"],
+        "hintBiomes": ["wastes", "ruins"]
+      },
+      {
+        "stepIndex": 1,
+        "stepTitle": "",
+        "encounterId": "da-step-1",
+        "journalHint": "A sealed door waits near abandoned waterworks.",
+        "hintTags": ["abandoned", "water"]
+      },
+      {
+        "stepIndex": 2,
+        "stepTitle": "",
+        "encounterId": "da-step-2",
+        "journalHint": "The deepest records lie in a hall the flood never fully surrendered.",
+        "hintTags": ["flooded", "ancient", "stone"]
+      }
+    ],
+    "rewardId": "deep-pack",
+    "hopeBonus": 2
+  }
+]

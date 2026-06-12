@@ -1,7 +1,7 @@
 import { fetchEncounters } from "./api/encounters";
+import { fetchRumors } from "./api/rumors";
 import { createAnalyticsClient } from "./api/analytics";
 import { coordKey } from "./engine/hex";
-import { ALL_RUMORS } from "./engine/data/rumors";
 import { clearSave, hasSave, loadGame, saveGame } from "./ui/save";
 import { pixelToHex, setupCanvas } from "./renderer/canvas";
 import { createCamera } from "./renderer/camera";
@@ -25,7 +25,7 @@ import { clickedNeighborToAction, keyToAction } from "./ui/input";
 import { toggleJournal, updateJournal, setJournalTab } from "./ui/journal";
 
 const HINTS_KEY = "waning-light-hints";
-const VALID_HINT_IDS: HintId[] = ["first-turn", "low-supply", "first-encounter"];
+const VALID_HINT_IDS: HintId[] = ["first-turn", "low-supply", "first-encounter", "first-rumor"];
 
 function loadDismissedHints(): Set<HintId> {
   try {
@@ -98,6 +98,7 @@ async function main(): Promise<void> {
 
   const ctx = setupCanvas(canvas);
   const encounters = await fetchEncounters();
+  const rumors = await fetchRumors();
   let seed = Date.now();
   let rng = createRng(seed);
   let analytics = createAnalyticsClient();
@@ -120,16 +121,16 @@ async function main(): Promise<void> {
         state = saved;
       } else {
         clearSave();
-        state = createInitialState(encounters, rng, ALL_RUMORS);
+        state = createInitialState(encounters, rng, rumors);
         analytics.track("game_start", { seed, fromSave: true });
       }
     } else {
       clearSave();
-      state = createInitialState(encounters, rng, ALL_RUMORS);
+      state = createInitialState(encounters, rng, rumors);
       analytics.track("game_start", { seed, fromSave: true });
     }
   } else {
-    state = createInitialState(encounters, rng, ALL_RUMORS);
+    state = createInitialState(encounters, rng, rumors);
     analytics.track("game_start", { seed, fromSave: false });
   }
 
@@ -137,7 +138,7 @@ async function main(): Promise<void> {
     seed = Date.now();
     rng = createRng(seed);
     analytics = createAnalyticsClient();
-    state = createInitialState(encounters, rng, ALL_RUMORS);
+    state = createInitialState(encounters, rng, rumors);
     clearSave();
     clearLog(logPanel);
     analytics.track("game_start", { seed, restart: true });
@@ -229,6 +230,11 @@ async function main(): Promise<void> {
           rumorId: rumor.rumorId,
           turnCount: nextState.turn,
         });
+        const progressCount =
+          nextState.rumors.active.length + nextState.rumors.completed.length;
+        if (progressCount > 1) {
+          dismissHint("first-rumor");
+        }
       }
     }
 
@@ -247,7 +253,13 @@ async function main(): Promise<void> {
 
   const frame = () => {
     const activeHint = getActiveHint(
-      { turn: state.turn, supply: state.player.supply, maxSupply: MAX_SUPPLY, mode: state.mode.type },
+      {
+        turn: state.turn,
+        supply: state.player.supply,
+        maxSupply: MAX_SUPPLY,
+        mode: state.mode.type,
+        rumorProgressCount: state.rumors.active.length + state.rumors.completed.length,
+      },
       dismissedHints,
     );
     camera = render(ctx, state, camera, activeHint);
@@ -270,6 +282,7 @@ async function main(): Promise<void> {
 
     if (normalizedKey === "j" && state.status === "playing") {
       event.preventDefault();
+      dismissHint("first-rumor");
       toggleJournal(journalPanel, logPanel);
       updateJournal(journalContent, state);
       return;

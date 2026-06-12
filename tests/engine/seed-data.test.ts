@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { ALL_BIOMES } from "../../src/engine/data/biomes";
+import rumorsSeed from "../../src/engine/data/rumors-seed.json";
 import seedEncounters from "../../src/engine/data/seed-encounters.json";
 
 describe("seed encounter data", () => {
@@ -62,5 +63,35 @@ describe("seed encounter data", () => {
     expect(seedEncounters.some((encounter) => encounter.id === "ao-step-0")).toBe(true);
     expect(seedEncounters.some((encounter) => encounter.id === "pl-step-0")).toBe(true);
     expect(seedEncounters.some((encounter) => encounter.id === "da-step-0")).toBe(true);
+  });
+});
+
+describe("seed rumor data", () => {
+  it("ships the bundled rumor chains", () => {
+    expect(rumorsSeed.length).toBe(4);
+  });
+
+  it("contains the required fields for each rumor and step", () => {
+    for (const rumor of rumorsSeed) {
+      expect(rumor.id).toBeTruthy();
+      expect(rumor.title).toBeTruthy();
+      expect(typeof rumor.premise).toBe("string");
+      expect(rumor.steps.length).toBeGreaterThan(0);
+
+      for (const step of rumor.steps) {
+        expect(step.encounterId).toBeTruthy();
+        expect(step.journalHint).toBeTruthy();
+        expect(Array.isArray(step.hintTags)).toBe(true);
+      }
+    }
+  });
+
+  it("links rumor steps to bundled encounters", () => {
+    const encounterIds = new Set(seedEncounters.map((encounter) => encounter.id));
+    for (const rumor of rumorsSeed) {
+      for (const step of rumor.steps) {
+        expect(encounterIds.has(step.encounterId)).toBe(true);
+      }
+    }
   });
 });

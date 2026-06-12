@@ -55,11 +55,13 @@ describe("resolveTurn push flow", () => {
     const rumor: Rumor = {
       id: "water-lead",
       title: "Whispers of Water",
+      premise: "",
       steps: [
         {
           stepIndex: 0,
+          stepTitle: "",
           encounterId: "water-step-0",
-          hint: "Follow signs of water",
+          journalHint: "Follow signs of water",
           hintTags: ["water"],
         },
       ],
@@ -238,10 +240,12 @@ describe("rumor step triggering", () => {
     const rumor: Rumor = {
       id: "whispering-well",
       title: "The Whispering Well",
+      premise: "",
       steps: [{
         stepIndex: 0,
+        stepTitle: "",
         encounterId: "ww-step-0",
-        hint: "Seek ancient water",
+        journalHint: "Seek ancient water",
         hintTags: ["water", "ancient"],
       }],
       reward: null,
@@ -289,17 +293,20 @@ describe("rumor advancement on encounter resolution", () => {
     const rumor: Rumor = {
       id: "whispering-well",
       title: "The Whispering Well",
+      premise: "",
       steps: [
         {
           stepIndex: 0,
+          stepTitle: "",
           encounterId: "ww-step-0",
-          hint: "Seek ancient water",
+          journalHint: "Seek ancient water",
           hintTags: ["water", "ancient"],
         },
         {
           stepIndex: 1,
+          stepTitle: "",
           encounterId: "ww-step-1",
-          hint: "Seek old stone",
+          journalHint: "Seek old stone",
           hintTags: ["stone"],
         },
       ],
@@ -343,17 +350,20 @@ describe("rumor advancement on encounter resolution", () => {
     const rumor: Rumor = {
       id: "whispering-well",
       title: "The Whispering Well",
+      premise: "",
       steps: [
         {
           stepIndex: 0,
+          stepTitle: "",
           encounterId: "ww-step-0",
-          hint: "Seek ancient water",
+          journalHint: "Seek ancient water",
           hintTags: ["water", "ancient"],
         },
         {
           stepIndex: 1,
+          stepTitle: "",
           encounterId: "ww-step-1",
-          hint: "Seek old stone",
+          journalHint: "Seek old stone",
           hintTags: ["stone"],
         },
       ],

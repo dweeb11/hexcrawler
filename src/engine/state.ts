@@ -61,18 +61,28 @@ export interface Relic {
 
 export interface RumorStep {
   stepIndex: number;
-  encounterId: string; // references an encounter by ID
-  hint: string; // narrative hint toward next step
-  hintTags: string[]; // tags the hint implies
-  hintBiomes?: Biome[]; // biomes the hint implies
+  stepTitle: string;
+  encounterId: string;
+  journalHint: string;
+  hintTags: string[];
+  hintBiomes?: Biome[];
 }
 
 export interface Rumor {
   id: string;
   title: string;
+  premise: string;
   steps: RumorStep[];
   reward: Relic | null;
   hopeBonus: number;
+}
+
+export interface RumorContext {
+  rumorId: string;
+  rumorTitle: string;
+  stepIndex: number;
+  stepCount: number;
+  isFinalStep: boolean;
 }
 
 export interface ActiveRumor {
@@ -101,7 +111,7 @@ export interface HexTile {
   readonly visited: boolean;
 }
 
-export type LogType = "narrative" | "resource" | "searing" | "system";
+export type LogType = "narrative" | "resource" | "searing" | "system" | "rumor";
 
 export interface LogEntry {
   readonly turn: number;
@@ -125,7 +135,12 @@ export type GameOverOutcome =
 
 export type GameMode =
   | { readonly type: "map" }
-  | { readonly type: "encounter"; readonly encounter: Encounter; readonly hex: CubeCoord }
+  | {
+      readonly type: "encounter";
+      readonly encounter: Encounter;
+      readonly hex: CubeCoord;
+      readonly rumorContext?: RumorContext;
+    }
   | { readonly type: "camp"; readonly result: LogEntry; readonly incident: LogEntry | null }
   | { readonly type: "gameover"; readonly reason: string; readonly outcome: GameOverOutcome };
 
@@ -291,6 +306,45 @@ export function serializeState(state: GameState): SerializedGameState {
   };
 }
 
+interface LegacyRumorStep extends RumorStep {
+  hint?: string;
+}
+
+interface LegacyRumor extends Omit<Rumor, "steps" | "premise"> {
+  premise?: string;
+  steps: LegacyRumorStep[];
+}
+
+function normalizeRumorStep(step: LegacyRumorStep): RumorStep {
+  return {
+    stepIndex: step.stepIndex,
+    stepTitle: step.stepTitle ?? "",
+    encounterId: step.encounterId,
+    journalHint: step.journalHint ?? step.hint ?? "",
+    hintTags: step.hintTags,
+    hintBiomes: step.hintBiomes,
+  };
+}
+
+function normalizeRumorState(rumors: {
+  available: LegacyRumor[];
+  active: ActiveRumor[];
+  completed: CompletedRumor[];
+}): RumorState {
+  return {
+    available: rumors.available.map((rumor) => ({
+      id: rumor.id,
+      title: rumor.title,
+      premise: rumor.premise ?? "",
+      steps: rumor.steps.map(normalizeRumorStep),
+      reward: rumor.reward,
+      hopeBonus: rumor.hopeBonus,
+    })),
+    active: rumors.active,
+    completed: rumors.completed,
+  };
+}
+
 export function deserializeState(data: any): GameState {
   const map = new Map<string, HexTile>();
 
@@ -317,7 +371,9 @@ export function deserializeState(data: any): GameState {
     log: data.log,
     status: data.status,
     encounters: data.encounters,
-    rumors: data.rumors ?? { available: [], active: [], completed: [] },
+    rumors: data.rumors
+      ? normalizeRumorState(data.rumors)
+      : { available: [], active: [], completed: [] },
     relics: data.relics ?? [],
     stats: data.stats ?? {
       hexesExplored: 0,

@@ -1,7 +1,10 @@
 import { type GameState, type ResourceDelta } from "../../engine/state";
+import { encounterHasDiscoveryChoice } from "../../engine/rumors";
 import { COLORS } from "../glyphs";
 import { drawHintOverlay, type ActiveHint } from "../hint-overlay";
 import { drawLegend } from "../legend";
+
+const RUMOR_COLOR = "#da4";
 
 function formatDelta(delta: ResourceDelta): string {
   const parts = Object.entries(delta)
@@ -23,34 +26,62 @@ export function renderEncounter(
 
   const mode = state.mode;
   const player = state.player;
+  const rumorContext = mode.rumorContext;
+  const isDiscoveryLead =
+    !rumorContext && encounterHasDiscoveryChoice(mode.encounter);
 
   ctx.save();
   ctx.fillStyle = COLORS.bg;
   ctx.fillRect(0, 0, width, height);
 
-  ctx.fillStyle = COLORS.text;
+  if (rumorContext) {
+    ctx.strokeStyle = RUMOR_COLOR;
+    ctx.lineWidth = 1;
+    ctx.font = "16px monospace";
+    ctx.fillStyle = RUMOR_COLOR;
+    ctx.textAlign = "center";
+    ctx.fillText("─ ═ ─", width / 2, 52);
+  }
+
+  ctx.fillStyle = rumorContext || isDiscoveryLead ? RUMOR_COLOR : COLORS.text;
   ctx.textAlign = "center";
   ctx.textBaseline = "top";
   ctx.font = "bold 28px monospace";
-  ctx.fillText("Encounter", width / 2, 80);
+
+  if (rumorContext) {
+    ctx.fillText(`Rumor — ${rumorContext.rumorTitle}`, width / 2, 80);
+    ctx.font = "16px monospace";
+    ctx.fillStyle = COLORS.textDim;
+    ctx.fillText(
+      `Part ${rumorContext.stepIndex + 1} of ${rumorContext.stepCount}`,
+      width / 2,
+      118,
+    );
+  } else if (isDiscoveryLead) {
+    ctx.fillText("A Lead Surfaces", width / 2, 80);
+  } else {
+    ctx.fillText("Encounter", width / 2, 80);
+  }
 
   ctx.font = "18px monospace";
-  wrapText(ctx, mode.encounter.text, width / 2, 150, width * 0.7, 28);
+  ctx.fillStyle = COLORS.text;
+  wrapText(ctx, mode.encounter.text, width / 2, rumorContext ? 160 : 150, width * 0.7, 28);
 
   ctx.font = "14px monospace";
   ctx.fillStyle = COLORS.textDim;
   ctx.fillText(
     `Supply ${player.supply}  Hope ${player.hope}  Health ${player.health}`,
     width / 2,
-    260,
+    rumorContext ? 270 : 260,
   );
 
   ctx.textAlign = "left";
   ctx.fillStyle = COLORS.text;
-  let y = 320;
+  let y = rumorContext ? 330 : 320;
   mode.encounter.choices.forEach((choice, index) => {
     const chanceLabel = choice.chance ? ` (${Math.round(choice.chance * 100)}%)` : "";
-    const line = `${index + 1}. ${choice.label}${chanceLabel} -> ${formatDelta(choice.outcome)}`;
+    const leadLabel = choice.discoversRumor ? "  [reveals a lead]" : "";
+    const line = `${index + 1}. ${choice.label}${chanceLabel} -> ${formatDelta(choice.outcome)}${leadLabel}`;
     wrapText(ctx, line, width * 0.18, y, width * 0.64, 24);
     y += 54;
   });

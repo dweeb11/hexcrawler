@@ -1,9 +1,10 @@
-export type HintId = "first-turn" | "low-supply" | "first-encounter";
+export type HintId = "first-turn" | "low-supply" | "first-encounter" | "first-rumor";
 
 const HINT_TEXTS: Record<HintId, string> = {
   "first-turn": "QWEASD to move  |  R to rest  |  F to forage",
   "first-encounter": "Press 1, 2, or 3 to choose",
   "low-supply": "Supplies are low - press F to forage",
+  "first-rumor": "Press J for your journal — a new lead awaits",
 };
 
 export function getActiveHint(
@@ -12,11 +13,19 @@ export function getActiveHint(
     supply: number;
     maxSupply: number;
     mode: string;
+    rumorProgressCount?: number;
   },
   dismissedHints: ReadonlySet<HintId>,
 ): { id: HintId; text: string } | null {
   if (context.turn === 0 && !dismissedHints.has("first-turn")) {
     return { id: "first-turn", text: HINT_TEXTS["first-turn"] };
+  }
+
+  if (
+    (context.rumorProgressCount ?? 0) === 1 &&
+    !dismissedHints.has("first-rumor")
+  ) {
+    return { id: "first-rumor", text: HINT_TEXTS["first-rumor"] };
   }
 
   if (context.mode === "encounter" && !dismissedHints.has("first-encounter")) {

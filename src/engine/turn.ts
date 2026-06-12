@@ -16,6 +16,7 @@ import {
   completeRumor,
   discoverRumor,
   applyRumorWeights,
+  shouldBoostRumorDiscovery,
 } from "./rumors";
 import { checkPillarsOfFrost, checkRestartTheGear, frostProximityBand, frostProximityDistance } from "./win";
 import {
@@ -27,6 +28,8 @@ import {
   type RNG,
   type RumorState,
   type Relic,
+  type Rumor,
+  type RumorContext,
 } from "./state";
 
 const FROST_PROXIMITY_MESSAGES: Record<1 | 2 | 3, string> = {
@@ -39,6 +42,20 @@ function appendLog(state: GameState, text: string, type: LogType = "narrative"):
   return {
     ...state,
     log: [...state.log, { turn: state.turn, text, type }],
+  };
+}
+
+function rumorLogTitle(title: string): string {
+  return title.startsWith("The ") ? title.slice(4) : title;
+}
+
+function buildRumorContext(rumor: Rumor, stepIndex: number): RumorContext {
+  return {
+    rumorId: rumor.id,
+    rumorTitle: rumor.title,
+    stepIndex,
+    stepCount: rumor.steps.length,
+    isFinalStep: stepIndex === rumor.steps.length - 1,
   };
 }
 function markConsumedTiles(state: GameState): GameState {
@@ -176,9 +193,18 @@ function handlePush(state: GameState, action: Extract<Action, { type: "push" }>,
 
   if (!map.has(key)) {
     const rumorWeights = applyRumorWeights(state.rumors);
+    const boostDiscovery = shouldBoostRumorDiscovery(state.rumors);
     map.set(
       key,
-      generateHex(destination, map, nextState.encounters, rng, nextState.searing, rumorWeights),
+      generateHex(
+        destination,
+        map,
+        nextState.encounters,
+        rng,
+        nextState.searing,
+        rumorWeights,
+        boostDiscovery,
+      ),
     );
   }
 
@@ -244,6 +270,7 @@ function handlePush(state: GameState, action: Extract<Action, { type: "push" }>,
           type: "encounter",
           encounter: resolvedEncounter,
           hex: enteredTile.coord,
+          rumorContext: buildRumorContext(rumorMatch.rumor, rumorMatch.active.currentStep),
         },
       };
     }
@@ -367,7 +394,8 @@ function handleChoose(state: GameState, action: Extract<Action, { type: "choose"
     return state;
   }
 
-  const choice = state.mode.encounter.choices[action.choiceIndex];
+  const encounterMode = state.mode;
+  const choice = encounterMode.encounter.choices[action.choiceIndex];
   if (!choice) {
     return appendLog(state, "You hesitate. No such choice presents itself.", "system");
   }
@@ -392,15 +420,22 @@ function handleChoose(state: GameState, action: Extract<Action, { type: "choose"
     if (rumor) {
       nextState = appendLog(
         nextState,
-        `A new lead: "${rumor.title}"`,
-        "narrative",
+        `▸ Lead recorded: "${rumor.title}" — press J to read your journal`,
+        "rumor",
       );
     }
   }
 
-  const rumorAdvance = checkRumorAdvancement(state, state.mode.encounter.id);
+  const rumorAdvance = checkRumorAdvancement(state, encounterMode.encounter.id);
   if (rumorAdvance) {
     const rumorCompleted = rumorAdvance.rumors.completed.length > state.rumors.completed.length;
+    const advancedRumor = state.rumors.available.find((r) => {
+      const active = state.rumors.active.find(
+        (entry) => entry.rumorId === r.id,
+      );
+      return active?.currentStep !== undefined &&
+        r.steps[active.currentStep]?.encounterId === encounterMode.encounter.id;
+    });
     const statsUpdate: Partial<GameStats> = {};
     if (rumorCompleted) statsUpdate.rumorsCompleted = nextState.stats.rumorsCompleted + 1;
     if (rumorAdvance.reward) statsUpdate.relicsCollected = nextState.stats.relicsCollected + 1;
@@ -415,6 +450,23 @@ function handleChoose(state: GameState, action: Extract<Action, { type: "choose"
         : nextState.player,
       stats: { ...nextState.stats, ...statsUpdate },
     };
+
+    if (advancedRumor) {
+      if (rumorCompleted) {
+        const relicName = rumorAdvance.reward?.name ?? "your reward";
+        nextState = appendLog(
+          nextState,
+          `▸ ${rumorLogTitle(advancedRumor.title)} resolved. You claim the ${relicName}.`,
+          "rumor",
+        );
+      } else {
+        nextState = appendLog(
+          nextState,
+          `▸ ${rumorLogTitle(advancedRumor.title)} — the trail deepens. Check your journal.`,
+          "rumor",
+        );
+      }
+    }
   }
 
   const text = outcome.succeeded
