@@ -1,5 +1,6 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { getDb, ensureTable, requireAuth, rowToRumor } from "../_lib/rumors";
+import { getDb, ensureTable, rowToRumor } from "../_lib/rumors";
+import { requireAuth } from "../_lib/auth";
 import type { Row } from "@libsql/client/web";
 
 export { getDb, setDbClientForTesting } from "../_lib/rumors";

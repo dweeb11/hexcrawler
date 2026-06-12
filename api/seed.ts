@@ -1,8 +1,8 @@
-import { timingSafeEqual } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { createClient, type Client, type InStatement } from "@libsql/client/web";
 import type { VercelRequest, VercelResponse } from "@vercel/node";
+import { requireAuth } from "./_lib/auth";
 
 let client: Client | null = null;
 
@@ -24,27 +24,6 @@ async function ensureTable(db: Client): Promise<void> {
       updated_at TEXT NOT NULL DEFAULT (datetime('now'))
     )
   ` as InStatement);
-}
-
-function requireAuth(req: VercelRequest, res: VercelResponse): boolean {
-  const expectedKey = process.env.ADMIN_API_KEY;
-  const providedKey = req.headers["x-api-key"];
-  const apiKey = Array.isArray(providedKey) ? providedKey[0] : providedKey;
-  if (!expectedKey) {
-    res.status(500).json({ error: "Server misconfigured: ADMIN_API_KEY is missing." });
-    return false;
-  }
-  if (!apiKey) { res.status(401).json({ error: "Unauthorized" }); return false; }
-  const left = Buffer.from(apiKey);
-  const right = Buffer.from(expectedKey);
-  const size = Math.max(left.length, right.length);
-  const a = Buffer.alloc(size); left.copy(a);
-  const b = Buffer.alloc(size); right.copy(b);
-  if (left.length !== right.length || !timingSafeEqual(a, b)) {
-    res.status(401).json({ error: "Unauthorized" });
-    return false;
-  }
-  return true;
 }
 
 interface SeedEncounter {

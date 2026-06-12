@@ -1,7 +1,4 @@
 import { renderAdmin } from "./admin/main";
-import { getStoredApiKey, setStoredApiKey, STORAGE_KEY } from "./admin/helpers";
-
-export { STORAGE_KEY, getStoredApiKey, setStoredApiKey };
 
 const root = document.getElementById("admin-root");
 if (!root) {

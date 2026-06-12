@@ -1,6 +1,4 @@
-import { timingSafeEqual } from "node:crypto";
 import { createClient, type Client, type Row, type InStatement } from "@libsql/client/web";
-import type { VercelRequest, VercelResponse } from "@vercel/node";
 
 let client: Client | null = null;
 
@@ -30,34 +28,6 @@ export async function ensureTable(db: Pick<Client, "execute">): Promise<void> {
       updated_at TEXT NOT NULL DEFAULT (datetime('now'))
     )
   ` as InStatement);
-}
-
-export function requireAuth(req: VercelRequest, res: VercelResponse): boolean {
-  const expectedKey = process.env.ADMIN_API_KEY;
-  const providedKey = req.headers["x-api-key"];
-  const apiKey = Array.isArray(providedKey) ? providedKey[0] : providedKey;
-  if (!expectedKey) {
-    res.status(500).json({ error: "Server misconfigured: ADMIN_API_KEY is missing." });
-    return false;
-  }
-  if (!apiKey) { res.status(401).json({ error: "Unauthorized" }); return false; }
-  const provided = Buffer.from(apiKey);
-  const expected = Buffer.from(expectedKey);
-  const size = Math.max(provided.length, expected.length);
-  const a = Buffer.alloc(size);
-  const b = Buffer.alloc(size);
-  provided.copy(a);
-  expected.copy(b);
-  // Always call timingSafeEqual before checking length — this ensures the
-  // comparison takes the same time regardless of key length, preventing
-  // a timing oracle that would reveal whether the submitted key length matches.
-  const valuesMatch = timingSafeEqual(a, b);
-  const lengthMatch = provided.length === expected.length;
-  if (!valuesMatch || !lengthMatch) {
-    res.status(401).json({ error: "Unauthorized" });
-    return false;
-  }
-  return true;
 }
 
 export function rowToRumor(row: Row) {

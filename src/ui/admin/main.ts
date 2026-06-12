@@ -1,6 +1,12 @@
 import type { Encounter } from "../../engine/state";
 import { renderEncountersPanel } from "./encounters-panel";
-import { create, getStoredApiKey, requestJson, setStoredApiKey, STORAGE_KEY } from "./helpers";
+import {
+  checkAdminSession,
+  create,
+  loginWithPassphrase,
+  logoutAdminSession,
+  requestJson,
+} from "./helpers";
 import { renderRumorsPanel } from "./rumors-panel";
 import { renderStats } from "./stats-panel";
 import { validateContentCrossReferences, type AdminRumor } from "./validation";
@@ -20,29 +26,36 @@ function renderAuthGate(root: HTMLElement): void {
   const card = create("section", { className: "card" });
   const title = create("h1", { text: "◆ Content Admin" });
   const blurb = create("p", {
-    text: "Enter the admin API key to edit encounters and rumor chains in Turso.",
+    text: "Sign in with your admin passphrase to edit encounters and rumor chains.",
   });
   const form = create("form", { className: "row" });
   const input = create("input") as HTMLInputElement;
   input.type = "password";
-  input.placeholder = "API key";
-  input.value = getStoredApiKey();
+  input.placeholder = "Passphrase";
+  input.autocomplete = "current-password";
   input.style.flex = "1";
-  const button = create("button", { text: "Unlock" }) as HTMLButtonElement;
+  const button = create("button", { text: "Sign in" }) as HTMLButtonElement;
   button.type = "submit";
+  const status = create("pre", { className: "status-line" });
   form.append(input, button);
-  form.addEventListener("submit", (event) => {
+  form.addEventListener("submit", async (event) => {
     event.preventDefault();
-    setStoredApiKey(input.value);
-    renderAdmin(root);
+    status.textContent = "";
+    try {
+      await loginWithPassphrase(input.value);
+      await renderAdmin(root);
+    } catch (error) {
+      status.textContent = String(error);
+    }
   });
-  card.append(title, blurb, form);
+  card.append(title, blurb, form, status);
   shell.append(card);
   root.replaceChildren(shell);
 }
 
 export async function renderAdmin(root: HTMLElement): Promise<void> {
-  if (!getStoredApiKey()) {
+  const authenticated = await checkAdminSession();
+  if (!authenticated) {
     renderAuthGate(root);
     return;
   }
@@ -62,8 +75,8 @@ export async function renderAdmin(root: HTMLElement): Promise<void> {
 
   const actions = create("div", { className: "row" });
   const validateButton = create("button", { text: "Validate all", className: "secondary" });
-  const resetButton = create("button", { text: "Clear key", className: "secondary" });
-  actions.append(validateButton, resetButton);
+  const logoutButton = create("button", { text: "Sign out", className: "secondary" });
+  actions.append(validateButton, logoutButton);
   headerRow.append(titleBlock, actions);
   header.append(headerRow);
 
@@ -141,8 +154,8 @@ export async function renderAdmin(root: HTMLElement): Promise<void> {
 
   validateButton.addEventListener("click", () => renderValidationBanner());
 
-  resetButton.addEventListener("click", () => {
-    sessionStorage.removeItem(STORAGE_KEY);
+  logoutButton.addEventListener("click", async () => {
+    await logoutAdminSession().catch(() => null);
     renderAuthGate(root);
   });
 

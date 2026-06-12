@@ -1,7 +1,5 @@
 import type { Biome } from "../../engine/state";
 
-export const STORAGE_KEY = "waning-light-admin-key";
-
 export function parseCsv(value: string): string[] | undefined {
   const parts = value
     .split(",")
@@ -47,25 +45,17 @@ export function create<K extends keyof HTMLElementTagNameMap>(
   return element;
 }
 
-export function getStoredApiKey(): string {
-  return sessionStorage.getItem(STORAGE_KEY) ?? "";
-}
-
-export function setStoredApiKey(value: string): void {
-  sessionStorage.setItem(STORAGE_KEY, value);
-}
-
 export async function requestJson(path: string, init: RequestInit = {}): Promise<unknown> {
   const headers = new Headers(init.headers);
-  const apiKey = getStoredApiKey();
-  if (apiKey) {
-    headers.set("X-API-Key", apiKey);
-  }
   if (init.body && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
   }
 
-  const response = await fetch(path, { ...init, headers });
+  const response = await fetch(path, {
+    ...init,
+    headers,
+    credentials: "include",
+  });
   if (!response.ok) {
     const text = await response.text();
     throw new Error(text || `Request failed with ${response.status}`);
@@ -76,6 +66,26 @@ export async function requestJson(path: string, init: RequestInit = {}): Promise
   }
 
   return response.json();
+}
+
+export async function checkAdminSession(): Promise<boolean> {
+  try {
+    const result = (await requestJson("/api/admin/session")) as { authenticated?: boolean };
+    return Boolean(result.authenticated);
+  } catch {
+    return false;
+  }
+}
+
+export async function loginWithPassphrase(passphrase: string): Promise<void> {
+  await requestJson("/api/admin/login", {
+    method: "POST",
+    body: JSON.stringify({ passphrase }),
+  });
+}
+
+export async function logoutAdminSession(): Promise<void> {
+  await requestJson("/api/admin/logout", { method: "POST" });
 }
 
 export function renderIssueList(container: HTMLElement, issues: Array<{ field: string; message: string }>): void {
