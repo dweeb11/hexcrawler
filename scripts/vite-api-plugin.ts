@@ -104,9 +104,7 @@ export default function viteApiPlugin(): Plugin {
           // Route: /api/rumors/[id]
           // Route: /api/seed
           // Route: /api/seed-rumors
-          // Route: /api/admin/login
-          // Route: /api/admin/logout
-          // Route: /api/admin/session
+          // Route: /api/admin/[route]
           // Route: /api/analytics
           // Route: /api/analytics/stats
           const pathname = url.split("?")[0];
@@ -141,17 +139,11 @@ export default function viteApiPlugin(): Plugin {
             handler = await server.ssrLoadModule(
               "/api/seed-rumors.ts",
             ) as RouteHandler;
-          } else if (pathname === "/api/admin/login") {
+          } else if (pathname.startsWith("/api/admin/")) {
+            const route = pathname.slice("/api/admin/".length);
+            vReq.query = { ...vReq.query, route };
             handler = await server.ssrLoadModule(
-              "/api/admin/login.ts",
-            ) as RouteHandler;
-          } else if (pathname === "/api/admin/logout") {
-            handler = await server.ssrLoadModule(
-              "/api/admin/logout.ts",
-            ) as RouteHandler;
-          } else if (pathname === "/api/admin/session") {
-            handler = await server.ssrLoadModule(
-              "/api/admin/session.ts",
+              "/api/admin/[route].ts",
             ) as RouteHandler;
           } else if (pathname === "/api/analytics") {
             handler = await server.ssrLoadModule(

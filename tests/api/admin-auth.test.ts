@@ -48,12 +48,13 @@ describe("admin auth", () => {
   });
 
   it("issues a session cookie on successful login", async () => {
-    const handler = (await import("../../api/admin/login")).default;
+    const handler = (await import("../../api/admin/[route]")).default;
     const res = createResponse();
 
     await handler(
       {
         method: "POST",
+        query: { route: "login" },
         body: { passphrase: "test-passphrase" },
       } as never,
       res as never,
@@ -65,12 +66,13 @@ describe("admin auth", () => {
   });
 
   it("rejects invalid passphrases", async () => {
-    const handler = (await import("../../api/admin/login")).default;
+    const handler = (await import("../../api/admin/[route]")).default;
     const res = createResponse();
 
     await handler(
       {
         method: "POST",
+        query: { route: "login" },
         body: { passphrase: "nope" },
       } as never,
       res as never,
@@ -80,13 +82,14 @@ describe("admin auth", () => {
   });
 
   it("reports authenticated session state", async () => {
-    const handler = (await import("../../api/admin/session")).default;
+    const handler = (await import("../../api/admin/[route]")).default;
     const token = createSessionToken();
     const res = createResponse();
 
     await handler(
       {
         method: "GET",
+        query: { route: "session" },
         headers: { cookie: `${SESSION_COOKIE_NAME}=${encodeURIComponent(token)}` },
       } as never,
       res as never,
@@ -122,10 +125,10 @@ describe("admin auth", () => {
   });
 
   it("clears the session cookie on logout", async () => {
-    const handler = (await import("../../api/admin/logout")).default;
+    const handler = (await import("../../api/admin/[route]")).default;
     const res = createResponse();
 
-    await handler({ method: "POST" } as never, res as never);
+    await handler({ method: "POST", query: { route: "logout" } } as never, res as never);
 
     expect(res.statusCode).toBe(200);
     expect(res.getHeader("Set-Cookie")).toContain("Max-Age=0");
