@@ -1,5 +1,5 @@
 // src/engine/rumors.ts
-import type { ActiveRumor, Biome, Rumor, RumorState, RumorStep, RumorWeights } from "./state";
+import type { ActiveRumor, Biome, Encounter, Rumor, RumorState, RumorStep, RumorWeights } from "./state";
 
 export interface RumorStepMatch {
   rumor: Rumor;
@@ -7,8 +7,24 @@ export interface RumorStepMatch {
   active: ActiveRumor;
 }
 
-const RUMOR_TAG_WEIGHT_BONUS = 0.3;  // +30% weight per hint tag
-const RUMOR_BIOME_WEIGHT_BONUS = 0.25; // +25% weight per hint biome
+const RUMOR_TAG_WEIGHT_BONUS = 0.3;
+const RUMOR_BIOME_WEIGHT_BONUS = 0.25;
+const DISCOVERY_WEIGHT_BOOST = 3;
+
+export function shouldBoostRumorDiscovery(rumorState: RumorState): boolean {
+  return rumorState.active.length === 0 && rumorState.completed.length === 0;
+}
+
+export function encounterHasDiscoveryChoice(encounter: Encounter): boolean {
+  return encounter.choices.some((choice) => Boolean(choice.discoversRumor));
+}
+
+export function discoveryEncounterWeight(encounter: Encounter, boostDiscovery: boolean): number {
+  if (!boostDiscovery || !encounterHasDiscoveryChoice(encounter)) {
+    return 1;
+  }
+  return DISCOVERY_WEIGHT_BOOST;
+}
 
 export function findNextRumorStep(
   rumorState: RumorState,

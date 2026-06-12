@@ -77,6 +77,14 @@ export function renderHud(
   ctx.font = "14px monospace";
   ctx.fillText(`Turn: ${state.turn}`, 28, 108);
 
+  const activeLeadCount = state.rumors.active.length;
+  if (activeLeadCount > 0) {
+    ctx.fillStyle = "#da4";
+    ctx.font = "14px monospace";
+    const label = activeLeadCount === 1 ? "1 active lead" : `${activeLeadCount} active leads`;
+    ctx.fillText(`◆ ${label}`, 170, 108);
+  }
+
   const distance = searingDistance(state);
   if (distance <= 5) {
     ctx.fillStyle = distance <= 2 ? "#d44" : "#da4";

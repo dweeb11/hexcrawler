@@ -1,5 +1,6 @@
 import { coordKey, neighbors } from "./hex";
 import { findMatchingEncounters } from "./encounters";
+import { discoveryEncounterWeight } from "./rumors";
 import {
   ALL_BIOMES,
   BIOME_CONFIGS,
@@ -126,6 +127,7 @@ export function pickEncounter(
   tags: Set<string>,
   biome: Biome,
   rng: RNG,
+  boostDiscovery = false,
 ): Encounter | null {
   const matching = findMatchingEncounters(encounters, tags, biome);
   const fallbackPool =
@@ -139,15 +141,25 @@ export function pickEncounter(
 
   if (fallbackPool.length === 0) return null;
 
-  // Sort by requiredTags length descending — rarer encounters first
   fallbackPool.sort((a, b) => b.requiredTags.length - a.requiredTags.length);
 
-  // Group by tag count
   const maxTags = fallbackPool[0].requiredTags.length;
   const topTier = fallbackPool.filter((e) => e.requiredTags.length === maxTags);
 
-  // Pick randomly from the top tier
-  return topTier[Math.floor(rng() * topTier.length)];
+  const totalWeight = topTier.reduce(
+    (sum, encounter) => sum + discoveryEncounterWeight(encounter, boostDiscovery),
+    0,
+  );
+  let roll = rng() * totalWeight;
+
+  for (const encounter of topTier) {
+    roll -= discoveryEncounterWeight(encounter, boostDiscovery);
+    if (roll <= 0) {
+      return encounter;
+    }
+  }
+
+  return topTier[topTier.length - 1] ?? null;
 }
 
 export function generateHex(
@@ -157,6 +169,7 @@ export function generateHex(
   rng: RNG,
   searing?: SearingState,
   rumorWeights?: RumorWeights,
+  boostDiscovery = false,
 ): HexTile {
   const neighborTiles = neighbors(coord)
     .map((neighborCoord) => existingMap.get(coordKey(neighborCoord)))
@@ -178,7 +191,7 @@ export function generateHex(
     coord,
     biome,
     tags,
-    encounter: pickEncounter(encounters, tags, biome, rng),
+    encounter: pickEncounter(encounters, tags, biome, rng, boostDiscovery),
     revealed: true,
     consumed: searing ? isConsumed(coord, searing) : false,
     visited: false,

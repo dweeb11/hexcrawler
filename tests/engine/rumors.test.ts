@@ -11,18 +11,21 @@ import type { Rumor, RumorState, ActiveRumor } from "../../src/engine/state";
 const testRumor: Rumor = {
   id: "whispering-well",
   title: "The Whispering Well",
+  premise: "",
   steps: [
     {
       stepIndex: 0,
+      stepTitle: "",
       encounterId: "ww-step-0",
-      hint: "Seek ancient water in the forest",
+      journalHint: "Seek ancient water in the forest",
       hintTags: ["water", "ancient"],
       hintBiomes: ["forest"],
     },
     {
       stepIndex: 1,
+      stepTitle: "",
       encounterId: "ww-step-1",
-      hint: "The well lies beneath stone ruins",
+      journalHint: "The well lies beneath stone ruins",
       hintTags: ["stone", "hollow"],
       hintBiomes: ["ruins"],
     },
@@ -57,9 +60,9 @@ describe("findNextRumorStep", () => {
       ...testRumor,
       id: "other-rumor",
       steps: [
-        { stepIndex: 0, encounterId: "or-0", hint: "", hintTags: ["water"], },
-        { stepIndex: 1, encounterId: "or-1", hint: "", hintTags: ["stone"], },
-        { stepIndex: 2, encounterId: "or-2", hint: "", hintTags: ["ice"], },
+        { stepIndex: 0, stepTitle: "", encounterId: "or-0", journalHint: "", hintTags: ["water"] },
+        { stepIndex: 1, stepTitle: "", encounterId: "or-1", journalHint: "", hintTags: ["stone"] },
+        { stepIndex: 2, stepTitle: "", encounterId: "or-2", journalHint: "", hintTags: ["ice"] },
       ],
       reward: null,
       hopeBonus: 2,

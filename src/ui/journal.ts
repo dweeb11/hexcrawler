@@ -40,7 +40,7 @@ function renderRumors(el: HTMLElement, state: GameState): void {
     const hint = document.createElement("p");
     hint.className = "journal-hint";
     const step = rumor.steps[active.currentStep];
-    hint.textContent = step ? step.hint : "Follow the trail...";
+    hint.textContent = step ? step.journalHint : "Follow the trail...";
     div.appendChild(hint);
 
     el.appendChild(div);

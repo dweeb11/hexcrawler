@@ -112,11 +112,13 @@ describe("serializeState / deserializeState", () => {
     const rumor: Rumor = {
       id: "whispering-well",
       title: "The Whispering Well",
+      premise: "",
       steps: [
         {
           stepIndex: 0,
+          stepTitle: "",
           encounterId: "ww-step-1",
-          hint: "Look for ancient water sources",
+          journalHint: "Look for ancient water sources",
           hintTags: ["water", "ancient"],
         },
       ],
