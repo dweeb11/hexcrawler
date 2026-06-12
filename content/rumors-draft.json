@@ -1,0 +1,223 @@
+[
+  {
+    "id": "ember-road",
+    "title": "The Ember Road",
+    "premise": "Waystone glyphs from an old Cinder-Seeker relay still mark a route through the land. The road-keeper who carved them hid tools at each stage. The final cache was never claimed.",
+    "steps": [
+      {
+        "stepIndex": 0,
+        "stepTitle": "The First Bracket",
+        "encounterId": "er-step-0",
+        "journalHint": "The inscription described a fire bracket on a scorched mountain ridge — the road-keeper's first signal point. Find the ridge where iron was once bolted to stone.",
+        "hintTags": ["scarred", "elevated"],
+        "hintBiomes": ["mountain"]
+      },
+      {
+        "stepIndex": 1,
+        "stepTitle": "The High Shelter",
+        "encounterId": "er-step-1",
+        "journalHint": "Above the signal ridge, the keeper's next mark was a stone shelter against the snowline — a halfway house where signal cord was stored for the road.",
+        "hintTags": ["hollow", "elevated"],
+        "hintBiomes": ["mountain"]
+      },
+      {
+        "stepIndex": 2,
+        "stepTitle": "The Wayhouse Ruins",
+        "encounterId": "er-step-2",
+        "journalHint": "The keeper's log route led through the ruins to a wayhouse — the place where the last signal fire burned before the Searing crossed. Find the sealed alcove in the rubble.",
+        "hintTags": ["ancient", "scarred"],
+        "hintBiomes": ["ruins"]
+      },
+      {
+        "stepIndex": 3,
+        "stepTitle": "Road's End",
+        "encounterId": "er-step-3",
+        "journalHint": "The road's last waystone marks a stone hollow in the ruins — the final cache point. The keeper's note said 'Come quickly' and sealed something there when the Searing came.",
+        "hintTags": ["hollow", "ancient"],
+        "hintBiomes": ["ruins"]
+      }
+    ],
+    "rewardId": "ember-compass",
+    "hopeBonus": 3
+  },
+  {
+    "id": "salt-covenant",
+    "title": "The Salt Covenant",
+    "premise": "Two settlements once signed a survival compact on a salt shelf in the wastes. The original record — and the cache it sealed — was never recovered. Someone scratched out one of the names.",
+    "steps": [
+      {
+        "stepIndex": 0,
+        "stepTitle": "The Brine Shelf",
+        "encounterId": "sc-step-0",
+        "journalHint": "The map's first mark is a salt shelf in the wastes — wide and flat, the kind of ground people once gathered to trade on. Look for a boundary stone at the shelf's center.",
+        "hintTags": ["flooded", "abandoned"],
+        "hintBiomes": ["wastes"]
+      },
+      {
+        "stepIndex": 1,
+        "stepTitle": "The Watchtower",
+        "encounterId": "sc-step-1",
+        "journalHint": "The boundary stone named a second compact site — a watchtower near the wastes edge. The scratched-out name pointed toward it. Find the tower and what was hidden under the floor.",
+        "hintTags": ["abandoned", "elevated"],
+        "hintBiomes": ["mountain"]
+      },
+      {
+        "stepIndex": 2,
+        "stepTitle": "The Sealed Storeroom",
+        "encounterId": "sc-step-2",
+        "journalHint": "One of the letters named a third compact witness who sheltered in a sealed storeroom in the ruins south of the tower. Find the storeroom and what they left behind.",
+        "hintTags": ["abandoned", "stone"],
+        "hintBiomes": ["ruins"]
+      },
+      {
+        "stepIndex": 3,
+        "stepTitle": "The Border Crossing",
+        "encounterId": "sc-step-3",
+        "journalHint": "The storeroom walls show a hand-drawn border line ending at an old road crossing in the ruins. The covenant was signed there — look for a marked flagstone.",
+        "hintTags": ["ancient", "stone"],
+        "hintBiomes": ["ruins"]
+      },
+      {
+        "stepIndex": 4,
+        "stepTitle": "The First Arch",
+        "encounterId": "sc-step-4",
+        "journalHint": "The covenant described a sealed cache under the first arch of the southern ruins — the actual goods traded as surety, hidden there and never collected. Find the arch.",
+        "hintTags": ["hollow", "ancient"],
+        "hintBiomes": ["ruins"]
+      }
+    ],
+    "rewardId": "deep-pack",
+    "hopeBonus": 3
+  },
+  {
+    "id": "dead-reckoning",
+    "title": "Dead Reckoning",
+    "premise": "A cartographer's final notebook describes three waypoints still accessible. They left their pack sealed at the last crossing and never came back for it.",
+    "steps": [
+      {
+        "stepIndex": 0,
+        "stepTitle": "First Waypoint",
+        "encounterId": "dr-step-0",
+        "journalHint": "The cartographer's first waypoint was a three-stone cairn at a river bend in the forest. Look for it where water curves against old ground.",
+        "hintTags": ["water", "ancient"],
+        "hintBiomes": ["forest"]
+      },
+      {
+        "stepIndex": 1,
+        "stepTitle": "The Echo Valley",
+        "encounterId": "dr-step-1",
+        "journalHint": "The circled mark on the partial map leads to a valley the cartographer noted as 'echo walls — sound carries far.' Find the valley where stone walls return your voice.",
+        "hintTags": ["hollow", "stone"],
+        "hintBiomes": ["mountain", "ruins"]
+      },
+      {
+        "stepIndex": 2,
+        "stepTitle": "The Crossing",
+        "encounterId": "dr-step-2",
+        "journalHint": "A note in the second tube mentioned 'the crossing' — where the old road meets the river. Half the pack was left there under a compass-rose flagstone.",
+        "hintTags": ["water", "stone"],
+        "hintBiomes": ["ruins", "settlement"]
+      },
+      {
+        "stepIndex": 3,
+        "stepTitle": "Third Waypoint",
+        "encounterId": "dr-step-3",
+        "journalHint": "The final waypoint is a cliff above the ruins — the cartographer's last sight line. The note said the view from the top shows the way out.",
+        "hintTags": ["elevated", "scarred"],
+        "hintBiomes": ["mountain"]
+      }
+    ],
+    "rewardId": "glass-spikes",
+    "hopeBonus": 2
+  },
+  {
+    "id": "wardens-seal",
+    "title": "The Warden's Seal",
+    "premise": "Before the Searing crossed the first settlements, a warden attempted a sealing ritual at the border. The ritual failed and the warden vanished. The mail they wore was never found.",
+    "steps": [
+      {
+        "stepIndex": 0,
+        "stepTitle": "The Sealed Gate",
+        "encounterId": "ws-step-0",
+        "journalHint": "The frieze showed the warden at a gate — one of the old border crossings in the settlement ruins. Find a gate with warden's marks on the lintel.",
+        "hintTags": ["inhabited", "stone"],
+        "hintBiomes": ["settlement"]
+      },
+      {
+        "stepIndex": 1,
+        "stepTitle": "The Wayhouse",
+        "encounterId": "ws-step-1",
+        "journalHint": "The order named the wayhouse — a sheltered building near the old road, east of the gate. The warden was last seen heading there.",
+        "hintTags": ["sheltered", "abandoned"],
+        "hintBiomes": ["settlement"]
+      },
+      {
+        "stepIndex": 2,
+        "stepTitle": "The Hollow Place",
+        "encounterId": "ws-step-2",
+        "journalHint": "The log's last entry mentioned a 'hollow place' near the ruins where old rites were held. The warden brought the mail there. Find the hollow.",
+        "hintTags": ["hollow", "sacred"],
+        "hintBiomes": ["ruins"]
+      },
+      {
+        "stepIndex": 3,
+        "stepTitle": "Above the First Arch",
+        "encounterId": "ws-step-3",
+        "journalHint": "The warden's note said to look above the first arch in the ruins when the light holds. Climb to where daylight reaches the stone corbels.",
+        "hintTags": ["ancient", "scarred"],
+        "hintBiomes": ["ruins"]
+      }
+    ],
+    "rewardId": "warded-mail",
+    "hopeBonus": 2
+  },
+  {
+    "id": "fire-keepers-cord",
+    "title": "The Fire Keeper's Cord",
+    "premise": "Before the Searing swallowed the last shrine, the fire-keeper knotted their prayers into a cord and hid it along a route only they knew. The cord still holds. So do the prayers.",
+    "steps": [
+      {
+        "stepIndex": 0,
+        "stepTitle": "The Brook Altar",
+        "encounterId": "fkc-step-0",
+        "journalHint": "The shrine thread ended at a 'low brook altar' — a carved stump beside running water deep in the forest. Follow running water until you find the altar.",
+        "hintTags": ["water", "sacred"],
+        "hintBiomes": ["forest"]
+      },
+      {
+        "stepIndex": 1,
+        "stepTitle": "The Root Hollow",
+        "encounterId": "fkc-step-1",
+        "journalHint": "The keeper's route continued into overgrown old growth — a natural hollow among ancient trees where something was sealed in a tin. Find the hollow at the heart of the oldest grove.",
+        "hintTags": ["ancient", "overgrown"],
+        "hintBiomes": ["forest"]
+      },
+      {
+        "stepIndex": 2,
+        "stepTitle": "The Festival Hearth",
+        "encounterId": "fkc-step-2",
+        "journalHint": "The note directed east to 'the place of old ash' — a settlement ruin where the keeper lit the festival fire each year. Find the hearth ring in the ruins.",
+        "hintTags": ["scarred", "abandoned"],
+        "hintBiomes": ["ruins"]
+      },
+      {
+        "stepIndex": 3,
+        "stepTitle": "The Ash Road",
+        "encounterId": "fkc-step-3",
+        "journalHint": "The keeper's route crossed a stretch of scarred wastes on the way out of the ruins — a road where fire was once lit for departing travelers. Find the route marker they left there.",
+        "hintTags": ["scarred", "flooded"],
+        "hintBiomes": ["wastes"]
+      },
+      {
+        "stepIndex": 4,
+        "stepTitle": "The Cold Hollow",
+        "encounterId": "fkc-step-4",
+        "journalHint": "The last counting loop pointed toward a 'cold hollow' the keeper called 'the only ground that did not shake.' Head into the hills above the wastes.",
+        "hintTags": ["hollow", "ancient"],
+        "hintBiomes": ["mountain"]
+      }
+    ],
+    "rewardId": "cinder-prayer",
+    "hopeBonus": 4
+  }
+]

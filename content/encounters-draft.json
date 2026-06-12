@@ -1,0 +1,449 @@
+[
+  {
+    "id": "ember-road-discovery",
+    "text": "At the edge of a hamlet, a carved waystone bears the old spiral glyph — Cinder-Seeker work, kept clean by someone who understood what it meant.",
+    "requiredTags": ["inhabited", "ancient"],
+    "biomes": ["settlement"],
+    "choices": [
+      {
+        "label": "Read the inscription",
+        "outcome": { "hope": 1 },
+        "discoversRumor": "ember-road"
+      },
+      {
+        "label": "Pocket the keeper's flint marker",
+        "outcome": { "supply": 1 }
+      }
+    ]
+  },
+  {
+    "id": "er-step-0",
+    "text": "The fire bracket is still bolted to the rock, angled for a south-facing signal. Below it, scratched with a knife point: a name and the glyph for 'road-keeper.' Someone maintained this post long after the road fell silent.",
+    "requiredTags": ["scarred", "elevated"],
+    "biomes": ["mountain"],
+    "choices": [
+      {
+        "label": "Relight a signal fire",
+        "outcome": { "hope": 1 }
+      },
+      {
+        "label": "Take the iron bracket",
+        "outcome": { "supply": 1 }
+      }
+    ]
+  },
+  {
+    "id": "er-step-1",
+    "text": "Above the signal ridge, a stone shelter sits in the lee of the mountain. Waxed signal cord hangs in coils from wooden pegs — still wound, still usable. Beside it: a log book with one final entry in the keeper's hand. 'Cache sealed. Road complete. Come quickly.'",
+    "requiredTags": ["hollow", "elevated"],
+    "biomes": ["mountain"],
+    "choices": [
+      {
+        "label": "Take the waxed cord",
+        "outcome": { "supply": 1 }
+      },
+      {
+        "label": "Read the full log",
+        "outcome": { "hope": 2 }
+      }
+    ]
+  },
+  {
+    "id": "er-step-2",
+    "text": "The wayhouse is mostly rubble, but the keeper's sealed alcove is untouched — built into the thickest wall, exactly as the log described. Inside: a fire lens on an iron chain. The glass is clouded from old heat, but it still focuses light into a point.",
+    "requiredTags": ["ancient", "scarred"],
+    "biomes": ["ruins"],
+    "choices": [
+      {
+        "label": "Take the fire lens",
+        "outcome": { "hope": 2 }
+      },
+      {
+        "label": "Search the rubble for rations",
+        "outcome": { "supply": 1 },
+        "chance": 0.6,
+        "failureOutcome": {}
+      }
+    ]
+  },
+  {
+    "id": "er-step-3",
+    "text": "Below the final waystone, a stone niche sealed with iron. Inside, wrapped in signal cloth: the Ember Compass — a tool that tilts toward warmth instead of north. The road-keeper's last errand. You complete it.",
+    "requiredTags": ["hollow", "ancient"],
+    "biomes": ["ruins"],
+    "choices": [
+      {
+        "label": "Claim the compass",
+        "outcome": { "hope": 2 }
+      },
+      {
+        "label": "Study the compass mechanism",
+        "outcome": { "hope": 1 }
+      }
+    ]
+  },
+  {
+    "id": "salt-covenant-discovery",
+    "text": "A merchant's pack lies open on a broken counter in an abandoned trading post. Inside: a route map with one edge dipped in brine and the word 'Covenant' burned into the leather.",
+    "requiredTags": ["inhabited", "stone"],
+    "biomes": ["settlement"],
+    "choices": [
+      {
+        "label": "Study the route",
+        "outcome": { "hope": 1 },
+        "discoversRumor": "salt-covenant"
+      },
+      {
+        "label": "Salvage the pack",
+        "outcome": { "supply": 1 }
+      }
+    ]
+  },
+  {
+    "id": "sc-step-0",
+    "text": "The salt shelf is cracked by old flood lines. At its center: a boundary stone with two names carved on opposing faces. One has been deliberately scratched out with something heavy.",
+    "requiredTags": ["flooded", "abandoned"],
+    "biomes": ["wastes"],
+    "choices": [
+      {
+        "label": "Read the surviving name",
+        "outcome": { "hope": 1 }
+      },
+      {
+        "label": "Chip salt from the stone",
+        "outcome": { "supply": 1 }
+      }
+    ]
+  },
+  {
+    "id": "sc-step-1",
+    "text": "The tower walls are charred at hip-height — fire set from inside, not out. Under a pried floorboard: a sealed letter addressed to both names on the boundary stone. It has been read and carefully re-sealed.",
+    "requiredTags": ["abandoned", "elevated"],
+    "biomes": ["mountain"],
+    "choices": [
+      {
+        "label": "Open the letter",
+        "outcome": { "hope": 1 },
+        "chance": 0.7,
+        "failureOutcome": { "health": -1 }
+      },
+      {
+        "label": "Search the tower floor",
+        "outcome": { "supply": 1 }
+      }
+    ]
+  },
+  {
+    "id": "sc-step-2",
+    "text": "A sealed storeroom, long abandoned. Inside: provisions wrapped in waxed cloth, untouched — a gesture of compact left by someone who never came back to claim an answer. A note reads: 'Left in good faith for whoever comes.'",
+    "requiredTags": ["abandoned", "stone"],
+    "biomes": ["ruins"],
+    "choices": [
+      {
+        "label": "Take the provisions",
+        "outcome": { "supply": 2 }
+      },
+      {
+        "label": "Leave an answering note",
+        "outcome": { "hope": 1 }
+      }
+    ]
+  },
+  {
+    "id": "sc-step-3",
+    "text": "Under a flagstone marked with both names — one scratched out, one intact — a folded document wrapped in oilskin. The Salt Covenant: names, terms, and a final clause describing a sealed cache hidden beneath 'the first arch in the southern ruins.'",
+    "requiredTags": ["ancient", "stone"],
+    "biomes": ["ruins"],
+    "choices": [
+      {
+        "label": "Read the compact aloud",
+        "outcome": { "hope": 2 }
+      },
+      {
+        "label": "Pocket the oilskin",
+        "outcome": { "supply": 1 }
+      }
+    ]
+  },
+  {
+    "id": "sc-step-4",
+    "text": "Under the first arch: a sealed chest. The trade goods it once held are long gone, but the Deep Pack used to carry them is intact — every seam stitched twice, impossible depth, balanced for a long road. Someone made this for a crossing that never happened.",
+    "requiredTags": ["hollow", "ancient"],
+    "biomes": ["ruins"],
+    "choices": [
+      {
+        "label": "Take the pack",
+        "outcome": { "hope": 2 }
+      },
+      {
+        "label": "Examine the chest markings",
+        "outcome": { "hope": 1 }
+      }
+    ]
+  },
+  {
+    "id": "dead-reckoning-discovery",
+    "text": "A dead cartographer's notebook lies open on a ruined desk. The last entry: 'Three waypoints remaining. Pack sealed at the crossing. Do not wait for me.'",
+    "requiredTags": ["abandoned", "stone"],
+    "biomes": ["ruins"],
+    "choices": [
+      {
+        "label": "Copy the waypoints",
+        "outcome": { "hope": 1 },
+        "discoversRumor": "dead-reckoning"
+      },
+      {
+        "label": "Take the blank pages",
+        "outcome": { "supply": 1 }
+      }
+    ]
+  },
+  {
+    "id": "dr-step-0",
+    "text": "Three stones, still standing. Lodged beneath the middle one: a waxed tube holding the cartographer's partial map. The next mark is circled in red chalk and labeled 'echo valley.'",
+    "requiredTags": ["water", "ancient"],
+    "biomes": ["forest"],
+    "choices": [
+      {
+        "label": "Study the partial map",
+        "outcome": { "hope": 1 }
+      },
+      {
+        "label": "Pocket the wax tube",
+        "outcome": { "supply": 1 }
+      }
+    ]
+  },
+  {
+    "id": "dr-step-1",
+    "text": "The echo valley is exactly as described — your footsteps return to you twice, slightly wrong. A second waxed tube is wedged into a wall crack. Inside: a map correction and a note. 'Pack is heavy. Left half at the crossing. The spikes are worth the weight.'",
+    "requiredTags": ["hollow", "stone"],
+    "biomes": ["mountain", "ruins"],
+    "choices": [
+      {
+        "label": "Retrieve the tube",
+        "outcome": { "hope": 1 }
+      },
+      {
+        "label": "Search the valley floor",
+        "outcome": { "supply": 1 }
+      }
+    ]
+  },
+  {
+    "id": "dr-step-2",
+    "text": "A flagstone marked with a compass rose. Below it: half a cartographer's pack. Food long spoiled, but tools intact — including a set of Glass Spikes wrapped in leather, labeled in the same hand: 'For the final climb.'",
+    "requiredTags": ["water", "stone"],
+    "biomes": ["ruins", "settlement"],
+    "choices": [
+      {
+        "label": "Take the pack tools",
+        "outcome": { "hope": 2 }
+      },
+      {
+        "label": "Search the pack for anything edible",
+        "outcome": { "supply": 1 },
+        "chance": 0.5,
+        "failureOutcome": {}
+      }
+    ]
+  },
+  {
+    "id": "dr-step-3",
+    "text": "At the summit: a brass sight-ring bolted to the rock, angled west. You look through it. The cartographer was right — there is a clear corridor through the ash, still open. You pocket the Glass Spikes and fix the heading in your mind.",
+    "requiredTags": ["elevated", "scarred"],
+    "biomes": ["mountain"],
+    "choices": [
+      {
+        "label": "Fix the heading",
+        "outcome": { "hope": 2 }
+      },
+      {
+        "label": "Mark the summit",
+        "outcome": { "hope": 1 }
+      }
+    ]
+  },
+  {
+    "id": "wardens-seal-discovery",
+    "text": "A wall frieze shows a warden in full mail standing at a sealed gate. The inscription below reads: 'The seal held longer than they thought.' The second line has been burned away.",
+    "requiredTags": ["ancient", "abandoned"],
+    "biomes": ["ruins"],
+    "choices": [
+      {
+        "label": "Trace the inscription",
+        "outcome": { "hope": 1 },
+        "discoversRumor": "wardens-seal"
+      },
+      {
+        "label": "Knock a stone from the frieze",
+        "outcome": { "supply": 1 }
+      }
+    ]
+  },
+  {
+    "id": "ws-step-0",
+    "text": "The gate lintel bears the seal glyph from the frieze. Carved into the wall beside it, a hollow barely big enough for a fist. Inside: a folded order on stiff paper. 'Retreat to the wayhouse. Do not burn the logs. The mail holds.'",
+    "requiredTags": ["inhabited", "stone"],
+    "biomes": ["settlement"],
+    "choices": [
+      {
+        "label": "Pocket the order",
+        "outcome": { "hope": 1 }
+      },
+      {
+        "label": "Examine the gate mechanism",
+        "outcome": { "supply": 1 }
+      }
+    ]
+  },
+  {
+    "id": "ws-step-1",
+    "text": "Long abandoned, but the walls hold. A cold fire ring and a mostly-burned log book in the corner. The last readable line: 'I go now to the hollow place. The mail must not be lost. Look above the first arch.'",
+    "requiredTags": ["sheltered", "abandoned"],
+    "biomes": ["settlement"],
+    "choices": [
+      {
+        "label": "Copy the surviving entries",
+        "outcome": { "hope": 2 }
+      },
+      {
+        "label": "Search the wayhouse stores",
+        "outcome": { "supply": 1 },
+        "chance": 0.6,
+        "failureOutcome": {}
+      }
+    ]
+  },
+  {
+    "id": "ws-step-2",
+    "text": "Wind-still and cool, the hollow is used for old rites — ash circles, carved stones, a fire ring built from memory rather than habit. In a stone depression: ash, two ritual pins, and a folded note. 'Look above the first arch when the light holds.'",
+    "requiredTags": ["hollow", "sacred"],
+    "biomes": ["ruins"],
+    "choices": [
+      {
+        "label": "Tend the ash circle",
+        "outcome": { "hope": 1 }
+      },
+      {
+        "label": "Take the ritual pins",
+        "outcome": { "supply": 1 }
+      }
+    ]
+  },
+  {
+    "id": "ws-step-3",
+    "text": "Above the arch, in a stone corbel where morning light reaches: a rolled bundle wrapped in warded cloth. The Warded Mail — rings etched with old sigils, not a single one burned. The warden's seal held after all.",
+    "requiredTags": ["ancient", "scarred"],
+    "biomes": ["ruins"],
+    "choices": [
+      {
+        "label": "Claim the mail",
+        "outcome": { "hope": 2 }
+      },
+      {
+        "label": "Study the sigil patterns",
+        "outcome": { "hope": 1 }
+      }
+    ]
+  },
+  {
+    "id": "fire-keepers-cord-discovery",
+    "text": "A shrine post at the forest edge holds a single knotted thread — one end burned, one end tucked into a crack in the post. A tile etched with the fire-keeper's glyph lies at its base.",
+    "requiredTags": ["sacred", "inhabited"],
+    "biomes": ["settlement", "forest"],
+    "choices": [
+      {
+        "label": "Study the knotted thread",
+        "outcome": { "hope": 1 },
+        "discoversRumor": "fire-keepers-cord"
+      },
+      {
+        "label": "Take the glyph tile",
+        "outcome": { "supply": 1 }
+      }
+    ]
+  },
+  {
+    "id": "fkc-step-0",
+    "text": "The carved stump altar sits beside a cold brook. A second thread is tied to its base — longer than the first, ending in three loops. Three more places to find. The brook is the coldest water you have touched in days.",
+    "requiredTags": ["water", "sacred"],
+    "biomes": ["forest"],
+    "choices": [
+      {
+        "label": "Offer water from the brook",
+        "outcome": { "hope": 2 }
+      },
+      {
+        "label": "Refill your canteen",
+        "outcome": { "supply": 1 }
+      }
+    ]
+  },
+  {
+    "id": "fkc-step-1",
+    "text": "Ancient root hollows ring a clearing of collapsed light. In the largest: a fire-keeper's tin sealed with pitch. Inside, the third counting knot and a charcoal note — 'From here, the heat cannot follow.' It was optimistic. It was also kind.",
+    "requiredTags": ["ancient", "overgrown"],
+    "biomes": ["forest"],
+    "choices": [
+      {
+        "label": "Read the full note",
+        "outcome": { "hope": 1 }
+      },
+      {
+        "label": "Take the tin for carrying",
+        "outcome": { "supply": 1 }
+      }
+    ]
+  },
+  {
+    "id": "fkc-step-2",
+    "text": "The festival hearth ring is cold and deep with ash. The fourth knot is wedged between the hearthstones — the longest yet, each loop a different thickness. The keeper ran out of time on this one. The knots are still even.",
+    "requiredTags": ["scarred", "abandoned"],
+    "biomes": ["ruins"],
+    "choices": [
+      {
+        "label": "Clear the hearth ring",
+        "outcome": { "hope": 2 }
+      },
+      {
+        "label": "Dig through the ash",
+        "outcome": { "supply": 1 },
+        "chance": 0.7,
+        "failureOutcome": {}
+      }
+    ]
+  },
+  {
+    "id": "fkc-step-3",
+    "text": "The old road is half-buried in ash and brine. A route marker leans at an angle, wrapped in a familiar waxed thread. The knot it holds is different from the others — not a counting knot. It means 'safe.' The keeper left it for anyone who came this way.",
+    "requiredTags": ["scarred", "flooded"],
+    "biomes": ["wastes"],
+    "choices": [
+      {
+        "label": "Leave your own marker",
+        "outcome": { "hope": 2 }
+      },
+      {
+        "label": "Take the route marker",
+        "outcome": { "supply": 1 }
+      }
+    ]
+  },
+  {
+    "id": "fkc-step-4",
+    "text": "The hollow is wind-still between two rock faces, exactly as described. In a niche at the back: a wrapped bundle. The fire-keeper's cord, complete — every knot intact. Each knot is a day of walking not yet lost.",
+    "requiredTags": ["hollow", "ancient"],
+    "biomes": ["mountain"],
+    "choices": [
+      {
+        "label": "Tie the cord to your pack",
+        "outcome": { "hope": 2 }
+      },
+      {
+        "label": "Count the keeper's knots",
+        "outcome": { "hope": 1 }
+      }
+    ]
+  }
+]

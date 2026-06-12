@@ -100,7 +100,11 @@ export default function viteApiPlugin(): Plugin {
 
           // Route: /api/encounters
           // Route: /api/encounters/[id]
+          // Route: /api/rumors
+          // Route: /api/rumors/[id]
           // Route: /api/seed
+          // Route: /api/seed-rumors
+          // Route: /api/admin/[route]
           // Route: /api/analytics
           // Route: /api/analytics/stats
           const pathname = url.split("?")[0];
@@ -117,9 +121,29 @@ export default function viteApiPlugin(): Plugin {
             handler = await server.ssrLoadModule(
               "/api/encounters/[id].ts",
             ) as RouteHandler;
+          } else if (pathname === "/api/rumors") {
+            handler = await server.ssrLoadModule(
+              "/api/rumors/index.ts",
+            ) as RouteHandler;
+          } else if (pathname.startsWith("/api/rumors/")) {
+            const id = pathname.slice("/api/rumors/".length);
+            vReq.query = { ...vReq.query, id };
+            handler = await server.ssrLoadModule(
+              "/api/rumors/[id].ts",
+            ) as RouteHandler;
           } else if (pathname === "/api/seed") {
             handler = await server.ssrLoadModule(
               "/api/seed.ts",
+            ) as RouteHandler;
+          } else if (pathname === "/api/seed-rumors") {
+            handler = await server.ssrLoadModule(
+              "/api/seed-rumors.ts",
+            ) as RouteHandler;
+          } else if (pathname.startsWith("/api/admin/")) {
+            const route = pathname.slice("/api/admin/".length);
+            vReq.query = { ...vReq.query, route };
+            handler = await server.ssrLoadModule(
+              "/api/admin/[route].ts",
             ) as RouteHandler;
           } else if (pathname === "/api/analytics") {
             handler = await server.ssrLoadModule(

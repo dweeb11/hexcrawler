@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>The Waning Light Admin</title>
+    <title>The Waning Light — Content Admin</title>
     <style>
       * {
         box-sizing: border-box;
@@ -11,9 +11,9 @@
 
       body {
         margin: 0;
-        font-family: "Iowan Old Style", Georgia, serif;
-        background: linear-gradient(180deg, #f6efe4 0%, #e9ddc7 100%);
-        color: #241d18;
+        font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+        background: #0a0a0a;
+        color: #c0c0c0;
       }
 
       #admin-root {
@@ -22,37 +22,63 @@
       }
 
       .shell {
-        max-width: 1200px;
+        max-width: 1400px;
         margin: 0 auto;
         display: grid;
         gap: 16px;
       }
 
       .card {
-        background: rgba(255, 250, 240, 0.92);
-        border: 1px solid #d0bda3;
-        border-radius: 16px;
+        background: #111;
+        border: 1px solid #333;
+        border-radius: 4px;
         padding: 16px;
-        box-shadow: 0 10px 30px rgba(77, 50, 26, 0.08);
       }
 
-      .two-column {
+      .editor-layout {
         display: grid;
         gap: 16px;
-        grid-template-columns: 1.1fr 0.9fr;
+        grid-template-columns: 1fr 1.2fr 0.9fr;
       }
 
-      .row {
+      .row,
+      .header-row {
         display: flex;
         gap: 12px;
         flex-wrap: wrap;
         align-items: center;
       }
 
+      .header-row {
+        justify-content: space-between;
+      }
+
+      .tab-row {
+        display: flex;
+        gap: 8px;
+        margin-top: 12px;
+      }
+
+      .tab {
+        background: transparent;
+        border: 1px solid #333;
+        color: #c0c0c0;
+      }
+
+      .tab.active {
+        border-color: #da4;
+        color: #da4;
+      }
+
       label {
         display: grid;
         gap: 6px;
-        font-size: 14px;
+        font-size: 13px;
+        margin-bottom: 10px;
+      }
+
+      label span {
+        color: #888;
       }
 
       input,
@@ -63,31 +89,45 @@
       }
 
       input,
-      textarea {
+      textarea,
+      select {
         width: 100%;
-        padding: 10px 12px;
-        border-radius: 10px;
-        border: 1px solid #c7b39b;
-        background: #fffdfa;
+        padding: 8px 10px;
+        border-radius: 2px;
+        border: 1px solid #333;
+        background: #0a0a0a;
+        color: #c0c0c0;
       }
 
       textarea {
-        min-height: 140px;
+        min-height: 120px;
         resize: vertical;
       }
 
+      .compact-input {
+        width: auto;
+        min-width: 120px;
+      }
+
       button {
-        padding: 10px 14px;
-        border-radius: 999px;
+        padding: 8px 12px;
+        border-radius: 2px;
         border: 1px solid #815b33;
-        background: #3c2f23;
+        background: #1a140f;
         color: #fff6ea;
         cursor: pointer;
       }
 
       button.secondary {
         background: transparent;
-        color: #3c2f23;
+        color: #c0c0c0;
+        border-color: #333;
+      }
+
+      button.selected,
+      li button.selected {
+        border-color: #da4;
+        color: #da4;
       }
 
       ul {
@@ -101,21 +141,92 @@
       li button {
         width: 100%;
         text-align: left;
-        border-radius: 12px;
       }
 
-      pre {
+      pre,
+      .status-line,
+      .validation-banner {
         white-space: pre-wrap;
         word-break: break-word;
-        background: #fffdfa;
-        border: 1px solid #d8c7b2;
-        padding: 12px;
-        border-radius: 12px;
+        background: #0a0a0a;
+        border: 1px solid #333;
+        padding: 10px;
+        border-radius: 2px;
+        font-size: 12px;
       }
 
-      @media (max-width: 900px) {
-        .two-column {
+      .validation-banner.ok {
+        border-color: #4a9;
+        color: #4a9;
+      }
+
+      .validation-banner.warn,
+      .issue-list,
+      .warn-text {
+        color: #da4;
+      }
+
+      .issue-list {
+        margin: 0;
+        padding-left: 18px;
+      }
+
+      .choice-card,
+      .step-card {
+        border: 1px solid #333;
+        padding: 12px;
+        margin-bottom: 12px;
+      }
+
+      .choice-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .preview-panel {
+        position: sticky;
+        top: 16px;
+        align-self: start;
+        max-height: calc(100vh - 48px);
+        overflow: auto;
+      }
+
+      .preview-body p,
+      .preview-body h3 {
+        margin: 0 0 8px;
+      }
+
+      .stats-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+      }
+
+      .stats-label {
+        padding: 6px 8px;
+        color: #888;
+      }
+
+      .stats-value {
+        padding: 6px 8px;
+        text-align: right;
+      }
+
+      hr {
+        border: none;
+        border-top: 1px solid #333;
+        margin: 12px 0;
+      }
+
+      @media (max-width: 1100px) {
+        .editor-layout {
           grid-template-columns: 1fr;
+        }
+
+        .preview-panel {
+          position: static;
+          max-height: none;
         }
       }
     </style>
