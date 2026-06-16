@@ -49,6 +49,11 @@ describe("checkLoss", () => {
     expect(result?.outcome).toBe("loss_hope");
     expect(result?.reason).toContain("light inside you fades");
   });
+
+  it("prefers health loss when both health and hope are depleted", () => {
+    const result = checkLoss(makePlayer({ health: 0, hope: 0 }));
+    expect(result?.outcome).toBe("loss_health");
+  });
 });
 
 describe("forageResult", () => {
