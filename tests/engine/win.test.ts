@@ -9,22 +9,7 @@ import {
   checkPillarsOfFrost,
   checkRestartTheGear,
   frostProximityBand,
-  frostProximityDistance,
 } from "../../src/engine/win";
-
-describe("frostProximityDistance", () => {
-  it("returns distance ahead of the Searing for direction=1", () => {
-    const searing: SearingState = { axis: "q", direction: 1, line: -10, advanceRate: 4 };
-    expect(frostProximityDistance(cubeCoord(0, 0, 0), searing)).toBe(10);
-    expect(frostProximityDistance(cubeCoord(5, -5, 0), searing)).toBe(15);
-  });
-
-  it("returns distance ahead of the Searing for direction=-1", () => {
-    const searing: SearingState = { axis: "q", direction: -1, line: 10, advanceRate: 4 };
-    expect(frostProximityDistance(cubeCoord(0, 0, 0), searing)).toBe(10);
-    expect(frostProximityDistance(cubeCoord(-5, 5, 0), searing)).toBe(15);
-  });
-});
 
 describe("frostProximityBand", () => {
   it("returns 0 below band 1 threshold", () => {

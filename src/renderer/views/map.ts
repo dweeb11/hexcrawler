@@ -1,5 +1,6 @@
 import { coordKey } from "../../engine/hex";
 import { getVisibleNeighbors } from "../../engine/map";
+import { searingDistance } from "../../engine/searing";
 import { type GameState, type HexTile, MAX_HOPE } from "../../engine/state";
 import { drawHexagon, hexToPixel, HEX_SIZE } from "../canvas";
 import type { Camera } from "../camera";
@@ -10,14 +11,6 @@ import { drawHintOverlay, type ActiveHint } from "../hint-overlay";
 import { drawLegend } from "../legend";
 
 const LOW_HOPE_THRESHOLD = Math.floor(MAX_HOPE * 0.4);
-
-function searingDistance(state: GameState): number {
-  const playerAxisValue = state.player.hex[state.searing.axis];
-  if (state.searing.direction === 1) {
-    return playerAxisValue - state.searing.line;
-  }
-  return state.searing.line - playerAxisValue;
-}
 
 function drawConsumedGradient(
   ctx: CanvasRenderingContext2D,
@@ -158,8 +151,8 @@ export function renderMap(
   ctx.restore();
 
   ctx.filter = "none";
-  drawSearingEdgeGlow(ctx, width, height, searingDistance(state), pulsePhase);
-
+  const distance = searingDistance(state.player.hex, state.searing);
+  drawSearingEdgeGlow(ctx, width, height, distance, pulsePhase);
 
   renderHud(ctx, state, width);
   drawLegend(ctx, width, "map");

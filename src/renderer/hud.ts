@@ -1,3 +1,4 @@
+import { searingDistance } from "../engine/searing";
 import {
   MAX_HEALTH,
   MAX_HOPE,
@@ -46,15 +47,6 @@ function drawResourceBar(
   ctx.fillText(`${current}/${max}`, x + 220, y);
 }
 
-function searingDistance(state: GameState): number {
-  const playerAxisValue = state.player.hex[state.searing.axis];
-  if (state.searing.direction === 1) {
-    return playerAxisValue - state.searing.line;
-  }
-
-  return state.searing.line - playerAxisValue;
-}
-
 export function renderHud(
   ctx: CanvasRenderingContext2D,
   state: GameState,
@@ -85,7 +77,7 @@ export function renderHud(
     ctx.fillText(`◆ ${label}`, 170, 108);
   }
 
-  const distance = searingDistance(state);
+  const distance = searingDistance(state.player.hex, state.searing);
   if (distance <= 5) {
     ctx.fillStyle = distance <= 2 ? "#d44" : "#da4";
     ctx.font = "bold 14px monospace";
