@@ -198,6 +198,24 @@ describe("resolveRumorDiscovery", () => {
     const rumorState: RumorState = { available: [testRumor], active: [], completed: [] };
     expect(resolveRumorDiscovery(rumorState, "missing")).toBeNull();
   });
+
+  it("returns null when rumor is already active", () => {
+    const rumorState: RumorState = {
+      available: [testRumor],
+      active: [{ rumorId: "whispering-well", currentStep: 0 }],
+      completed: [],
+    };
+    expect(resolveRumorDiscovery(rumorState, "whispering-well")).toBeNull();
+  });
+
+  it("returns null when rumor is already completed", () => {
+    const rumorState: RumorState = {
+      available: [testRumor],
+      active: [],
+      completed: [{ rumorId: "whispering-well", completedAtTurn: 5 }],
+    };
+    expect(resolveRumorDiscovery(rumorState, "whispering-well")).toBeNull();
+  });
 });
 
 describe("resolveRumorAfterEncounter", () => {

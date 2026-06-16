@@ -43,25 +43,25 @@ function appendLog(state: GameState, text: string, type: LogType = "narrative"):
 }
 
 function applyRumorEffects(state: GameState, effects: RumorEffects): GameState {
+  const stats = { ...state.stats };
+  if (effects.statsDelta.rumorsDiscovered !== undefined) {
+    stats.rumorsDiscovered += effects.statsDelta.rumorsDiscovered;
+  }
+  if (effects.statsDelta.rumorsCompleted !== undefined) {
+    stats.rumorsCompleted += effects.statsDelta.rumorsCompleted;
+  }
+  if (effects.statsDelta.relicsCollected !== undefined) {
+    stats.relicsCollected += effects.statsDelta.relicsCollected;
+  }
+
   let nextState: GameState = {
     ...state,
     rumors: effects.rumors,
-    stats: {
-      ...state.stats,
-      ...(effects.statsDelta.rumorsDiscovered
-        ? { rumorsDiscovered: state.stats.rumorsDiscovered + effects.statsDelta.rumorsDiscovered }
-        : {}),
-      ...(effects.statsDelta.rumorsCompleted
-        ? { rumorsCompleted: state.stats.rumorsCompleted + effects.statsDelta.rumorsCompleted }
-        : {}),
-      ...(effects.statsDelta.relicsCollected
-        ? { relicsCollected: state.stats.relicsCollected + effects.statsDelta.relicsCollected }
-        : {}),
-    },
+    stats,
     ...(effects.relicsToAdd.length > 0
       ? { relics: [...state.relics, ...effects.relicsToAdd] }
       : {}),
-    ...(effects.hopeDelta
+    ...(effects.hopeDelta !== 0
       ? { player: applyDelta(state.player, { hope: effects.hopeDelta }, state.relics) }
       : {}),
   };

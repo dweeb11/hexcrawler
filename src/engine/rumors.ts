@@ -210,6 +210,11 @@ export function resolveRumorDiscovery(
   const rumor = getRumor(rumorState, rumorId);
   if (!rumor) return null;
 
+  const alreadyKnown =
+    rumorState.active.some((a) => a.rumorId === rumorId) ||
+    rumorState.completed.some((c) => c.rumorId === rumorId);
+  if (alreadyKnown) return null;
+
   return {
     rumors: discoverRumor(rumorState, rumorId),
     logs: [
