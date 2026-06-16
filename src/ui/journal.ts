@@ -4,14 +4,23 @@ import type { GameState } from "../engine/state";
 
 let currentTab: "rumors" | "relics" = "rumors";
 
-export function toggleJournal(journalEl: HTMLElement, logEl: HTMLElement): void {
-  const isHidden = journalEl.classList.contains("hidden");
-  if (isHidden) {
-    journalEl.classList.remove("hidden");
-    logEl.classList.add("hidden");
-  } else {
+export function isJournalOpen(journalEl: HTMLElement): boolean {
+  return !journalEl.classList.contains("hidden");
+}
+
+export function closeJournal(journalEl: HTMLElement, logEl: HTMLElement): void {
+  if (isJournalOpen(journalEl)) {
     journalEl.classList.add("hidden");
     logEl.classList.remove("hidden");
+  }
+}
+
+export function toggleJournal(journalEl: HTMLElement, logEl: HTMLElement): void {
+  if (isJournalOpen(journalEl)) {
+    closeJournal(journalEl, logEl);
+  } else {
+    journalEl.classList.remove("hidden");
+    logEl.classList.add("hidden");
   }
 }
 

@@ -21,8 +21,9 @@ import {
   playWin,
   playLoss,
 } from "./ui/audio";
-import { clickedNeighborToAction, keyToAction } from "./ui/input";
-import { toggleJournal, updateJournal, setJournalTab } from "./ui/journal";
+import { clickedNeighborToAction } from "./ui/input";
+import { toggleJournal, updateJournal, setJournalTab, closeJournal } from "./ui/journal";
+import { resolveJournalKeydown } from "./ui/journal-input";
 
 const HINTS_KEY = "waning-light-hints";
 const VALID_HINT_IDS: HintId[] = ["first-turn", "low-supply", "first-encounter", "first-rumor"];
@@ -309,28 +310,39 @@ async function main(): Promise<void> {
       return;
     }
 
-    const normalizedKey = event.key.toLowerCase();
-
     if (state.mode.type === "gameover" && event.key === "Enter") {
       restart();
       return;
     }
 
-    if (normalizedKey === "j" && state.status === "playing") {
-      event.preventDefault();
-      dismissHint("first-rumor");
-      toggleJournal(journalPanel, logPanel);
-      updateJournal(journalContent, state);
-      return;
-    }
+    const journalOpen = !journalPanel.classList.contains("hidden");
+    const result = resolveJournalKeydown(event.key, state.mode, state.status, journalOpen);
 
-    if (!journalPanel.classList.contains("hidden")) {
-      return;
-    }
-
-    const action = keyToAction(event.key, state.mode);
-    if (action) {
-      applyAction(action);
+    switch (result.type) {
+      case "toggle-journal":
+        event.preventDefault();
+        dismissHint("first-rumor");
+        toggleJournal(journalPanel, logPanel);
+        if (!journalPanel.classList.contains("hidden")) {
+          updateJournal(journalContent, state);
+        }
+        return;
+      case "close-journal":
+        event.preventDefault();
+        closeJournal(journalPanel, logPanel);
+        return;
+      case "game-action":
+        if (journalOpen) {
+          closeJournal(journalPanel, logPanel);
+        }
+        applyAction(result.action);
+        return;
+      case "none":
+        return;
+      default: {
+        const _exhaustive: never = result;
+        return _exhaustive;
+      }
     }
   });
 
