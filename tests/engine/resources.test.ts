@@ -34,10 +34,20 @@ describe("applyDelta", () => {
 });
 
 describe("checkLoss", () => {
-  it("returns loss messages for dead or hopeless players", () => {
+  it("returns null for a healthy player", () => {
     expect(checkLoss(makePlayer())).toBeNull();
-    expect(checkLoss(makePlayer({ health: 0 }))).toContain("body gives out");
-    expect(checkLoss(makePlayer({ hope: 0 }))).toContain("light inside you fades");
+  });
+
+  it("returns the health outcome and reason when health is depleted", () => {
+    const result = checkLoss(makePlayer({ health: 0 }));
+    expect(result?.outcome).toBe("loss_health");
+    expect(result?.reason).toContain("body gives out");
+  });
+
+  it("returns the hope outcome and reason when hope is depleted", () => {
+    const result = checkLoss(makePlayer({ hope: 0 }));
+    expect(result?.outcome).toBe("loss_hope");
+    expect(result?.reason).toContain("light inside you fades");
   });
 });
 
