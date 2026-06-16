@@ -1,5 +1,10 @@
 import { coordKey, HEX_DIRECTIONS, type CubeCoord, type HexDirection } from "../engine/hex";
-import type { Action, GameMode } from "../engine/state";
+import type { Action, GameMode, GameState } from "../engine/state";
+
+export type KeydownResult =
+  | { type: "none" }
+  | { type: "toggle-journal" }
+  | { type: "game-action"; action: Action; closeJournalFirst: boolean };
 
 // Matches flat-top hexToPixel: W/S pure N/S; Q/E/A/D diagonals (see legend in renderer/legend.ts).
 const KEY_TO_DIRECTION: Record<string, HexDirection> = {
@@ -40,6 +45,30 @@ export function keyToAction(key: string, mode: GameMode): Action | null {
   }
 
   return null;
+}
+
+export function resolveKeydown(
+  key: string,
+  mode: GameMode,
+  status: GameState["status"],
+  journalOpen: boolean,
+): KeydownResult {
+  const normalizedKey = key.toLowerCase();
+
+  if (normalizedKey === "j" && (status === "playing" || journalOpen)) {
+    return { type: "toggle-journal" };
+  }
+
+  if (journalOpen && normalizedKey === "escape") {
+    return { type: "toggle-journal" };
+  }
+
+  const action = keyToAction(key, mode);
+  if (action) {
+    return { type: "game-action", action, closeJournalFirst: journalOpen };
+  }
+
+  return { type: "none" };
 }
 
 export function clickedNeighborToAction(center: CubeCoord, clicked: CubeCoord): Action | null {

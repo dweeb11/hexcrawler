@@ -44,6 +44,11 @@
         flex: 1;
       }
 
+      #journal-panel {
+        display: flex;
+        flex-direction: column;
+      }
+
       .hidden {
         display: none;
       }
@@ -67,6 +72,19 @@
       .journal-tab.active {
         color: #c0c0c0;
         border-bottom: 1px solid #c0c0c0;
+      }
+
+      #journal-content {
+        flex: 1;
+        overflow-y: auto;
+      }
+
+      #journal-footer {
+        margin-top: auto;
+        padding-top: 8px;
+        border-top: 1px solid #333;
+        color: #666;
+        font-size: 11px;
       }
 
       .log-entry {
@@ -160,6 +178,7 @@
             <button class="journal-tab" data-tab="relics">Relics</button>
           </div>
           <div id="journal-content"></div>
+          <div id="journal-footer">Press J or Esc to close</div>
         </div>
       </div>
     </div>

@@ -21,8 +21,14 @@ import {
   playWin,
   playLoss,
 } from "./ui/audio";
-import { clickedNeighborToAction, keyToAction } from "./ui/input";
-import { toggleJournal, updateJournal, setJournalTab } from "./ui/journal";
+import { clickedNeighborToAction, resolveKeydown } from "./ui/input";
+import {
+  toggleJournal,
+  updateJournal,
+  setJournalTab,
+  closeJournal,
+  isJournalOpen,
+} from "./ui/journal";
 
 const HINTS_KEY = "waning-light-hints";
 const VALID_HINT_IDS: HintId[] = ["first-turn", "low-supply", "first-encounter", "first-rumor"];
@@ -309,28 +315,39 @@ async function main(): Promise<void> {
       return;
     }
 
-    const normalizedKey = event.key.toLowerCase();
-
     if (state.mode.type === "gameover" && event.key === "Enter") {
       restart();
       return;
     }
 
-    if (normalizedKey === "j" && state.status === "playing") {
-      event.preventDefault();
-      dismissHint("first-rumor");
-      toggleJournal(journalPanel, logPanel);
-      updateJournal(journalContent, state);
-      return;
-    }
+    const journalOpen = isJournalOpen(journalPanel);
+    const result = resolveKeydown(event.key, state.mode, state.status, journalOpen);
 
-    if (!journalPanel.classList.contains("hidden")) {
-      return;
-    }
-
-    const action = keyToAction(event.key, state.mode);
-    if (action) {
-      applyAction(action);
+    switch (result.type) {
+      case "toggle-journal": {
+        event.preventDefault();
+        const opening = !journalOpen;
+        if (opening) {
+          dismissHint("first-rumor");
+        }
+        toggleJournal(journalPanel, logPanel);
+        if (opening) {
+          updateJournal(journalContent, state);
+        }
+        return;
+      }
+      case "game-action":
+        if (result.closeJournalFirst) {
+          closeJournal(journalPanel, logPanel);
+        }
+        applyAction(result.action);
+        return;
+      case "none":
+        return;
+      default: {
+        const _exhaustive: never = result;
+        return _exhaustive;
+      }
     }
   });
 
