@@ -4,11 +4,11 @@ import { createAnalyticsClient } from "./api/analytics";
 import { coordKey } from "./engine/hex";
 import { clearSave, hasSave, loadGame, saveGame } from "./ui/save";
 import { pixelToHex, setupCanvas } from "./renderer/canvas";
-import { createCamera } from "./renderer/camera";
+import { createCamera, screenToWorld, type Camera } from "./renderer/camera";
+import { hitTestEncounterChoice } from "./renderer/encounter-layout";
 import { render } from "./renderer/renderer";
 import { createInitialState, MAX_SUPPLY, type Action, type GameState } from "./engine/state";
 import { resolveTurn } from "./engine/turn";
-import { screenToWorld } from "./renderer/camera";
 import { getActiveHint, type HintId } from "./ui/hints";
 import { applyHopeStyling, clearLog, updateLog } from "./ui/log";
 import {
@@ -78,6 +78,42 @@ function submitPlaytest(gameState: GameState, outcome: "won" | "lost"): void {
       rumorsCompleted,
     }),
   }).catch(() => { /* fire-and-forget; ignore network failures */ });
+}
+
+type CanvasTouchResult = Action | "restart";
+
+function canvasTouchToAction(
+  state: GameState,
+  x: number,
+  y: number,
+  camera: Camera,
+): CanvasTouchResult | null {
+  switch (state.mode.type) {
+    case "gameover":
+      return "restart";
+    case "camp":
+      return { type: "dismiss" };
+    case "encounter": {
+      const choiceIndex = hitTestEncounterChoice(
+        y,
+        state.mode.encounter.choices.length,
+        state.mode.rumorContext != null,
+      );
+      if (choiceIndex === null) {
+        return null;
+      }
+      return { type: "choose", choiceIndex };
+    }
+    case "map": {
+      const world = screenToWorld(camera, x, y);
+      const clicked = pixelToHex(world.x, world.y);
+      return clickedNeighborToAction(state.player.hex, clicked);
+    }
+    default: {
+      const _exhaustive: never = state.mode;
+      return _exhaustive;
+    }
+  }
 }
 
 async function main(): Promise<void> {
@@ -352,34 +388,13 @@ async function main(): Promise<void> {
     const x = touch.clientX - rect.left;
     const y = touch.clientY - rect.top;
 
-    if (state.mode.type === "gameover") {
+    const result = canvasTouchToAction(state, x, y, camera);
+    if (result === "restart") {
       restart();
       return;
     }
-
-    if (state.mode.type === "camp") {
-      applyAction({ type: "dismiss" });
-      return;
-    }
-
-    if (state.mode.type === "encounter") {
-      // Encounter choices are drawn at y=320 with 54px spacing in canvas CSS coordinates
-      const CHOICE_START_Y = 320;
-      const CHOICE_HEIGHT = 54;
-      const choiceIndex = Math.floor((y - CHOICE_START_Y) / CHOICE_HEIGHT);
-      if (choiceIndex >= 0 && choiceIndex < state.mode.encounter.choices.length) {
-        applyAction({ type: "choose", choiceIndex });
-      }
-      return;
-    }
-
-    if (state.mode.type === "map") {
-      const world = screenToWorld(camera, x, y);
-      const clicked = pixelToHex(world.x, world.y);
-      const action = clickedNeighborToAction(state.player.hex, clicked);
-      if (action) {
-        applyAction(action);
-      }
+    if (result) {
+      applyAction(result);
     }
   }, { passive: false });
 

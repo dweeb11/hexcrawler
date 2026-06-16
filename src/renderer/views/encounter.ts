@@ -1,3 +1,4 @@
+import { encounterChoiceY, encounterLayout } from "../encounter-layout";
 import { type GameState, type ResourceDelta } from "../../engine/state";
 import { encounterHasDiscoveryChoice } from "../../engine/rumors";
 import { COLORS } from "../glyphs";
@@ -65,25 +66,25 @@ export function renderEncounter(
 
   ctx.font = "18px monospace";
   ctx.fillStyle = COLORS.text;
-  wrapText(ctx, mode.encounter.text, width / 2, rumorContext ? 160 : 150, width * 0.7, 28);
+  const layout = encounterLayout(rumorContext != null);
+  wrapText(ctx, mode.encounter.text, width / 2, layout.textY, width * 0.7, 28);
 
   ctx.font = "14px monospace";
   ctx.fillStyle = COLORS.textDim;
   ctx.fillText(
     `Supply ${player.supply}  Hope ${player.hope}  Health ${player.health}`,
     width / 2,
-    rumorContext ? 270 : 260,
+    layout.statsY,
   );
 
   ctx.textAlign = "left";
   ctx.fillStyle = COLORS.text;
-  let y = rumorContext ? 330 : 320;
+  const hasRumorContext = rumorContext != null;
   mode.encounter.choices.forEach((choice, index) => {
     const chanceLabel = choice.chance ? ` (${Math.round(choice.chance * 100)}%)` : "";
     const leadLabel = choice.discoversRumor ? "  [reveals a lead]" : "";
     const line = `${index + 1}. ${choice.label}${chanceLabel} -> ${formatDelta(choice.outcome)}${leadLabel}`;
-    wrapText(ctx, line, width * 0.18, y, width * 0.64, 24);
-    y += 54;
+    wrapText(ctx, line, width * 0.18, encounterChoiceY(index, hasRumorContext), width * 0.64, 24);
   });
 
   drawLegend(ctx, width, "encounter");
