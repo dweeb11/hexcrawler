@@ -21,23 +21,22 @@ export function resolveTurn(state: GameState, action: Action, rng: RNG): GameSta
     return checkedState;
   }
 
-  if (action.type === "choose") {
-    return resolveChoose(checkedState, action, rng);
+  switch (action.type) {
+    case "choose":
+      return resolveChoose(checkedState, action, rng);
+    case "dismiss":
+      return resolveDismiss(checkedState);
+    case "push": {
+      const advancedState = { ...checkedState, turn: checkedState.turn + 1 };
+      return resolvePush(advancedState, action, rng);
+    }
+    case "pause": {
+      const advancedState = { ...checkedState, turn: checkedState.turn + 1 };
+      return resolvePause(advancedState, action, rng);
+    }
+    default: {
+      const _exhaustive: never = action;
+      return _exhaustive;
+    }
   }
-
-  if (action.type === "dismiss") {
-    return resolveDismiss(checkedState);
-  }
-
-  const advancedState = { ...checkedState, turn: checkedState.turn + 1 };
-
-  if (action.type === "push") {
-    return resolvePush(advancedState, action, rng);
-  }
-
-  if (action.type === "pause") {
-    return resolvePause(advancedState, action, rng);
-  }
-
-  return advancedState;
 }
