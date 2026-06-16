@@ -1,12 +1,20 @@
 // tests/engine/rumors.test.ts
 import { describe, expect, it } from "vitest";
 import {
+  advanceRumor,
+  applyRumorEffects,
+  buildRumorContext,
+  discoverRumor,
+  findActiveRumorForEncounter,
   findNextRumorStep,
   applyRumorWeights,
-  advanceRumor,
-  discoverRumor,
+  getRumorJournalEntries,
+  resolveRumorAfterEncounter,
+  resolveRumorDiscovery,
 } from "../../src/engine/rumors";
-import type { Rumor, RumorState, ActiveRumor } from "../../src/engine/state";
+import { createInitialState } from "../../src/engine/state";
+import type { Relic, Rumor, RumorState, ActiveRumor } from "../../src/engine/state";
+import { seededRng } from "../helpers";
 
 const testRumor: Rumor = {
   id: "whispering-well",
@@ -137,5 +145,199 @@ describe("discoverRumor", () => {
     };
     const updated = discoverRumor(rumorState, "whispering-well");
     expect(updated.active).toHaveLength(1);
+  });
+});
+
+describe("buildRumorContext", () => {
+  it("marks final step when on last index", () => {
+    const context = buildRumorContext(testRumor, 1);
+    expect(context).toEqual({
+      rumorId: "whispering-well",
+      rumorTitle: "The Whispering Well",
+      stepIndex: 1,
+      stepCount: 2,
+      isFinalStep: true,
+    });
+  });
+});
+
+describe("findActiveRumorForEncounter", () => {
+  it("returns active rumor matching encounter id", () => {
+    const rumorState: RumorState = {
+      available: [testRumor],
+      active: [{ rumorId: "whispering-well", currentStep: 0 }],
+      completed: [],
+    };
+    const match = findActiveRumorForEncounter(rumorState, "ww-step-0");
+    expect(match?.rumor.id).toBe("whispering-well");
+    expect(match?.active.currentStep).toBe(0);
+  });
+
+  it("returns null when encounter is not a rumor step", () => {
+    const rumorState: RumorState = {
+      available: [testRumor],
+      active: [{ rumorId: "whispering-well", currentStep: 0 }],
+      completed: [],
+    };
+    expect(findActiveRumorForEncounter(rumorState, "unrelated")).toBeNull();
+  });
+});
+
+describe("resolveRumorDiscovery", () => {
+  it("returns discovery log and stats delta", () => {
+    const rumorState: RumorState = {
+      available: [testRumor],
+      active: [],
+      completed: [],
+    };
+    const result = resolveRumorDiscovery(rumorState, "whispering-well");
+    expect(result?.rumors.active).toHaveLength(1);
+    expect(result?.statsDelta).toEqual({ rumorsDiscovered: 1 });
+    expect(result?.logs[0]?.text).toContain("The Whispering Well");
+    expect(result?.logs[0]?.type).toBe("rumor");
+  });
+
+  it("returns null for unknown rumor id", () => {
+    const rumorState: RumorState = { available: [testRumor], active: [], completed: [] };
+    expect(resolveRumorDiscovery(rumorState, "missing")).toBeNull();
+  });
+
+  it("returns null when rumor is already active", () => {
+    const rumorState: RumorState = {
+      available: [testRumor],
+      active: [{ rumorId: "whispering-well", currentStep: 0 }],
+      completed: [],
+    };
+    expect(resolveRumorDiscovery(rumorState, "whispering-well")).toBeNull();
+  });
+
+  it("returns null when rumor is already completed", () => {
+    const rumorState: RumorState = {
+      available: [testRumor],
+      active: [],
+      completed: [{ rumorId: "whispering-well", completedAtTurn: 5 }],
+    };
+    expect(resolveRumorDiscovery(rumorState, "whispering-well")).toBeNull();
+  });
+});
+
+describe("resolveRumorAfterEncounter", () => {
+  const activeState: RumorState = {
+    available: [testRumor],
+    active: [{ rumorId: "whispering-well", currentStep: 0 }],
+    completed: [],
+  };
+
+  it("advances to next step and logs trail-deepens message", () => {
+    const result = resolveRumorAfterEncounter(activeState, "ww-step-0", 5);
+    expect(result?.rumors.active).toEqual([{ rumorId: "whispering-well", currentStep: 1 }]);
+    expect(result?.logs[0]?.text).toContain("trail deepens");
+    expect(result?.hopeDelta).toBe(0);
+  });
+
+  it("completes chain on final step and grants reward and hope", () => {
+    const relic: Relic = {
+      id: "well-sigil",
+      name: "Well Sigil",
+      description: "Token of resolve.",
+      effect: { type: "max_resource", resource: "hope", bonus: 1 },
+    };
+    const rumorWithReward: Rumor = { ...testRumor, reward: relic, hopeBonus: 3 };
+    const finalStepState: RumorState = {
+      available: [rumorWithReward],
+      active: [{ rumorId: "whispering-well", currentStep: 1 }],
+      completed: [],
+    };
+
+    const result = resolveRumorAfterEncounter(finalStepState, "ww-step-1", 9);
+    expect(result?.rumors.active).toEqual([]);
+    expect(result?.rumors.completed).toEqual([
+      { rumorId: "whispering-well", completedAtTurn: 9 },
+    ]);
+    expect(result?.relicsToAdd).toEqual([relic]);
+    expect(result?.hopeDelta).toBe(3);
+    expect(result?.statsDelta).toEqual({ rumorsCompleted: 1, relicsCollected: 1 });
+    expect(result?.logs[0]?.text).toContain("Whispering Well resolved");
+    expect(result?.logs[0]?.text).toContain("Well Sigil");
+  });
+
+  it("strips leading The from completion log title", () => {
+    const result = resolveRumorAfterEncounter(activeState, "ww-step-0", 1);
+    expect(result?.logs[0]?.text).toMatch(/^▸ Whispering Well —/);
+  });
+
+  it("returns null when encounter is not a rumor step", () => {
+    expect(resolveRumorAfterEncounter(activeState, "other", 1)).toBeNull();
+  });
+});
+
+describe("getRumorJournalEntries", () => {
+  it("returns active entries with step progress and hints", () => {
+    const rumorState: RumorState = {
+      available: [testRumor],
+      active: [{ rumorId: "whispering-well", currentStep: 0 }],
+      completed: [],
+    };
+    const entries = getRumorJournalEntries(rumorState);
+    expect(entries).toHaveLength(1);
+    expect(entries[0]).toMatchObject({
+      status: "active",
+      stepIndex: 0,
+      stepCount: 2,
+      journalHint: "Seek ancient water in the forest",
+    });
+  });
+
+  it("returns completed entries with reward metadata", () => {
+    const relic: Relic = {
+      id: "well-sigil",
+      name: "Well Sigil",
+      description: "Token.",
+      effect: { type: "max_resource", resource: "hope", bonus: 1 },
+    };
+    const rumorState: RumorState = {
+      available: [{ ...testRumor, reward: relic }],
+      active: [],
+      completed: [{ rumorId: "whispering-well", completedAtTurn: 12 }],
+    };
+    const entries = getRumorJournalEntries(rumorState);
+    expect(entries[0]).toMatchObject({
+      status: "completed",
+      completedAtTurn: 12,
+      rumor: expect.objectContaining({ reward: relic }),
+    });
+  });
+});
+
+describe("applyRumorEffects", () => {
+  it("merges stats, relics, hope, and log entries onto game state", () => {
+    const state = createInitialState([], seededRng(1));
+    const stateWithRoom = { ...state, player: { ...state.player, hope: 3 } };
+    const relic: Relic = {
+      id: "well-sigil",
+      name: "Well Sigil",
+      description: "Token.",
+      effect: { type: "max_resource", resource: "hope", bonus: 1 },
+    };
+    const effects = resolveRumorAfterEncounter(
+      {
+        available: [{ ...testRumor, reward: relic, hopeBonus: 2 }],
+        active: [{ rumorId: "whispering-well", currentStep: 1 }],
+        completed: [],
+      },
+      "ww-step-1",
+      7,
+    );
+    expect(effects).not.toBeNull();
+
+    const next = applyRumorEffects(stateWithRoom, effects!);
+
+    expect(next.rumors.completed).toEqual([{ rumorId: "whispering-well", completedAtTurn: 7 }]);
+    expect(next.stats.rumorsCompleted).toBe(1);
+    expect(next.stats.relicsCollected).toBe(1);
+    expect(next.relics).toContainEqual(relic);
+    expect(next.player.hope).toBe(5);
+    expect(next.log.at(-1)?.type).toBe("rumor");
+    expect(next.log.at(-1)?.text).toContain("Well Sigil");
   });
 });

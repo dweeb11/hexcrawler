@@ -11,11 +11,12 @@ import {
   getForageBonus,
 } from "./relics";
 import {
+  applyRumorEffects,
+  buildRumorContext,
   findNextRumorStep,
-  advanceRumor,
-  completeRumor,
-  discoverRumor,
   applyRumorWeights,
+  resolveRumorAfterEncounter,
+  resolveRumorDiscovery,
   shouldBoostRumorDiscovery,
 } from "./rumors";
 import { checkPillarsOfFrost, checkRestartTheGear, frostProximityBand } from "./win";
@@ -23,14 +24,9 @@ import {
   type Action,
   type GameOverOutcome,
   type GameState,
-  type GameStats,
   type LogEntry,
   type LogType,
   type RNG,
-  type RumorState,
-  type Relic,
-  type Rumor,
-  type RumorContext,
 } from "./state";
 
 const FROST_PROXIMITY_MESSAGES: Record<1 | 2 | 3, string> = {
@@ -46,19 +42,6 @@ function appendLog(state: GameState, text: string, type: LogType = "narrative"):
   };
 }
 
-function rumorLogTitle(title: string): string {
-  return title.startsWith("The ") ? title.slice(4) : title;
-}
-
-function buildRumorContext(rumor: Rumor, stepIndex: number): RumorContext {
-  return {
-    rumorId: rumor.id,
-    rumorTitle: rumor.title,
-    stepIndex,
-    stepCount: rumor.steps.length,
-    isFinalStep: stepIndex === rumor.steps.length - 1,
-  };
-}
 function markConsumedTiles(state: GameState): GameState {
   const nextMap = new Map<string, (typeof state.map extends Map<string, infer T> ? T : never)>();
   for (const [key, tile] of state.map.entries()) {
@@ -321,43 +304,6 @@ function handlePause(state: GameState, action: Extract<Action, { type: "pause" }
   };
 }
 
-function checkRumorAdvancement(
-  state: GameState,
-  encounterId: string,
-): { rumors: RumorState; reward: Relic | null; hopeBonus: number } | null {
-  const activeRumor = state.rumors.active.find((active) => {
-    const rumor = state.rumors.available.find((r) => r.id === active.rumorId);
-    return rumor?.steps[active.currentStep]?.encounterId === encounterId;
-  });
-
-  if (!activeRumor) return null;
-
-  const rumor = state.rumors.available.find((r) => r.id === activeRumor.rumorId);
-  if (!rumor) return null;
-
-  const nextStep = activeRumor.currentStep + 1;
-  if (nextStep >= rumor.steps.length) {
-    // completed
-    return {
-      rumors: completeRumor(state.rumors, rumor.id, state.turn),
-      reward: rumor.reward,
-      hopeBonus: rumor.hopeBonus,
-    };
-  }
-  // advanced
-  const newActive = { ...activeRumor, currentStep: nextStep };
-  return {
-    rumors: {
-      ...state.rumors,
-      active: state.rumors.active.map((a) =>
-        a.rumorId === newActive.rumorId ? newActive : a,
-      ),
-    },
-    reward: null,
-    hopeBonus: 0,
-  };
-}
-
 function handleChoose(state: GameState, action: Extract<Action, { type: "choose" }>, rng: RNG): GameState {
   if (state.mode.type !== "encounter") {
     return state;
@@ -378,64 +324,19 @@ function handleChoose(state: GameState, action: Extract<Action, { type: "choose"
   };
 
   if (choice.discoversRumor) {
-    nextState = {
-      ...nextState,
-      rumors: discoverRumor(nextState.rumors, choice.discoversRumor),
-      stats: { ...nextState.stats, rumorsDiscovered: nextState.stats.rumorsDiscovered + 1 },
-    };
-    const rumor = nextState.rumors.available.find(
-      (r) => r.id === choice.discoversRumor,
-    );
-    if (rumor) {
-      nextState = appendLog(
-        nextState,
-        `▸ Lead recorded: "${rumor.title}" — press J to read your journal`,
-        "rumor",
-      );
+    const discovery = resolveRumorDiscovery(nextState.rumors, choice.discoversRumor);
+    if (discovery) {
+      nextState = applyRumorEffects(nextState, discovery);
     }
   }
 
-  const rumorAdvance = checkRumorAdvancement(state, encounterMode.encounter.id);
+  const rumorAdvance = resolveRumorAfterEncounter(
+    state.rumors,
+    encounterMode.encounter.id,
+    state.turn,
+  );
   if (rumorAdvance) {
-    const rumorCompleted = rumorAdvance.rumors.completed.length > state.rumors.completed.length;
-    const advancedRumor = state.rumors.available.find((r) => {
-      const active = state.rumors.active.find(
-        (entry) => entry.rumorId === r.id,
-      );
-      return active?.currentStep !== undefined &&
-        r.steps[active.currentStep]?.encounterId === encounterMode.encounter.id;
-    });
-    const statsUpdate: Partial<GameStats> = {};
-    if (rumorCompleted) statsUpdate.rumorsCompleted = nextState.stats.rumorsCompleted + 1;
-    if (rumorAdvance.reward) statsUpdate.relicsCollected = nextState.stats.relicsCollected + 1;
-    nextState = {
-      ...nextState,
-      rumors: rumorAdvance.rumors,
-      ...(rumorAdvance.reward
-        ? { relics: [...nextState.relics, rumorAdvance.reward] }
-        : {}),
-      player: rumorAdvance.hopeBonus
-        ? applyDelta(nextState.player, { hope: rumorAdvance.hopeBonus })
-        : nextState.player,
-      stats: { ...nextState.stats, ...statsUpdate },
-    };
-
-    if (advancedRumor) {
-      if (rumorCompleted) {
-        const relicName = rumorAdvance.reward?.name ?? "your reward";
-        nextState = appendLog(
-          nextState,
-          `▸ ${rumorLogTitle(advancedRumor.title)} resolved. You claim the ${relicName}.`,
-          "rumor",
-        );
-      } else {
-        nextState = appendLog(
-          nextState,
-          `▸ ${rumorLogTitle(advancedRumor.title)} — the trail deepens. Check your journal.`,
-          "rumor",
-        );
-      }
-    }
+    nextState = applyRumorEffects(nextState, rumorAdvance);
   }
 
   const text = outcome.succeeded
