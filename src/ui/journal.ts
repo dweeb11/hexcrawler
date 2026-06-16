@@ -1,5 +1,6 @@
 // src/ui/journal.ts
-import type { GameState, Relic, Rumor, ActiveRumor, CompletedRumor } from "../engine/state";
+import { getRumorJournalEntries } from "../engine/rumors";
+import type { GameState } from "../engine/state";
 
 let currentTab: "rumors" | "relics" = "rumors";
 
@@ -25,50 +26,38 @@ export function updateJournal(contentEl: HTMLElement, state: GameState): void {
 }
 
 function renderRumors(el: HTMLElement, state: GameState): void {
-  // Active rumors
-  for (const active of state.rumors.active) {
-    const rumor = state.rumors.available.find((r) => r.id === active.rumorId);
-    if (!rumor) continue;
+  const entries = getRumorJournalEntries(state.rumors);
 
+  for (const entry of entries) {
     const div = document.createElement("div");
-    div.className = "journal-entry journal-active";
+    div.className =
+      entry.status === "active" ? "journal-entry journal-active" : "journal-entry journal-completed";
 
     const title = document.createElement("h3");
-    title.textContent = `${rumor.title} (${active.currentStep + 1}/${rumor.steps.length})`;
-    div.appendChild(title);
+    if (entry.status === "active") {
+      title.textContent = `${entry.rumor.title} (${(entry.stepIndex ?? 0) + 1}/${entry.stepCount ?? entry.rumor.steps.length})`;
+      div.appendChild(title);
 
-    const hint = document.createElement("p");
-    hint.className = "journal-hint";
-    const step = rumor.steps[active.currentStep];
-    hint.textContent = step ? step.journalHint : "Follow the trail...";
-    div.appendChild(hint);
+      const hint = document.createElement("p");
+      hint.className = "journal-hint";
+      hint.textContent = entry.journalHint ?? "Follow the trail...";
+      div.appendChild(hint);
+    } else {
+      title.textContent = `✓ ${entry.rumor.title}`;
+      div.appendChild(title);
 
-    el.appendChild(div);
-  }
-
-  // Completed rumors
-  for (const completed of state.rumors.completed) {
-    const rumor = state.rumors.available.find((r) => r.id === completed.rumorId);
-    if (!rumor) continue;
-
-    const div = document.createElement("div");
-    div.className = "journal-entry journal-completed";
-
-    const title = document.createElement("h3");
-    title.textContent = `✓ ${rumor.title}`;
-    div.appendChild(title);
-
-    if (rumor.reward) {
-      const reward = document.createElement("p");
-      reward.className = "journal-reward";
-      reward.textContent = `Reward: ${rumor.reward.name}`;
-      div.appendChild(reward);
+      if (entry.rumor.reward) {
+        const reward = document.createElement("p");
+        reward.className = "journal-reward";
+        reward.textContent = `Reward: ${entry.rumor.reward.name}`;
+        div.appendChild(reward);
+      }
     }
 
     el.appendChild(div);
   }
 
-  if (state.rumors.active.length === 0 && state.rumors.completed.length === 0) {
+  if (entries.length === 0) {
     const empty = document.createElement("p");
     empty.className = "journal-empty";
     empty.textContent = "No rumors discovered yet.";
