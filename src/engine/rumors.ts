@@ -1,8 +1,10 @@
 // src/engine/rumors.ts
+import { applyDelta } from "./resources";
 import type {
   ActiveRumor,
   Biome,
   Encounter,
+  GameState,
   GameStats,
   Relic,
   Rumor,
@@ -28,14 +30,21 @@ export interface RumorEffects {
   hopeDelta: number;
 }
 
-export interface RumorJournalEntry {
+export interface RumorJournalEntryActive {
+  status: "active";
   rumor: Rumor;
-  status: "active" | "completed";
-  stepIndex?: number;
-  stepCount?: number;
-  journalHint?: string;
-  completedAtTurn?: number;
+  stepIndex: number;
+  stepCount: number;
+  journalHint: string;
 }
+
+export interface RumorJournalEntryCompleted {
+  status: "completed";
+  rumor: Rumor;
+  completedAtTurn: number;
+}
+
+export type RumorJournalEntry = RumorJournalEntryActive | RumorJournalEntryCompleted;
 
 const RUMOR_TAG_WEIGHT_BONUS = 0.3;
 const RUMOR_BIOME_WEIGHT_BONUS = 0.25;
@@ -276,5 +285,37 @@ export function resolveRumorAfterEncounter(
     statsDelta: {},
     relicsToAdd: [],
     hopeDelta: 0,
+  };
+}
+
+export function applyRumorEffects(state: GameState, effects: RumorEffects): GameState {
+  const stats = { ...state.stats };
+  if (effects.statsDelta.rumorsDiscovered !== undefined) {
+    stats.rumorsDiscovered += effects.statsDelta.rumorsDiscovered;
+  }
+  if (effects.statsDelta.rumorsCompleted !== undefined) {
+    stats.rumorsCompleted += effects.statsDelta.rumorsCompleted;
+  }
+  if (effects.statsDelta.relicsCollected !== undefined) {
+    stats.relicsCollected += effects.statsDelta.relicsCollected;
+  }
+
+  const relics =
+    effects.relicsToAdd.length > 0 ? [...state.relics, ...effects.relicsToAdd] : state.relics;
+  const player =
+    effects.hopeDelta !== 0
+      ? applyDelta(state.player, { hope: effects.hopeDelta }, state.relics)
+      : state.player;
+
+  return {
+    ...state,
+    rumors: effects.rumors,
+    stats,
+    relics,
+    player,
+    log: [
+      ...state.log,
+      ...effects.logs.map((entry) => ({ turn: state.turn, text: entry.text, type: entry.type })),
+    ],
   };
 }

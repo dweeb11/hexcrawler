@@ -30,27 +30,39 @@ function renderRumors(el: HTMLElement, state: GameState): void {
 
   for (const entry of entries) {
     const div = document.createElement("div");
-    div.className =
-      entry.status === "active" ? "journal-entry journal-active" : "journal-entry journal-completed";
 
-    const title = document.createElement("h3");
-    if (entry.status === "active") {
-      title.textContent = `${entry.rumor.title} (${(entry.stepIndex ?? 0) + 1}/${entry.stepCount ?? entry.rumor.steps.length})`;
-      div.appendChild(title);
+    switch (entry.status) {
+      case "active": {
+        div.className = "journal-entry journal-active";
 
-      const hint = document.createElement("p");
-      hint.className = "journal-hint";
-      hint.textContent = entry.journalHint ?? "Follow the trail...";
-      div.appendChild(hint);
-    } else {
-      title.textContent = `✓ ${entry.rumor.title}`;
-      div.appendChild(title);
+        const title = document.createElement("h3");
+        title.textContent = `${entry.rumor.title} (${entry.stepIndex + 1}/${entry.stepCount})`;
+        div.appendChild(title);
 
-      if (entry.rumor.reward) {
-        const reward = document.createElement("p");
-        reward.className = "journal-reward";
-        reward.textContent = `Reward: ${entry.rumor.reward.name}`;
-        div.appendChild(reward);
+        const hint = document.createElement("p");
+        hint.className = "journal-hint";
+        hint.textContent = entry.journalHint;
+        div.appendChild(hint);
+        break;
+      }
+      case "completed": {
+        div.className = "journal-entry journal-completed";
+
+        const title = document.createElement("h3");
+        title.textContent = `✓ ${entry.rumor.title}`;
+        div.appendChild(title);
+
+        if (entry.rumor.reward) {
+          const reward = document.createElement("p");
+          reward.className = "journal-reward";
+          reward.textContent = `Reward: ${entry.rumor.reward.name}`;
+          div.appendChild(reward);
+        }
+        break;
+      }
+      default: {
+        const _exhaustive: never = entry;
+        throw new Error(`Unknown journal entry status: ${String(_exhaustive)}`);
       }
     }
 

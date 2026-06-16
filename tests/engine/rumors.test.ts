@@ -2,6 +2,7 @@
 import { describe, expect, it } from "vitest";
 import {
   advanceRumor,
+  applyRumorEffects,
   buildRumorContext,
   discoverRumor,
   findActiveRumorForEncounter,
@@ -11,7 +12,9 @@ import {
   resolveRumorAfterEncounter,
   resolveRumorDiscovery,
 } from "../../src/engine/rumors";
+import { createInitialState } from "../../src/engine/state";
 import type { Relic, Rumor, RumorState, ActiveRumor } from "../../src/engine/state";
+import { seededRng } from "../helpers";
 
 const testRumor: Rumor = {
   id: "whispering-well",
@@ -303,5 +306,38 @@ describe("getRumorJournalEntries", () => {
       completedAtTurn: 12,
       rumor: expect.objectContaining({ reward: relic }),
     });
+  });
+});
+
+describe("applyRumorEffects", () => {
+  it("merges stats, relics, hope, and log entries onto game state", () => {
+    const state = createInitialState([], seededRng(1));
+    const stateWithRoom = { ...state, player: { ...state.player, hope: 3 } };
+    const relic: Relic = {
+      id: "well-sigil",
+      name: "Well Sigil",
+      description: "Token.",
+      effect: { type: "max_resource", resource: "hope", bonus: 1 },
+    };
+    const effects = resolveRumorAfterEncounter(
+      {
+        available: [{ ...testRumor, reward: relic, hopeBonus: 2 }],
+        active: [{ rumorId: "whispering-well", currentStep: 1 }],
+        completed: [],
+      },
+      "ww-step-1",
+      7,
+    );
+    expect(effects).not.toBeNull();
+
+    const next = applyRumorEffects(stateWithRoom, effects!);
+
+    expect(next.rumors.completed).toEqual([{ rumorId: "whispering-well", completedAtTurn: 7 }]);
+    expect(next.stats.rumorsCompleted).toBe(1);
+    expect(next.stats.relicsCollected).toBe(1);
+    expect(next.relics).toContainEqual(relic);
+    expect(next.player.hope).toBe(5);
+    expect(next.log.at(-1)?.type).toBe("rumor");
+    expect(next.log.at(-1)?.text).toContain("Well Sigil");
   });
 });

@@ -11,13 +11,13 @@ import {
   getForageBonus,
 } from "./relics";
 import {
+  applyRumorEffects,
   buildRumorContext,
   findNextRumorStep,
   applyRumorWeights,
   resolveRumorAfterEncounter,
   resolveRumorDiscovery,
   shouldBoostRumorDiscovery,
-  type RumorEffects,
 } from "./rumors";
 import { checkPillarsOfFrost, checkRestartTheGear, frostProximityBand } from "./win";
 import {
@@ -40,37 +40,6 @@ function appendLog(state: GameState, text: string, type: LogType = "narrative"):
     ...state,
     log: [...state.log, { turn: state.turn, text, type }],
   };
-}
-
-function applyRumorEffects(state: GameState, effects: RumorEffects): GameState {
-  const stats = { ...state.stats };
-  if (effects.statsDelta.rumorsDiscovered !== undefined) {
-    stats.rumorsDiscovered += effects.statsDelta.rumorsDiscovered;
-  }
-  if (effects.statsDelta.rumorsCompleted !== undefined) {
-    stats.rumorsCompleted += effects.statsDelta.rumorsCompleted;
-  }
-  if (effects.statsDelta.relicsCollected !== undefined) {
-    stats.relicsCollected += effects.statsDelta.relicsCollected;
-  }
-
-  let nextState: GameState = {
-    ...state,
-    rumors: effects.rumors,
-    stats,
-    ...(effects.relicsToAdd.length > 0
-      ? { relics: [...state.relics, ...effects.relicsToAdd] }
-      : {}),
-    ...(effects.hopeDelta !== 0
-      ? { player: applyDelta(state.player, { hope: effects.hopeDelta }, state.relics) }
-      : {}),
-  };
-
-  for (const entry of effects.logs) {
-    nextState = appendLog(nextState, entry.text, entry.type);
-  }
-
-  return nextState;
 }
 
 function markConsumedTiles(state: GameState): GameState {

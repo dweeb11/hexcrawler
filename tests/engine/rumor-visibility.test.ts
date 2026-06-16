@@ -247,6 +247,38 @@ describe("rumor log messages", () => {
     expect(rumorLog?.text).toContain("press J");
   });
 
+  it("does not double-count discovery when rumor is already active", () => {
+    const discoveryEncounter: Encounter = {
+      id: "ww-discovery",
+      text: "A spiral in the bark.",
+      requiredTags: [],
+      choices: [
+        { label: "Trace the spiral", outcome: {}, discoversRumor: "whispering-well" },
+      ],
+    };
+    const rumor = makeRumor({ reward: null });
+    const state = createInitialState([discoveryEncounter], seededRng(1), [rumor]);
+    const inEncounter: GameState = {
+      ...state,
+      rumors: {
+        ...state.rumors,
+        active: [{ rumorId: "whispering-well", currentStep: 0 }],
+      },
+      mode: {
+        type: "encounter",
+        encounter: discoveryEncounter,
+        hex: cubeCoord(1, 0, -1),
+      },
+    };
+
+    const next = resolveTurn(inEncounter, { type: "choose", choiceIndex: 0 }, seededRng(2));
+
+    expect(next.stats.rumorsDiscovered).toBe(0);
+    expect(
+      next.log.filter((entry) => entry.type === "rumor" && entry.text.includes("Lead recorded")),
+    ).toHaveLength(0);
+  });
+
   it("logs step advancement after resolving a rumor step", () => {
     const stepEncounter: Encounter = {
       id: "ww-step-0",
