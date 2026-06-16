@@ -21,9 +21,14 @@ import {
   playWin,
   playLoss,
 } from "./ui/audio";
-import { clickedNeighborToAction } from "./ui/input";
-import { toggleJournal, updateJournal, setJournalTab, closeJournal } from "./ui/journal";
-import { resolveJournalKeydown } from "./ui/journal-input";
+import { clickedNeighborToAction, resolveKeydown } from "./ui/input";
+import {
+  toggleJournal,
+  updateJournal,
+  setJournalTab,
+  closeJournal,
+  isJournalOpen,
+} from "./ui/journal";
 
 const HINTS_KEY = "waning-light-hints";
 const VALID_HINT_IDS: HintId[] = ["first-turn", "low-supply", "first-encounter", "first-rumor"];
@@ -315,24 +320,24 @@ async function main(): Promise<void> {
       return;
     }
 
-    const journalOpen = !journalPanel.classList.contains("hidden");
-    const result = resolveJournalKeydown(event.key, state.mode, state.status, journalOpen);
+    const journalOpen = isJournalOpen(journalPanel);
+    const result = resolveKeydown(event.key, state.mode, state.status, journalOpen);
 
     switch (result.type) {
-      case "toggle-journal":
+      case "toggle-journal": {
         event.preventDefault();
-        dismissHint("first-rumor");
+        const opening = !journalOpen;
+        if (opening) {
+          dismissHint("first-rumor");
+        }
         toggleJournal(journalPanel, logPanel);
-        if (!journalPanel.classList.contains("hidden")) {
+        if (opening) {
           updateJournal(journalContent, state);
         }
         return;
-      case "close-journal":
-        event.preventDefault();
-        closeJournal(journalPanel, logPanel);
-        return;
+      }
       case "game-action":
-        if (journalOpen) {
+        if (result.closeJournalFirst) {
           closeJournal(journalPanel, logPanel);
         }
         applyAction(result.action);
