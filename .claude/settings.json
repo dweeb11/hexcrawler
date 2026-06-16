@@ -1,4 +1,19 @@
 {
+  "enabledPlugins": {
+    "superpowers@claude-plugins-official": false
+  },
+  "skillOverrides": {
+    "superpowers:using-superpowers": "off",
+    "superpowers:brainstorming": "off",
+    "superpowers:executing-plans": "off",
+    "superpowers:subagent-driven-development": "off",
+    "superpowers:test-driven-development": "off",
+    "superpowers:systematic-debugging": "off",
+    "superpowers:writing-plans": "off",
+    "superpowers:verification-before-completion": "off",
+    "superpowers:using-git-worktrees": "off",
+    "superpowers:finishing-a-development-branch": "off"
+  },
   "hooks": {
     "WorktreeCreate": [
       {

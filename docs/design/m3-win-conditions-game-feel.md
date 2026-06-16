@@ -1,6 +1,6 @@
 # M3: Win Conditions + Game Feel — Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use `/tdd` with `implement-from-plan` to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** The game has two win conditions, atmospheric effects, sound design, and narrative death/win screens. The game feels complete.
 

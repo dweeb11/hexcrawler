@@ -1,6 +1,6 @@
 # M1: Minimum Viable UX + Save/Load — Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use `/tdd` with `implement-from-plan` to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Make the current game playable by non-developers — readable HUD, intuitive controls, save/load so players can leave and come back.
 

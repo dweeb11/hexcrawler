@@ -1,6 +1,6 @@
 # The Waning Light MVP Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use `/tdd` with `implement-from-plan` to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Build a playable solo hexcrawl web game with procedural map generation, resource management, encounters fetched from a Turso database, the Searing mechanic, and an admin panel for live encounter editing.
 

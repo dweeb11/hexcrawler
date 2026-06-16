@@ -1,6 +1,6 @@
 # M2: Rumor Deck + Relics + Encounter Overhaul — Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use `/tdd` with `implement-from-plan` to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Every hex is interesting. The Rumor Deck gives exploration narrative purpose. Relics give tangible progression. The encounter system tells stories.
 

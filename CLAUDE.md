@@ -100,6 +100,32 @@ Art Direction is required before Design (glyph style for this project).
 
 ---
 
+## Agent skills
+
+Project agent skills live in `.agents/skills/` (Matt Pocock engineering suite) and `.claude/skills/` (hexcrawler-specific workflows). Superpowers is disabled for this repo.
+
+### Issue tracker
+
+GitHub Issues on `dweeb11/hexcrawler` via `gh` CLI. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Default mattpocock vocabulary (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`). See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context layout. Designs in `docs/design/`, milestones in `docs/milestones/`. `CONTEXT.md` and `docs/adr/` are created lazily by `/grill-with-docs`. See `docs/agents/domain.md`.
+
+### Implementation workflow
+
+- **Plan / align:** `/grill-with-docs` or `/grill-me`
+- **Break down:** `/to-issues` or `/to-prd`
+- **Implement:** `/tdd` + `implement-from-plan` skill
+- **Verify:** `verify` skill
+- **Debug:** `/diagnose`
+
+---
+
 ## Agent Roles
 
 **You are Producer + Engineer. The human is Designer + Assistant Producer.**
