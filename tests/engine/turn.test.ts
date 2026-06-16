@@ -668,6 +668,46 @@ describe("resolveTurn win flow", () => {
       expect(next.mode.outcome).toBe("loss_health");
     }
   });
+
+  it("sets outcome=loss_hope on hope depletion", () => {
+    const { state, rng } = makeState();
+    const next = resolveTurn(
+      { ...state, player: { ...state.player, hope: 0 } },
+      { type: "push", direction: 0 },
+      rng,
+    );
+    expect(next.status).toBe("lost");
+    if (next.mode.type === "gameover") {
+      expect(next.mode.outcome).toBe("loss_hope");
+      expect(next.mode.reason).toContain("do not rise");
+    }
+  });
+
+  it("sets outcome=loss_searing when entering a consumed hex", () => {
+    const { state, rng } = makeState();
+    const target = neighbor(state.player.hex, 0);
+    const next = resolveTurn(
+      {
+        ...state,
+        searing: { ...state.searing, axis: "q", direction: 1, line: target.q },
+        map: new Map(state.map).set(coordKey(target), {
+          coord: target,
+          biome: "forest",
+          tags: new Set(),
+          encounter: null,
+          revealed: true,
+          consumed: true,
+          visited: false,
+        }),
+      },
+      { type: "push", direction: 0 },
+      rng,
+    );
+    expect(next.status).toBe("lost");
+    if (next.mode.type === "gameover") {
+      expect(next.mode.outcome).toBe("loss_searing");
+    }
+  });
 });
 
 describe("stats tracking", () => {

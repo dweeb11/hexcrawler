@@ -1,4 +1,4 @@
-import type { Biome, Player, RNG, ResourceDelta, Relic } from "./state";
+import type { Biome, GameOverOutcome, Player, RNG, ResourceDelta, Relic } from "./state";
 import { MAX_HEALTH, MAX_HOPE, MAX_SUPPLY } from "./state";
 import { getMaxResource } from "./relics";
 
@@ -39,13 +39,26 @@ export function applyDelta(
   );
 }
 
-export function checkLoss(player: Player): string | null {
+export type LossOutcome = Extract<GameOverOutcome, `loss_${string}`>;
+
+export interface LossResult {
+  readonly outcome: LossOutcome;
+  readonly reason: string;
+}
+
+export function checkLoss(player: Player): LossResult | null {
   if (player.health <= 0) {
-    return "Your body gives out. The Twilight Strip claims another.";
+    return {
+      outcome: "loss_health",
+      reason: "Your body gives out. The Twilight Strip claims another.",
+    };
   }
 
   if (player.hope <= 0) {
-    return "The light inside you fades. You surrender to the heat.";
+    return {
+      outcome: "loss_hope",
+      reason: "The light inside you fades. You sit down, and do not rise.",
+    };
   }
 
   return null;

@@ -2,8 +2,8 @@ import { coordKey, neighbor } from "./hex";
 import { resolveChoice } from "./encounters";
 import { encounterForHope } from "./encounters";
 import { generateHex } from "./map";
-import { applyDelta, forageResult } from "./resources";
-import { advanceSearing, isConsumed, shouldAdvance } from "./searing";
+import { applyDelta, checkLoss, forageResult, type LossResult } from "./resources";
+import { advanceSearing, isConsumed, searingDistance, shouldAdvance } from "./searing";
 import { rollNightIncident } from "./data/incidents";
 import {
   getHopeDecayInterval,
@@ -18,9 +18,10 @@ import {
   applyRumorWeights,
   shouldBoostRumorDiscovery,
 } from "./rumors";
-import { checkPillarsOfFrost, checkRestartTheGear, frostProximityBand, frostProximityDistance } from "./win";
+import { checkPillarsOfFrost, checkRestartTheGear, frostProximityBand } from "./win";
 import {
   type Action,
+  type GameOverOutcome,
   type GameState,
   type GameStats,
   type LogEntry,
@@ -72,41 +73,27 @@ function markConsumedTiles(state: GameState): GameState {
   return { ...state, map: nextMap };
 }
 
+const SEARING_LOSS: LossResult = {
+  outcome: "loss_searing",
+  reason: "The Searing catches you. In the end, you could not outrun the sun.",
+};
+
+function enterGameOver(state: GameState, outcome: GameOverOutcome, reason: string): GameState {
+  return {
+    ...state,
+    status: outcome.startsWith("win_") ? "won" : "lost",
+    mode: { type: "gameover", reason, outcome },
+  };
+}
+
 function applyLossChecks(state: GameState): GameState {
   if (isConsumed(state.player.hex, state.searing)) {
-    return {
-      ...state,
-      status: "lost",
-      mode: {
-        type: "gameover",
-        reason: "The Searing catches you. In the end, you could not outrun the sun.",
-        outcome: "loss_searing",
-      },
-    };
+    return enterGameOver(state, SEARING_LOSS.outcome, SEARING_LOSS.reason);
   }
 
-  if (state.player.health <= 0) {
-    return {
-      ...state,
-      status: "lost",
-      mode: {
-        type: "gameover",
-        reason: "Your body gives out. The Twilight Strip claims another.",
-        outcome: "loss_health",
-      },
-    };
-  }
-
-  if (state.player.hope <= 0) {
-    return {
-      ...state,
-      status: "lost",
-      mode: {
-        type: "gameover",
-        reason: "The light inside you fades. You sit down, and do not rise.",
-        outcome: "loss_hope",
-      },
-    };
+  const resourceLoss = checkLoss(state.player);
+  if (resourceLoss) {
+    return enterGameOver(state, resourceLoss.outcome, resourceLoss.reason);
   }
 
   return state;
@@ -118,29 +105,19 @@ function applyWinChecks(state: GameState): GameState {
   }
 
   if (checkPillarsOfFrost(state.player.hex, state.searing)) {
-    return {
-      ...state,
-      status: "won",
-      mode: {
-        type: "gameover",
-        reason:
-          "You stand before the Pillars of Frost, monuments to a world that was. The Searing is far behind. You are safe — for now.",
-        outcome: "win_pillars",
-      },
-    };
+    return enterGameOver(
+      state,
+      "win_pillars",
+      "You stand before the Pillars of Frost, monuments to a world that was. The Searing is far behind. You are safe — for now.",
+    );
   }
 
   if (checkRestartTheGear(state.relics)) {
-    return {
-      ...state,
-      status: "won",
-      mode: {
-        type: "gameover",
-        reason:
-          "The Gear turns. The mechanism groans to life. The sun shudders — and moves. You have restarted the world.",
-        outcome: "win_gear",
-      },
-    };
+    return enterGameOver(
+      state,
+      "win_gear",
+      "The Gear turns. The mechanism groans to life. The sun shudders — and moves. You have restarted the world.",
+    );
   }
 
   return state;
@@ -234,23 +211,15 @@ function handlePush(state: GameState, action: Extract<Action, { type: "push" }>,
   );
 
   // Frost proximity: emit a signal when crossing into a new band (closer to the Pillars).
-  const oldBand = frostProximityBand(frostProximityDistance(state.player.hex, state.searing));
-  const newBand = frostProximityBand(frostProximityDistance(destination, state.searing));
+  const oldBand = frostProximityBand(searingDistance(state.player.hex, state.searing));
+  const newBand = frostProximityBand(searingDistance(destination, state.searing));
   if (newBand > oldBand) {
     nextState = appendLog(nextState, FROST_PROXIMITY_MESSAGES[newBand as 1 | 2 | 3], "narrative");
   }
 
   // Entering an already-consumed hex is an immediate loss, even if an encounter exists there.
   if (enteredTile.consumed || isConsumed(enteredTile.coord, nextState.searing)) {
-    return {
-      ...nextState,
-      status: "lost",
-      mode: {
-        type: "gameover",
-        reason: "The Searing catches you. In the end, you could not outrun the sun.",
-        outcome: "loss_searing",
-      },
-    };
+    return enterGameOver(nextState, SEARING_LOSS.outcome, SEARING_LOSS.reason);
   }
 
   const rumorMatch = findNextRumorStep(

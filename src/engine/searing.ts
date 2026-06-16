@@ -1,6 +1,7 @@
 import type { CubeCoord } from "./hex";
 import type { HexAxis, RNG, SearingState } from "./state";
-import { SEARING_ADVANCE_RATE } from "./state";
+
+export const SEARING_ADVANCE_RATE = 5;
 
 const AXES: HexAxis[] = ["q", "r", "s"];
 
@@ -26,6 +27,11 @@ export function advanceSearing(searing: SearingState): SearingState {
 export function isConsumed(coord: CubeCoord, searing: SearingState): boolean {
   const axisValue = coord[searing.axis];
   return searing.direction === 1 ? axisValue <= searing.line : axisValue >= searing.line;
+}
+
+export function searingDistance(coord: CubeCoord, searing: SearingState): number {
+  const axisValue = coord[searing.axis];
+  return searing.direction === 1 ? axisValue - searing.line : searing.line - axisValue;
 }
 
 export function shouldAdvance(turn: number, advanceRate: number): boolean {

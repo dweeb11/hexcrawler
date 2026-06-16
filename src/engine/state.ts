@@ -1,4 +1,5 @@
 import { coordKey, cubeCoord, type CubeCoord, type HexDirection } from "./hex";
+import { initSearing } from "./searing";
 
 export type Biome = "forest" | "mountain" | "ruins" | "settlement" | "wastes";
 export type HexAxis = "q" | "r" | "s";
@@ -187,7 +188,6 @@ export const STARTING_HOPE = 5;
 export const MAX_HOPE = 5;
 export const STARTING_HEALTH = 3;
 export const MAX_HEALTH = 5;
-export const SEARING_ADVANCE_RATE = 5;
 export const HOPE_DECAY_INTERVAL = 7;
 
 export interface SerializedHexTile {
@@ -231,10 +231,6 @@ export function createInitialState(
     consumed: false,
     visited: true,
   };
-  const axes: HexAxis[] = ["q", "r", "s"];
-  const axis = axes[Math.floor(rng() * axes.length)] ?? "q";
-  const direction: 1 | -1 = rng() < 0.5 ? 1 : -1;
-
   return {
     player: {
       hex: startCoord,
@@ -243,12 +239,7 @@ export function createInitialState(
       health: STARTING_HEALTH,
     },
     map: new Map([[coordKey(startCoord), startHex]]),
-    searing: {
-      axis,
-      direction,
-      line: direction === 1 ? -10 : 10,
-      advanceRate: SEARING_ADVANCE_RATE,
-    },
+    searing: initSearing(rng),
     turn: 0,
     mode: { type: "map" },
     log: [
