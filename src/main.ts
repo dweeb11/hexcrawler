@@ -9,7 +9,7 @@ import { createCamera, screenToWorld, type Camera } from "./renderer/camera";
 import { hitTestEncounterChoice } from "./renderer/encounter-layout";
 import { render } from "./renderer/renderer";
 import { createInitialState, MAX_SUPPLY, type Action, type GameState } from "./engine/state";
-import { createGameSession, type GameSession, type GameSessionDeps } from "./game-session";
+import { createGameSession } from "./session/game-session";
 import { getActiveHint, type HintId } from "./ui/hints";
 import { applyHopeStyling, clearLog, updateLog } from "./ui/log";
 import {
@@ -106,6 +106,8 @@ async function main(): Promise<void> {
   const encounters = await fetchEncounters();
   const rumors = await fetchRumors();
   let seed = Date.now();
+  let rng = createRng(seed);
+  let analytics = createAnalyticsClient();
   let camera = createCamera();
   const dismissedHints = loadDismissedHints();
 
@@ -114,32 +116,6 @@ async function main(): Promise<void> {
       dismissedHints.add(id);
       saveDismissedHints(dismissedHints);
     }
-  };
-
-  const persistState = (nextState: GameState) => {
-    if (nextState.status === "playing") {
-      saveGame(nextState);
-    } else {
-      clearSave();
-    }
-  };
-
-  const deps: GameSessionDeps = {
-    rng: createRng(seed),
-    analytics: createAnalyticsClient(),
-    audio: {
-      playMove,
-      playEncounterOpen,
-      playChoiceSelect,
-      playSearingAdvance,
-      playForage,
-      playRest,
-      playWin,
-      playLoss,
-    },
-    dismissHint,
-    persistState,
-    submitPlaytest,
   };
 
   let initialState: GameState;
@@ -151,29 +127,44 @@ async function main(): Promise<void> {
         initialState = saved;
       } else {
         clearSave();
-        initialState = createInitialState(encounters, deps.rng, rumors);
-        deps.analytics.track("game_start", { seed, fromSave: true });
+        initialState = createInitialState(encounters, rng, rumors);
+        analytics.track("game_start", { seed, fromSave: true });
       }
     } else {
       clearSave();
-      initialState = createInitialState(encounters, deps.rng, rumors);
-      deps.analytics.track("game_start", { seed, fromSave: true });
+      initialState = createInitialState(encounters, rng, rumors);
+      analytics.track("game_start", { seed, fromSave: true });
     }
   } else {
-    initialState = createInitialState(encounters, deps.rng, rumors);
-    deps.analytics.track("game_start", { seed, fromSave: false });
+    initialState = createInitialState(encounters, rng, rumors);
+    analytics.track("game_start", { seed, fromSave: false });
   }
 
-  let session: GameSession = createGameSession(initialState, deps);
+  const session = createGameSession(initialState, {
+    getRng: () => rng,
+    getAnalytics: () => analytics,
+    audio: {
+      playMove,
+      playEncounterOpen,
+      playChoiceSelect,
+      playSearingAdvance,
+      playForage,
+      playRest,
+      playWin,
+      playLoss,
+    },
+    hints: { dismissHint },
+    persistence: { save: saveGame, clear: clearSave },
+    playtest: { submit: submitPlaytest },
+  });
 
   const restart = () => {
     seed = Date.now();
-    deps.rng = createRng(seed);
-    deps.analytics = createAnalyticsClient();
-    session.restart(createInitialState(encounters, deps.rng, rumors));
-    clearSave();
+    rng = createRng(seed);
+    analytics = createAnalyticsClient();
+    session.restart(createInitialState(encounters, rng, rumors));
     clearLog(logPanel);
-    deps.analytics.track("game_start", { seed, restart: true });
+    analytics.track("game_start", { seed, restart: true });
   };
 
   const frame = () => {
@@ -200,6 +191,7 @@ async function main(): Promise<void> {
     }
 
     const state = session.getState();
+
     if (state.mode.type === "gameover" && event.key === "Enter") {
       restart();
       return;
@@ -238,12 +230,13 @@ async function main(): Promise<void> {
 
   journalTabs.forEach((tab) => {
     tab.addEventListener("click", () => {
+      const state = session.getState();
       journalTabs.forEach((t) => t.classList.remove("active"));
       tab.classList.add("active");
       const tabName = tab.getAttribute("data-tab");
       if (tabName === "rumors" || tabName === "relics") {
         setJournalTab(tabName);
-        updateJournal(journalContent, session.getState());
+        updateJournal(journalContent, state);
       }
     });
   });

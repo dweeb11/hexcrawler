@@ -1,8 +1,8 @@
-import type { AnalyticsClient } from "./api/analytics";
-import { coordKey } from "./engine/hex";
-import type { Action, GameState, RNG } from "./engine/state";
-import { resolveTurn } from "./engine/turn";
-import type { HintId } from "./ui/hints";
+import type { AnalyticsClient } from "../api/analytics";
+import { coordKey } from "../engine/hex";
+import type { Action, GameState, RNG } from "../engine/state";
+import { resolveTurn } from "../engine/turn";
+import type { HintId } from "../ui/hints";
 
 export interface GameSessionAudio {
   playMove(): void;
@@ -15,13 +15,26 @@ export interface GameSessionAudio {
   playLoss(): void;
 }
 
+export interface GameSessionHints {
+  dismissHint(id: HintId): void;
+}
+
+export interface GameSessionPersistence {
+  save(state: GameState): void;
+  clear(): void;
+}
+
+export interface GameSessionPlaytest {
+  submit(gameState: GameState, outcome: "won" | "lost"): void;
+}
+
 export interface GameSessionDeps {
-  rng: RNG;
-  analytics: AnalyticsClient;
+  getRng(): RNG;
+  getAnalytics(): AnalyticsClient;
   audio: GameSessionAudio;
-  dismissHint: (id: HintId) => void;
-  persistState: (state: GameState) => void;
-  submitPlaytest: (state: GameState, outcome: "won" | "lost") => void;
+  hints: GameSessionHints;
+  persistence: GameSessionPersistence;
+  playtest: GameSessionPlaytest;
 }
 
 export interface GameSession {
@@ -36,9 +49,17 @@ export function createGameSession(
 ): GameSession {
   let state = initialState;
 
+  const persistState = (nextState: GameState) => {
+    if (nextState.status === "playing") {
+      deps.persistence.save(nextState);
+    } else {
+      deps.persistence.clear();
+    }
+  };
+
   const dispatch = (action: Action): GameState => {
     const previousState = state;
-    const nextState = resolveTurn(previousState, action, deps.rng);
+    const nextState = resolveTurn(previousState, action, deps.getRng());
     const previousRumorIds = new Set(previousState.rumors.active.map((rumor) => rumor.rumorId));
     const previousRelicIds = new Set(previousState.relics.map((relic) => relic.id));
 
@@ -46,17 +67,17 @@ export function createGameSession(
       action.type === "push" &&
       coordKey(nextState.player.hex) !== coordKey(previousState.player.hex)
     ) {
-      deps.dismissHint("first-turn");
+      deps.hints.dismissHint("first-turn");
       deps.audio.playMove();
     }
 
     if (action.type === "choose" && previousState.mode.type === "encounter") {
-      deps.dismissHint("first-encounter");
+      deps.hints.dismissHint("first-encounter");
       deps.audio.playChoiceSelect();
     }
 
     if (action.type === "pause" && action.activity === "forage") {
-      deps.dismissHint("low-supply");
+      deps.hints.dismissHint("low-supply");
       deps.audio.playForage();
     }
 
@@ -70,7 +91,7 @@ export function createGameSession(
     ) {
       deps.audio.playEncounterOpen();
       const encounterHex = nextState.map.get(coordKey(nextState.mode.hex));
-      deps.analytics.track("encounter", {
+      deps.getAnalytics().track("encounter", {
         turnCount: nextState.turn,
         encounterId: nextState.mode.encounter.id,
         biome: encounterHex?.biome ?? null,
@@ -83,8 +104,8 @@ export function createGameSession(
 
     if (nextState.status === "won" && previousState.status !== "won") {
       deps.audio.playWin();
-      deps.submitPlaytest(nextState, "won");
-      deps.analytics.track("game_end", {
+      deps.playtest.submit(nextState, "won");
+      deps.getAnalytics().track("game_end", {
         outcome: "won",
         cause: "won",
         turnCount: nextState.turn,
@@ -93,8 +114,8 @@ export function createGameSession(
 
     if (nextState.status === "lost" && previousState.status !== "lost") {
       deps.audio.playLoss();
-      deps.submitPlaytest(nextState, "lost");
-      deps.analytics.track("game_end", {
+      deps.playtest.submit(nextState, "lost");
+      deps.getAnalytics().track("game_end", {
         outcome: "lost",
         cause: nextState.mode.type === "gameover" ? nextState.mode.reason : "unknown",
         turnCount: nextState.turn,
@@ -102,7 +123,7 @@ export function createGameSession(
     }
 
     if (nextState.turn > previousState.turn) {
-      deps.analytics.track("turn", {
+      deps.getAnalytics().track("turn", {
         turnCount: nextState.turn,
         actionType: action.type,
       });
@@ -110,21 +131,21 @@ export function createGameSession(
 
     for (const rumor of nextState.rumors.active) {
       if (!previousRumorIds.has(rumor.rumorId)) {
-        deps.analytics.track("rumor", {
+        deps.getAnalytics().track("rumor", {
           rumorId: rumor.rumorId,
           turnCount: nextState.turn,
         });
         const progressCount =
           nextState.rumors.active.length + nextState.rumors.completed.length;
         if (progressCount > 1) {
-          deps.dismissHint("first-rumor");
+          deps.hints.dismissHint("first-rumor");
         }
       }
     }
 
     for (const relic of nextState.relics) {
       if (!previousRelicIds.has(relic.id)) {
-        deps.analytics.track("relic", {
+        deps.getAnalytics().track("relic", {
           relicId: relic.id,
           turnCount: nextState.turn,
         });
@@ -132,7 +153,7 @@ export function createGameSession(
     }
 
     state = nextState;
-    deps.persistState(state);
+    persistState(state);
     return state;
   };
 
@@ -140,6 +161,7 @@ export function createGameSession(
     getState: () => state,
     restart: (newState: GameState) => {
       state = newState;
+      deps.persistence.clear();
     },
     dispatch,
   };
