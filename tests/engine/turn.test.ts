@@ -764,6 +764,126 @@ describe("resolveTurn win flow", () => {
   });
 });
 
+describe("turn invariants", () => {
+  it("choose does not increment turn", () => {
+    const encounter: Encounter = {
+      id: "invariant-choose",
+      text: "A choice awaits.",
+      requiredTags: [],
+      choices: [{ label: "Choose", outcome: {} }],
+    };
+    const { state, rng } = makeState();
+    const inEncounter: GameState = {
+      ...state,
+      turn: 5,
+      mode: { type: "encounter", encounter, hex: state.player.hex },
+    };
+
+    const next = resolveTurn(inEncounter, { type: "choose", choiceIndex: 0 }, rng);
+
+    expect(next.turn).toBe(5);
+  });
+
+  it("dismiss does not increment turn", () => {
+    const { state, rng } = makeState();
+    const inCamp: GameState = {
+      ...state,
+      turn: 7,
+      mode: {
+        type: "camp",
+        result: { turn: 7, text: "You rest.", type: "resource" },
+        incident: null,
+      },
+    };
+
+    const next = resolveTurn(inCamp, { type: "dismiss" }, rng);
+
+    expect(next.turn).toBe(7);
+  });
+
+  it("pause increments turn but defers end-of-turn effects until dismiss", () => {
+    const { state, rng } = makeState();
+    const searingBefore = state.searing.line;
+    const turnBefore = state.turn;
+
+    const paused = resolveTurn(state, { type: "pause", activity: "rest" }, rng);
+    expect(paused.turn).toBe(turnBefore + 1);
+    expect(paused.mode.type).toBe("camp");
+    expect(paused.searing.line).toBe(searingBefore);
+
+    const dismissed = resolveTurn(paused, { type: "dismiss" }, rng);
+    expect(dismissed.turn).toBe(turnBefore + 1);
+    expect(dismissed.mode.type).toBe("map");
+  });
+
+  it("applyLossChecks runs before every action while status is playing", () => {
+    const encounter: Encounter = {
+      id: "invariant-loss",
+      text: "Too late.",
+      requiredTags: [],
+      choices: [{ label: "OK", outcome: { health: 1 } }],
+    };
+    const { state, rng } = makeState();
+    const depleted = { ...state.player, health: 0 };
+
+    const pushLoss = resolveTurn(
+      { ...state, player: depleted },
+      { type: "push", direction: 0 },
+      rng,
+    );
+    expect(pushLoss.status).toBe("lost");
+
+    const pauseLoss = resolveTurn(
+      { ...state, player: depleted },
+      { type: "pause", activity: "rest" },
+      rng,
+    );
+    expect(pauseLoss.status).toBe("lost");
+
+    const chooseLoss = resolveTurn(
+      {
+        ...state,
+        player: depleted,
+        mode: { type: "encounter", encounter, hex: state.player.hex },
+      },
+      { type: "choose", choiceIndex: 0 },
+      rng,
+    );
+    expect(chooseLoss.status).toBe("lost");
+
+    const dismissLoss = resolveTurn(
+      {
+        ...state,
+        player: depleted,
+        mode: {
+          type: "camp",
+          result: { turn: state.turn, text: "You rest.", type: "resource" },
+          incident: null,
+        },
+      },
+      { type: "dismiss" },
+      rng,
+    );
+    expect(dismissLoss.status).toBe("lost");
+  });
+
+  it("push with no supply still increments turn before early return on loss", () => {
+    const { state, rng } = makeState();
+    const turnBefore = state.turn;
+    const next = resolveTurn(
+      {
+        ...state,
+        player: { ...state.player, supply: 0, health: 1 },
+      },
+      { type: "push", direction: 0 },
+      rng,
+    );
+
+    expect(next.turn).toBe(turnBefore + 1);
+    expect(next.status).toBe("lost");
+  });
+});
+
 describe("stats tracking", () => {
   it("increments hexesExplored when entering a new hex", () => {
     const { state, rng } = makeState();

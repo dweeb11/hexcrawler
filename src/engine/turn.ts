@@ -7,7 +7,7 @@
  */
 import { type Action, type GameState, type RNG } from "./state";
 import { resolveDismiss, resolvePause } from "./turn/camp";
-import { applyLossChecks } from "./turn/end-of-turn";
+import { applyLossChecks } from "./turn/checks";
 import { resolveChoose } from "./turn/encounter-resolution";
 import { resolvePush } from "./turn/movement";
 

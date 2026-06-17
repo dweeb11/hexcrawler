@@ -3,7 +3,8 @@ import { coordKey } from "../hex";
 import { getForageBonus } from "../relics";
 import { applyDelta, forageResult } from "../resources";
 import { type Action, type GameState, type LogEntry, type RNG } from "../state";
-import { appendLog, applyEndOfTurnEffects } from "./end-of-turn";
+import { appendLog } from "./log";
+import { applyEndOfTurnEffects } from "./end-of-turn";
 
 export function resolvePause(
   state: GameState,

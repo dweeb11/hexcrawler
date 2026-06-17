@@ -1,15 +1,10 @@
-import { applyDelta, checkLoss, type LossResult } from "../resources";
+import { applyDelta } from "../resources";
 import { getHopeDecayInterval } from "../relics";
 import { advanceSearing, isConsumed, shouldAdvance } from "../searing";
 import { checkPillarsOfFrost, checkRestartTheGear } from "../win";
-import { type GameOverOutcome, type GameState, type LogType } from "../state";
-
-export function appendLog(state: GameState, text: string, type: LogType = "narrative"): GameState {
-  return {
-    ...state,
-    log: [...state.log, { turn: state.turn, text, type }],
-  };
-}
+import { type GameState } from "../state";
+import { applyLossChecks } from "./checks";
+import { appendLog, enterGameOver } from "./log";
 
 function markConsumedTiles(state: GameState): GameState {
   const nextMap = new Map<string, (typeof state.map extends Map<string, infer T> ? T : never)>();
@@ -23,32 +18,6 @@ function markConsumedTiles(state: GameState): GameState {
   }
 
   return { ...state, map: nextMap };
-}
-
-export const SEARING_LOSS: LossResult = {
-  outcome: "loss_searing",
-  reason: "The Searing catches you. In the end, you could not outrun the sun.",
-};
-
-export function enterGameOver(state: GameState, outcome: GameOverOutcome, reason: string): GameState {
-  return {
-    ...state,
-    status: outcome.startsWith("win_") ? "won" : "lost",
-    mode: { type: "gameover", reason, outcome },
-  };
-}
-
-export function applyLossChecks(state: GameState): GameState {
-  if (isConsumed(state.player.hex, state.searing)) {
-    return enterGameOver(state, SEARING_LOSS.outcome, SEARING_LOSS.reason);
-  }
-
-  const resourceLoss = checkLoss(state.player);
-  if (resourceLoss) {
-    return enterGameOver(state, resourceLoss.outcome, resourceLoss.reason);
-  }
-
-  return state;
 }
 
 function applyWinChecks(state: GameState): GameState {

@@ -1,5 +1,5 @@
 import { encounterForHope } from "../encounters";
-import { coordKey, neighbor } from "../hex";
+import { coordKey, neighbor, type CubeCoord } from "../hex";
 import { generateHex } from "../map";
 import { getMoveDiscount } from "../relics";
 import { applyDelta } from "../resources";
@@ -10,21 +10,57 @@ import {
   shouldBoostRumorDiscovery,
 } from "../rumors";
 import { isConsumed, searingDistance } from "../searing";
-import { type Action, type GameState, type RNG } from "../state";
-import { frostProximityBand } from "../win";
 import {
-  appendLog,
-  applyEndOfTurnEffects,
-  applyLossChecks,
-  enterGameOver,
-  SEARING_LOSS,
-} from "./end-of-turn";
+  type Encounter,
+  type GameState,
+  type HexTile,
+  type RNG,
+  type RumorContext,
+  type Action,
+} from "../state";
+import { frostProximityBand } from "../win";
+import { applyLossChecks } from "./checks";
+import { applyEndOfTurnEffects } from "./end-of-turn";
+import { appendLog, enterGameOver, SEARING_LOSS } from "./log";
 
 const FROST_PROXIMITY_MESSAGES: Record<1 | 2 | 3, string> = {
   1: "A faint chill drifts from the north. The air is colder here.",
   2: "Ice crystals trace the stones at your feet. The cold deepens.",
   3: "The temperature plummets. Frost coats everything. The Pillars must be close.",
 };
+
+function enterEncounter(
+  state: GameState,
+  encounter: Encounter,
+  hex: CubeCoord,
+  options?: {
+    rumorContext?: RumorContext;
+    map?: Map<string, HexTile>;
+    logEncounterText?: boolean;
+  },
+): GameState {
+  const afterLossCheck = applyLossChecks(state);
+  if (afterLossCheck.status !== "playing") {
+    return afterLossCheck;
+  }
+
+  let nextState: GameState = {
+    ...afterLossCheck,
+    ...(options?.map ? { map: options.map } : {}),
+    mode: {
+      type: "encounter",
+      encounter,
+      hex,
+      ...(options?.rumorContext ? { rumorContext: options.rumorContext } : {}),
+    },
+  };
+
+  if (options?.logEncounterText) {
+    nextState = appendLog(nextState, encounter.text, "narrative");
+  }
+
+  return nextState;
+}
 
 export function resolvePush(
   state: GameState,
@@ -113,19 +149,9 @@ export function resolvePush(
     );
     if (rumorEncounter) {
       const resolvedEncounter = encounterForHope(rumorEncounter, nextState.player.hope);
-      const afterLossCheck = applyLossChecks(nextState);
-      if (afterLossCheck.status !== "playing") {
-        return afterLossCheck;
-      }
-      return {
-        ...afterLossCheck,
-        mode: {
-          type: "encounter",
-          encounter: resolvedEncounter,
-          hex: enteredTile.coord,
-          rumorContext: buildRumorContext(rumorMatch.rumor, rumorMatch.active.currentStep),
-        },
-      };
+      return enterEncounter(nextState, resolvedEncounter, enteredTile.coord, {
+        rumorContext: buildRumorContext(rumorMatch.rumor, rumorMatch.active.currentStep),
+      });
     }
   }
 
@@ -133,23 +159,10 @@ export function resolvePush(
     const resolvedEncounter = encounterForHope(enteredTile.encounter, nextState.player.hope);
     const clearedTile = { ...enteredTile, encounter: null };
     map.set(key, clearedTile);
-    const afterLossCheck = applyLossChecks(nextState);
-    if (afterLossCheck.status !== "playing") {
-      return afterLossCheck;
-    }
-    return {
-      ...afterLossCheck,
+    return enterEncounter(nextState, resolvedEncounter, destination, {
       map: new Map(map),
-      mode: {
-        type: "encounter",
-        encounter: resolvedEncounter,
-        hex: destination,
-      },
-      log: [
-        ...afterLossCheck.log,
-        { turn: afterLossCheck.turn, text: resolvedEncounter.text, type: "narrative" },
-      ],
-    };
+      logEncounterText: true,
+    });
   }
 
   return applyEndOfTurnEffects(nextState);

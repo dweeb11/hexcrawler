@@ -6,7 +6,8 @@ import {
   resolveRumorDiscovery,
 } from "../rumors";
 import { type Action, type GameState, type RNG } from "../state";
-import { appendLog, applyEndOfTurnEffects } from "./end-of-turn";
+import { appendLog } from "./log";
+import { applyEndOfTurnEffects } from "./end-of-turn";
 
 export function resolveChoose(
   state: GameState,
