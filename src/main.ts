@@ -1,7 +1,9 @@
 import { fetchEncounters } from "./api/encounters";
 import { fetchRumors } from "./api/rumors";
 import { createAnalyticsClient } from "./api/analytics";
+import { submitPlaytest } from "./api/playtests";
 import { coordKey } from "./engine/hex";
+import { createSeededRng } from "./engine/rng";
 import { clearSave, hasSave, loadGame, saveGame } from "./ui/save";
 import { pixelToHex, setupCanvas } from "./renderer/canvas";
 import { createCamera, screenToWorld, type Camera } from "./renderer/camera";
@@ -47,43 +49,6 @@ function loadDismissedHints(): Set<HintId> {
 
 function saveDismissedHints(hints: Set<HintId>): void {
   localStorage.setItem(HINTS_KEY, JSON.stringify([...hints]));
-}
-
-function createRng(seed: number): () => number {
-  let current = seed % 2147483647;
-  if (current <= 0) {
-    current += 2147483646;
-  }
-
-  return () => {
-    current = (current * 16807) % 2147483647;
-    return (current - 1) / 2147483646;
-  };
-}
-
-function submitPlaytest(gameState: GameState, outcome: "won" | "lost"): void {
-  const biomesVisited = [...new Set(
-    [...gameState.map.values()]
-      .filter((tile) => tile.visited)
-      .map((tile) => tile.biome),
-  )];
-  const deathCause =
-    outcome === "lost" && gameState.mode.type === "gameover"
-      ? gameState.mode.reason
-      : undefined;
-  const rumorsCompleted = gameState.rumors.completed.length;
-
-  fetch("/api/playtests", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      outcome,
-      turnsSurvived: gameState.turn,
-      deathCause,
-      biomesVisited,
-      rumorsCompleted,
-    }),
-  }).catch(() => { /* fire-and-forget; ignore network failures */ });
 }
 
 type CanvasTouchResult = Action | "restart";
@@ -142,7 +107,7 @@ async function main(): Promise<void> {
   const encounters = await fetchEncounters();
   const rumors = await fetchRumors();
   let seed = Date.now();
-  let rng = createRng(seed);
+  let rng = createSeededRng(seed);
   let analytics = createAnalyticsClient();
   let state: GameState;
   let camera = createCamera();
@@ -178,7 +143,7 @@ async function main(): Promise<void> {
 
   const restart = () => {
     seed = Date.now();
-    rng = createRng(seed);
+    rng = createSeededRng(seed);
     analytics = createAnalyticsClient();
     state = createInitialState(encounters, rng, rumors);
     clearSave();
