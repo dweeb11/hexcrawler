@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { createSeededRng } from "../../src/engine/rng";
+import { createRng } from "../../src/engine/rng";
 
-describe("createSeededRng", () => {
+describe("createRng", () => {
   it("produces a deterministic sequence for a fixed seed", () => {
-    const rngA = createSeededRng(42);
-    const rngB = createSeededRng(42);
+    const rngA = createRng(42);
+    const rngB = createRng(42);
 
     const sequenceA = Array.from({ length: 5 }, () => rngA());
     const sequenceB = Array.from({ length: 5 }, () => rngB());
@@ -15,14 +15,14 @@ describe("createSeededRng", () => {
   });
 
   it("normalizes non-positive seeds to valid starting states", () => {
-    const rngZero = createSeededRng(0);
-    const rngZeroAgain = createSeededRng(0);
+    const rngZero = createRng(0);
+    const rngZeroAgain = createRng(0);
 
     expect(rngZero()).toBe(rngZeroAgain());
   });
 
   it("returns values in [0, 1)", () => {
-    const rng = createSeededRng(12345);
+    const rng = createRng(12345);
 
     for (let i = 0; i < 100; i++) {
       const value = rng();

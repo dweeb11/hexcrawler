@@ -3,7 +3,7 @@ import { fetchRumors } from "./api/rumors";
 import { createAnalyticsClient } from "./api/analytics";
 import { submitPlaytest } from "./api/playtests";
 import { coordKey } from "./engine/hex";
-import { createSeededRng } from "./engine/rng";
+import { createRng } from "./engine/rng";
 import { clearSave, hasSave, loadGame, saveGame } from "./ui/save";
 import { pixelToHex, setupCanvas } from "./renderer/canvas";
 import { createCamera, screenToWorld, type Camera } from "./renderer/camera";
@@ -107,7 +107,7 @@ async function main(): Promise<void> {
   const encounters = await fetchEncounters();
   const rumors = await fetchRumors();
   let seed = Date.now();
-  let rng = createSeededRng(seed);
+  let rng = createRng(seed);
   let analytics = createAnalyticsClient();
   let state: GameState;
   let camera = createCamera();
@@ -143,7 +143,7 @@ async function main(): Promise<void> {
 
   const restart = () => {
     seed = Date.now();
-    rng = createSeededRng(seed);
+    rng = createRng(seed);
     analytics = createAnalyticsClient();
     state = createInitialState(encounters, rng, rumors);
     clearSave();

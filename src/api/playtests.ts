@@ -1,12 +1,9 @@
-import { coordKey } from "../engine/hex";
 import type { GameState } from "../engine/state";
 
 const PLAYTESTS_ENDPOINT = "/api/playtests";
 
-export type PlaytestOutcome = "won" | "lost";
-
 export interface PlaytestPayload {
-  outcome: PlaytestOutcome;
+  outcome: "won" | "lost";
   turnsSurvived: number;
   deathCause?: string;
   biomesVisited: string[];
@@ -15,7 +12,7 @@ export interface PlaytestPayload {
 
 export function buildPlaytestPayload(
   gameState: GameState,
-  outcome: PlaytestOutcome,
+  outcome: "won" | "lost",
 ): PlaytestPayload {
   const biomesVisited = [
     ...new Set(
@@ -28,19 +25,20 @@ export function buildPlaytestPayload(
     outcome === "lost" && gameState.mode.type === "gameover"
       ? gameState.mode.reason
       : undefined;
+  const rumorsCompleted = gameState.rumors.completed.length;
 
   return {
     outcome,
     turnsSurvived: gameState.turn,
     deathCause,
     biomesVisited,
-    rumorsCompleted: gameState.rumors.completed.length,
+    rumorsCompleted,
   };
 }
 
 export function submitPlaytest(
   gameState: GameState,
-  outcome: PlaytestOutcome,
+  outcome: "won" | "lost",
   fetchFn: typeof fetch = fetch,
 ): void {
   const payload = buildPlaytestPayload(gameState, outcome);

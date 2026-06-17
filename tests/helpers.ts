@@ -1,1 +1,1 @@
-export { createSeededRng as seededRng } from "../src/engine/rng";
+export { createRng as seededRng } from "../src/engine/rng";

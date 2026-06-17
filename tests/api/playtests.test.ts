@@ -87,6 +87,26 @@ describe("buildPlaytestPayload", () => {
     });
   });
 
+  it("omits deathCause on a win", () => {
+    const state = gameStateWith({
+      turn: 12,
+      status: "won",
+      mode: {
+        type: "gameover",
+        reason: "won",
+        outcome: "win_pillars",
+      },
+    });
+
+    expect(buildPlaytestPayload(state, "won")).toEqual({
+      outcome: "won",
+      turnsSurvived: 12,
+      deathCause: undefined,
+      biomesVisited: ["settlement"],
+      rumorsCompleted: 0,
+    });
+  });
+
   it("deduplicates visited biomes", () => {
     const forestA = tile(1, 0, "forest", true);
     const forestB = tile(0, 1, "forest", true);
@@ -123,12 +143,16 @@ describe("submitPlaytest", () => {
         }),
       },
     );
+
+    await Promise.resolve();
   });
 
-  it("does not throw when fetch rejects", () => {
+  it("does not throw when fetch rejects", async () => {
     const fetchMock = vi.fn().mockRejectedValue(new Error("network"));
     const state = gameStateWith({ status: "lost" });
 
     expect(() => submitPlaytest(state, "lost", fetchMock)).not.toThrow();
+
+    await Promise.resolve();
   });
 });
