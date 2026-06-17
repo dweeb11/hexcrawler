@@ -1,16 +1,8 @@
-import { createAnalyticsClient, type AnalyticsClient } from "../api/analytics";
+import type { AnalyticsClient } from "../api/analytics";
 import { coordKey } from "../engine/hex";
-import { createRng } from "../engine/rng";
-import {
-  createInitialState,
-  type Action,
-  type Encounter,
-  type GameState,
-  type RNG,
-  type Rumor,
-} from "../engine/state";
+import type { Action, GameState, RNG } from "../engine/state";
 import { resolveTurn } from "../engine/turn";
-import type { HintId } from "./hints";
+import type { HintId } from "../ui/hints";
 
 export interface GameSessionAudio {
   playMove(): void;
@@ -24,7 +16,7 @@ export interface GameSessionAudio {
 }
 
 export interface GameSessionHints {
-  dismiss(id: HintId): void;
+  dismissHint(id: HintId): void;
 }
 
 export interface GameSessionPersistence {
@@ -33,11 +25,20 @@ export interface GameSessionPersistence {
 }
 
 export interface GameSessionPlaytest {
-  submit(state: GameState, outcome: "won" | "lost"): void;
+  submit(gameState: GameState, outcome: "won" | "lost"): void;
+}
+
+export interface GameSessionDeps {
+  getRng(): RNG;
+  getAnalytics(): AnalyticsClient;
+  audio: GameSessionAudio;
+  hints: GameSessionHints;
+  persistence: GameSessionPersistence;
+  playtest: GameSessionPlaytest;
 }
 
 export interface TransitionDeps {
-  analytics: AnalyticsClient;
+  getAnalytics(): AnalyticsClient;
   audio: GameSessionAudio;
   hints: GameSessionHints;
   playtest: GameSessionPlaytest;
@@ -61,7 +62,7 @@ export function handleMovementTransitions(
     action.type === "push" &&
     coordKey(next.player.hex) !== coordKey(prev.player.hex)
   ) {
-    deps.hints.dismiss("first-turn");
+    deps.hints.dismissHint("first-turn");
     deps.audio.playMove();
   }
 }
@@ -74,14 +75,14 @@ export function handleEncounterTransitions(
   deps: TransitionDeps,
 ): void {
   if (action.type === "choose" && prev.mode.type === "encounter") {
-    deps.hints.dismiss("first-encounter");
+    deps.hints.dismissHint("first-encounter");
     deps.audio.playChoiceSelect();
   }
 
   if (next.mode.type === "encounter" && prev.mode.type !== "encounter") {
     deps.audio.playEncounterOpen();
     const encounterHex = next.map.get(coordKey(next.mode.hex));
-    deps.analytics.track("encounter", {
+    deps.getAnalytics().track("encounter", {
       turnCount: next.turn,
       encounterId: next.mode.encounter.id,
       biome: encounterHex?.biome ?? null,
@@ -97,7 +98,7 @@ export function handleCampTransitions(
   deps: TransitionDeps,
 ): void {
   if (action.type === "pause" && action.activity === "forage") {
-    deps.hints.dismiss("low-supply");
+    deps.hints.dismissHint("low-supply");
     deps.audio.playForage();
   }
 
@@ -128,7 +129,7 @@ export function handleGameEndTransitions(
   if (next.status === "won" && prev.status !== "won") {
     deps.audio.playWin();
     deps.playtest.submit(next, "won");
-    deps.analytics.track("game_end", {
+    deps.getAnalytics().track("game_end", {
       outcome: "won",
       cause: "won",
       turnCount: next.turn,
@@ -138,7 +139,7 @@ export function handleGameEndTransitions(
   if (next.status === "lost" && prev.status !== "lost") {
     deps.audio.playLoss();
     deps.playtest.submit(next, "lost");
-    deps.analytics.track("game_end", {
+    deps.getAnalytics().track("game_end", {
       outcome: "lost",
       cause: next.mode.type === "gameover" ? next.mode.reason : "unknown",
       turnCount: next.turn,
@@ -160,7 +161,7 @@ export function handleProgressionTransitions(
   deps: TransitionDeps,
 ): void {
   if (next.turn > prev.turn) {
-    deps.analytics.track("turn", {
+    deps.getAnalytics().track("turn", {
       turnCount: next.turn,
       actionType: action.type,
     });
@@ -169,14 +170,14 @@ export function handleProgressionTransitions(
   const previousRumorIds = new Set(prev.rumors.active.map((rumor) => rumor.rumorId));
   for (const rumor of next.rumors.active) {
     if (!previousRumorIds.has(rumor.rumorId)) {
-      deps.analytics.track("rumor", {
+      deps.getAnalytics().track("rumor", {
         rumorId: rumor.rumorId,
         turnCount: next.turn,
       });
       const progressCount =
         next.rumors.active.length + next.rumors.completed.length;
       if (progressCount > 1) {
-        deps.hints.dismiss("first-rumor");
+        deps.hints.dismissHint("first-rumor");
       }
     }
   }
@@ -184,7 +185,7 @@ export function handleProgressionTransitions(
   const previousRelicIds = new Set(prev.relics.map((relic) => relic.id));
   for (const relic of next.relics) {
     if (!previousRelicIds.has(relic.id)) {
-      deps.analytics.track("relic", {
+      deps.getAnalytics().track("relic", {
         relicId: relic.id,
         turnCount: next.turn,
       });
@@ -213,39 +214,26 @@ export function runTransitionHandlers(
   }
 }
 
-export interface GameSessionDeps {
-  analytics: AnalyticsClient;
-  audio: GameSessionAudio;
-  hints: GameSessionHints;
-  persistence: GameSessionPersistence;
-  playtest: GameSessionPlaytest;
-}
-
 export interface GameSession {
   getState(): GameState;
-  getRng(): RNG;
-  getAnalytics(): AnalyticsClient;
-  applyAction(action: Action): void;
-  restart(encounters: Encounter[], rumors: Rumor[], seed: number): void;
+  restart(initialState: GameState): void;
+  dispatch(action: Action): GameState;
 }
 
 export function createGameSession(
   initialState: GameState,
-  rng: RNG,
   deps: GameSessionDeps,
 ): GameSession {
   let state = initialState;
-  let currentRng = rng;
-  let analytics = deps.analytics;
 
   const transitionDeps = (): TransitionDeps => ({
-    analytics,
+    getAnalytics: () => deps.getAnalytics(),
     audio: deps.audio,
     hints: deps.hints,
     playtest: deps.playtest,
   });
 
-  const persistState = (nextState: GameState): void => {
+  const persistState = (nextState: GameState) => {
     if (nextState.status === "playing") {
       deps.persistence.save(nextState);
     } else {
@@ -253,23 +241,21 @@ export function createGameSession(
     }
   };
 
+  const dispatch = (action: Action): GameState => {
+    const prev = state;
+    const next = resolveTurn(prev, action, deps.getRng());
+    runTransitionHandlers(prev, next, action, transitionDeps());
+    state = next;
+    persistState(state);
+    return state;
+  };
+
   return {
     getState: () => state,
-    getRng: () => currentRng,
-    getAnalytics: () => analytics,
-    applyAction(action) {
-      const prev = state;
-      const next = resolveTurn(prev, action, currentRng);
-      runTransitionHandlers(prev, next, action, transitionDeps());
-      state = next;
-      persistState(state);
-    },
-    restart(encounters, rumors, seed) {
-      currentRng = createRng(seed);
-      analytics = createAnalyticsClient();
-      state = createInitialState(encounters, currentRng, rumors);
+    restart: (newState: GameState) => {
+      state = newState;
       deps.persistence.clear();
-      analytics.track("game_start", { seed, restart: true });
     },
+    dispatch,
   };
 }

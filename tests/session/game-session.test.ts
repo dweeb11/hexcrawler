@@ -1,6 +1,6 @@
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { createAnalyticsClient } from "../../src/api/analytics";
+import type { AnalyticsClient } from "../../src/api/analytics";
 import { coordKey, cubeCoord, neighbor } from "../../src/engine/hex";
 import {
   createInitialState,
@@ -12,60 +12,51 @@ import { PILLARS_DISTANCE_THRESHOLD, GEAR_RELIC_THRESHOLD } from "../../src/engi
 import {
   createGameSession,
   handleProgressionTransitions,
-  type GameSessionAudio,
-  type GameSessionHints,
-  type GameSessionPersistence,
-  type GameSessionPlaytest,
+  type GameSessionDeps,
   type TransitionDeps,
-} from "../../src/ui/game-session";
+} from "../../src/session/game-session";
 import { seededRng } from "../helpers";
 
-function makeMocks() {
-  const analytics = createAnalyticsClient("test-session");
-  const track = vi.spyOn(analytics, "track");
-
-  const audio: GameSessionAudio = {
-    playMove: vi.fn(),
-    playEncounterOpen: vi.fn(),
-    playChoiceSelect: vi.fn(),
-    playSearingAdvance: vi.fn(),
-    playForage: vi.fn(),
-    playRest: vi.fn(),
-    playWin: vi.fn(),
-    playLoss: vi.fn(),
-  };
-
-  const dismissed = new Set<string>();
-  const hints: GameSessionHints = {
-    dismiss: vi.fn((id) => {
-      dismissed.add(id);
-    }),
-  };
-
-  const persistence: GameSessionPersistence = {
+function createMockDeps(rng = seededRng(42)): GameSessionDeps & {
+  persistence: { save: ReturnType<typeof vi.fn>; clear: ReturnType<typeof vi.fn> };
+  track: ReturnType<typeof vi.fn>;
+} {
+  const persistence = {
     save: vi.fn(),
     clear: vi.fn(),
   };
 
-  const playtest: GameSessionPlaytest = {
-    submit: vi.fn(),
+  const track = vi.fn();
+  const analytics: AnalyticsClient = {
+    sessionId: "test-session",
+    track,
   };
 
-  return { analytics, track, audio, hints, dismissed, persistence, playtest };
+  return {
+    getRng: () => rng,
+    getAnalytics: () => analytics,
+    track,
+    audio: {
+      playMove: vi.fn(),
+      playEncounterOpen: vi.fn(),
+      playChoiceSelect: vi.fn(),
+      playSearingAdvance: vi.fn(),
+      playForage: vi.fn(),
+      playRest: vi.fn(),
+      playWin: vi.fn(),
+      playLoss: vi.fn(),
+    },
+    hints: { dismissHint: vi.fn() },
+    persistence,
+    playtest: { submit: vi.fn() },
+  };
 }
 
 function makeSession(state?: GameState, seed = 42) {
-  const mocks = makeMocks();
-  const rng = seededRng(seed);
-  const initialState = state ?? createInitialState([], rng);
-  const session = createGameSession(initialState, rng, {
-    analytics: mocks.analytics,
-    audio: mocks.audio,
-    hints: mocks.hints,
-    persistence: mocks.persistence,
-    playtest: mocks.playtest,
-  });
-  return { session, ...mocks, rng };
+  const deps = createMockDeps(seededRng(seed));
+  const initialState = state ?? createInitialState([], deps.getRng());
+  const session = createGameSession(initialState, deps);
+  return { session, deps };
 }
 
 function encounterOnNeighbor(state: GameState, encounter: Encounter): GameState {
@@ -84,19 +75,73 @@ function encounterOnNeighbor(state: GameState, encounter: Encounter): GameState 
   };
 }
 
+describe("createGameSession", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("dispatch returns updated state and saves while playing", () => {
+    const deps = createMockDeps();
+    const initialState = createInitialState([], deps.getRng());
+    const session = createGameSession(initialState, deps);
+
+    const next = session.dispatch({ type: "push", direction: 0 });
+
+    expect(next.turn).toBeGreaterThan(initialState.turn);
+    expect(next).toBe(session.getState());
+    expect(deps.persistence.save).toHaveBeenCalledWith(next);
+    expect(deps.persistence.clear).not.toHaveBeenCalled();
+  });
+
+  it("dispatch clears save on game over", () => {
+    const deps = createMockDeps();
+    const initialState = createInitialState([], deps.getRng());
+    const session = createGameSession(
+      {
+        ...initialState,
+        player: { ...initialState.player, health: 0 },
+      },
+      deps,
+    );
+
+    const next = session.dispatch({ type: "push", direction: 0 });
+
+    expect(next.status).toBe("lost");
+    expect(deps.persistence.clear).toHaveBeenCalled();
+    expect(deps.persistence.save).not.toHaveBeenCalled();
+  });
+
+  it("restart resets state and clears save", () => {
+    const deps = createMockDeps();
+    const initialState = createInitialState([], deps.getRng());
+    const session = createGameSession(initialState, deps);
+    session.dispatch({ type: "push", direction: 0 });
+
+    const freshState = createInitialState([], deps.getRng());
+    session.restart(freshState);
+
+    expect(session.getState()).toBe(freshState);
+    expect(deps.persistence.clear).toHaveBeenCalled();
+  });
+});
+
 describe("game session transitions", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   it("emits turn analytics only when next.turn > prev.turn", () => {
-    const { session, track } = makeSession();
+    const { session, deps } = makeSession();
     const turnBefore = session.getState().turn;
 
-    session.applyAction({ type: "push", direction: 0 });
+    session.dispatch({ type: "push", direction: 0 });
 
     expect(session.getState().turn).toBe(turnBefore + 1);
-    expect(track).toHaveBeenCalledWith("turn", {
+    expect(deps.track).toHaveBeenCalledWith("turn", {
       turnCount: turnBefore + 1,
       actionType: "push",
     });
-    track.mockClear();
+    deps.track.mockClear();
 
     const encounter: Encounter = {
       id: "choice-test",
@@ -113,29 +158,29 @@ describe("game session transitions", () => {
         hex: cubeCoord(1, 0, -1),
       },
     };
-    const { session: encounterSession, track: encounterTrack } = makeSession(inEncounter);
+    const { session: encounterSession, deps: encounterDeps } = makeSession(inEncounter);
     const chooseTurnBefore = encounterSession.getState().turn;
 
-    encounterSession.applyAction({ type: "choose", choiceIndex: 0 });
+    encounterSession.dispatch({ type: "choose", choiceIndex: 0 });
 
     expect(encounterSession.getState().turn).toBe(chooseTurnBefore);
-    expect(encounterTrack).not.toHaveBeenCalledWith(
+    expect(encounterDeps.track).not.toHaveBeenCalledWith(
       "turn",
       expect.objectContaining({ actionType: "choose" }),
     );
   });
 
   it("does not emit turn analytics for dismiss", () => {
-    const { session, track } = makeSession();
-    session.applyAction({ type: "pause", activity: "rest" });
+    const { session, deps } = makeSession();
+    session.dispatch({ type: "pause", activity: "rest" });
     expect(session.getState().mode.type).toBe("camp");
-    track.mockClear();
+    deps.track.mockClear();
 
     const turnBefore = session.getState().turn;
-    session.applyAction({ type: "dismiss" });
+    session.dispatch({ type: "dismiss" });
 
     expect(session.getState().turn).toBe(turnBefore);
-    expect(track).not.toHaveBeenCalledWith("turn", expect.anything());
+    expect(deps.track).not.toHaveBeenCalledWith("turn", expect.anything());
   });
 
   it("tracks encounter analytics when mode transitions to encounter", () => {
@@ -147,12 +192,12 @@ describe("game session transitions", () => {
     };
     const base = createInitialState([], seededRng(1));
     const withEncounter = encounterOnNeighbor(base, encounter);
-    const { session: encounterSession, track: encounterTrack } = makeSession(withEncounter);
+    const { session: encounterSession, deps } = makeSession(withEncounter);
 
-    encounterSession.applyAction({ type: "push", direction: 0 });
+    encounterSession.dispatch({ type: "push", direction: 0 });
 
     expect(encounterSession.getState().mode.type).toBe("encounter");
-    expect(encounterTrack).toHaveBeenCalledWith("encounter", {
+    expect(deps.track).toHaveBeenCalledWith("encounter", {
       turnCount: encounterSession.getState().turn,
       encounterId: "forest-test",
       biome: "forest",
@@ -160,9 +205,9 @@ describe("game session transitions", () => {
   });
 
   it("dismisses first-turn hint on first move", () => {
-    const { session, hints } = makeSession();
-    session.applyAction({ type: "push", direction: 0 });
-    expect(hints.dismiss).toHaveBeenCalledWith("first-turn");
+    const { session, deps } = makeSession();
+    session.dispatch({ type: "push", direction: 0 });
+    expect(deps.hints.dismissHint).toHaveBeenCalledWith("first-turn");
   });
 
   it("dismisses first-encounter hint when choosing in encounter mode", () => {
@@ -181,15 +226,15 @@ describe("game session transitions", () => {
         hex: cubeCoord(1, 0, -1),
       },
     };
-    const { session, hints } = makeSession(inEncounter);
-    session.applyAction({ type: "choose", choiceIndex: 0 });
-    expect(hints.dismiss).toHaveBeenCalledWith("first-encounter");
+    const { session, deps } = makeSession(inEncounter);
+    session.dispatch({ type: "choose", choiceIndex: 0 });
+    expect(deps.hints.dismissHint).toHaveBeenCalledWith("first-encounter");
   });
 
   it("dismisses low-supply hint when foraging", () => {
-    const { session, hints } = makeSession();
-    session.applyAction({ type: "pause", activity: "forage" });
-    expect(hints.dismiss).toHaveBeenCalledWith("low-supply");
+    const { session, deps } = makeSession();
+    session.dispatch({ type: "pause", activity: "forage" });
+    expect(deps.hints.dismissHint).toHaveBeenCalledWith("low-supply");
   });
 
   it("dismisses first-rumor hint when a second rumor is discovered", () => {
@@ -205,24 +250,24 @@ describe("game session transitions", () => {
         ],
       },
     };
-    const mocks = makeMocks();
-    const deps: TransitionDeps = {
-      analytics: mocks.analytics,
-      audio: mocks.audio,
-      hints: mocks.hints,
-      playtest: mocks.playtest,
+    const deps = createMockDeps();
+    const transitionDeps: TransitionDeps = {
+      getAnalytics: () => deps.getAnalytics(),
+      audio: deps.audio,
+      hints: deps.hints,
+      playtest: deps.playtest,
     };
 
-    handleProgressionTransitions(prev, next, { type: "push", direction: 0 }, deps);
+    handleProgressionTransitions(prev, next, { type: "push", direction: 0 }, transitionDeps);
 
-    expect(mocks.hints.dismiss).toHaveBeenCalledWith("first-rumor");
+    expect(deps.hints.dismissHint).toHaveBeenCalledWith("first-rumor");
   });
 
   it("saves while playing", () => {
-    const { session, persistence } = makeSession();
-    session.applyAction({ type: "push", direction: 0 });
+    const { session, deps } = makeSession();
+    session.dispatch({ type: "push", direction: 0 });
     expect(session.getState().status).toBe("playing");
-    expect(persistence.save).toHaveBeenCalled();
+    expect(deps.persistence.save).toHaveBeenCalled();
   });
 
   it("clears save on win", () => {
@@ -243,13 +288,13 @@ describe("game session transitions", () => {
         visited: true,
       }),
     };
-    const { session, persistence } = makeSession(nearWin, 99);
+    const { session, deps } = makeSession(nearWin, 99);
 
-    session.applyAction({ type: "push", direction: 0 });
+    session.dispatch({ type: "push", direction: 0 });
 
     expect(session.getState().status).toBe("won");
-    expect(persistence.clear).toHaveBeenCalled();
-    expect(persistence.save).not.toHaveBeenCalled();
+    expect(deps.persistence.clear).toHaveBeenCalled();
+    expect(deps.persistence.save).not.toHaveBeenCalled();
   });
 
   it("clears save on loss", () => {
@@ -261,11 +306,11 @@ describe("game session transitions", () => {
         health: 1,
       },
     };
-    const { session, persistence } = makeSession(starving);
-    session.applyAction({ type: "push", direction: 0 });
+    const { session, deps } = makeSession(starving);
+    session.dispatch({ type: "push", direction: 0 });
 
     expect(session.getState().status).toBe("lost");
-    expect(persistence.clear).toHaveBeenCalled();
+    expect(deps.persistence.clear).toHaveBeenCalled();
   });
 
   it("submits playtest and game_end analytics on win", () => {
@@ -286,16 +331,16 @@ describe("game session transitions", () => {
       relics,
       mode: { type: "encounter", encounter, hex: cubeCoord(0, 0, 0) },
     };
-    const { session, playtest, track } = makeSession(nearWin);
+    const { session, deps } = makeSession(nearWin);
 
-    session.applyAction({ type: "choose", choiceIndex: 0 });
+    session.dispatch({ type: "choose", choiceIndex: 0 });
 
     expect(session.getState().status).toBe("won");
-    expect(playtest.submit).toHaveBeenCalledWith(
+    expect(deps.playtest.submit).toHaveBeenCalledWith(
       expect.objectContaining({ status: "won" }),
       "won",
     );
-    expect(track).toHaveBeenCalledWith("game_end", {
+    expect(deps.track).toHaveBeenCalledWith("game_end", {
       outcome: "won",
       cause: "won",
       turnCount: session.getState().turn,
@@ -310,16 +355,16 @@ describe("game session transitions", () => {
         health: 0,
       },
     };
-    const { session, playtest, track } = makeSession(dying);
+    const { session, deps } = makeSession(dying);
 
-    session.applyAction({ type: "push", direction: 0 });
+    session.dispatch({ type: "push", direction: 0 });
 
     expect(session.getState().status).toBe("lost");
-    expect(playtest.submit).toHaveBeenCalledWith(
+    expect(deps.playtest.submit).toHaveBeenCalledWith(
       expect.objectContaining({ status: "lost" }),
       "lost",
     );
-    expect(track).toHaveBeenCalledWith(
+    expect(deps.track).toHaveBeenCalledWith(
       "game_end",
       expect.objectContaining({
         outcome: "lost",
@@ -337,17 +382,17 @@ describe("handleProgressionTransitions turn semantics", () => {
       mode: { type: "map" },
       player: { ...prev.player, hope: prev.player.hope + 1 },
     };
-    const mocks = makeMocks();
-    const deps: TransitionDeps = {
-      analytics: mocks.analytics,
-      audio: mocks.audio,
-      hints: mocks.hints,
-      playtest: mocks.playtest,
+    const deps = createMockDeps();
+    const transitionDeps: TransitionDeps = {
+      getAnalytics: () => deps.getAnalytics(),
+      audio: deps.audio,
+      hints: deps.hints,
+      playtest: deps.playtest,
     };
 
-    handleProgressionTransitions(prev, next, { type: "choose", choiceIndex: 0 }, deps);
-    handleProgressionTransitions(prev, next, { type: "dismiss" }, deps);
+    handleProgressionTransitions(prev, next, { type: "choose", choiceIndex: 0 }, transitionDeps);
+    handleProgressionTransitions(prev, next, { type: "dismiss" }, transitionDeps);
 
-    expect(mocks.track).not.toHaveBeenCalledWith("turn", expect.anything());
+    expect(deps.track).not.toHaveBeenCalledWith("turn", expect.anything());
   });
 });

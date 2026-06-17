@@ -9,6 +9,7 @@ import { createCamera, screenToWorld, type Camera } from "./renderer/camera";
 import { hitTestEncounterChoice } from "./renderer/encounter-layout";
 import { render } from "./renderer/renderer";
 import { createInitialState, MAX_SUPPLY, type Action, type GameState } from "./engine/state";
+import { createGameSession } from "./session/game-session";
 import { getActiveHint, type HintId } from "./ui/hints";
 import { applyHopeStyling, clearLog, updateLog } from "./ui/log";
 import {
@@ -29,7 +30,6 @@ import {
   closeJournal,
   isJournalOpen,
 } from "./ui/journal";
-import { createGameSession } from "./ui/game-session";
 
 const HINTS_KEY = "waning-light-hints";
 const VALID_HINT_IDS: HintId[] = ["first-turn", "low-supply", "first-encounter", "first-rumor"];
@@ -108,7 +108,6 @@ async function main(): Promise<void> {
   let seed = Date.now();
   let rng = createRng(seed);
   let analytics = createAnalyticsClient();
-  let initialState: GameState;
   let camera = createCamera();
   const dismissedHints = loadDismissedHints();
 
@@ -119,6 +118,7 @@ async function main(): Promise<void> {
     }
   };
 
+  let initialState: GameState;
   if (hasSave()) {
     const saved = loadGame();
     if (saved && saved.status === "playing") {
@@ -140,8 +140,9 @@ async function main(): Promise<void> {
     analytics.track("game_start", { seed, fromSave: false });
   }
 
-  const session = createGameSession(initialState, rng, {
-    analytics,
+  const session = createGameSession(initialState, {
+    getRng: () => rng,
+    getAnalytics: () => analytics,
     audio: {
       playMove,
       playEncounterOpen,
@@ -152,15 +153,18 @@ async function main(): Promise<void> {
       playWin,
       playLoss,
     },
-    hints: { dismiss: dismissHint },
+    hints: { dismissHint },
     persistence: { save: saveGame, clear: clearSave },
     playtest: { submit: submitPlaytest },
   });
 
   const restart = () => {
     seed = Date.now();
-    session.restart(encounters, rumors, seed);
+    rng = createRng(seed);
+    analytics = createAnalyticsClient();
+    session.restart(createInitialState(encounters, rng, rumors));
     clearLog(logPanel);
+    analytics.track("game_start", { seed, restart: true });
   };
 
   const frame = () => {
@@ -187,6 +191,7 @@ async function main(): Promise<void> {
     }
 
     const state = session.getState();
+
     if (state.mode.type === "gameover" && event.key === "Enter") {
       restart();
       return;
@@ -212,7 +217,7 @@ async function main(): Promise<void> {
         if (result.closeJournalFirst) {
           closeJournal(journalPanel, logPanel);
         }
-        session.applyAction(result.action);
+        session.dispatch(result.action);
         return;
       case "none":
         return;
@@ -250,7 +255,7 @@ async function main(): Promise<void> {
     const clicked = pixelToHex(world.x, world.y);
     const action = clickedNeighborToAction(state.player.hex, clicked);
     if (action) {
-      session.applyAction(action);
+      session.dispatch(action);
     }
   });
 
@@ -285,7 +290,7 @@ async function main(): Promise<void> {
       return;
     }
     if (result) {
-      session.applyAction(result);
+      session.dispatch(result);
     }
   }, { passive: false });
 
