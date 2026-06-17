@@ -32,19 +32,16 @@ export function resolvePush(
 ): GameState {
   const moveDiscount = getMoveDiscount(state.relics);
   const isFreeMove = rng() < moveDiscount;
-
-  if (!isFreeMove && state.player.supply <= 0) {
-    return appendLog(
-      state,
-      "You have no Supply left. Pause and forage, or pause and rest.",
-      "system",
-    );
-  }
+  const starvingMove = !isFreeMove && state.player.supply <= 0;
 
   const destination = neighbor(state.player.hex, action.direction);
   let nextState: GameState = {
     ...state,
-    player: applyDelta(state.player, { supply: isFreeMove ? 0 : -1 }, state.relics),
+    player: applyDelta(
+      state.player,
+      isFreeMove ? {} : starvingMove ? { health: -1 } : { supply: -1 },
+      state.relics,
+    ),
   };
 
   const map = new Map(nextState.map);
@@ -88,7 +85,9 @@ export function resolvePush(
     nextState,
     isFreeMove
       ? `You push onward into ${enteredTile.biome}. The way is free.`
-      : `You push onward into ${enteredTile.biome}. (-1 Supply)`,
+      : starvingMove
+        ? `You push onward into ${enteredTile.biome}. Your body pays the toll. (-1 Health)`
+        : `You push onward into ${enteredTile.biome}. (-1 Supply)`,
     "resource",
   );
 

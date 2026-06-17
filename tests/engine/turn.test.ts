@@ -39,16 +39,36 @@ describe("resolveTurn push flow", () => {
     expect(destination?.visited).toBe(true);
   });
 
-  it("refuses to move without supply", () => {
+  it("moves without supply by spending health instead", () => {
     const { state, rng } = makeState();
     const emptyState: GameState = {
       ...state,
-      player: { ...state.player, supply: 0 },
+      player: { ...state.player, supply: 0, health: 5 },
     };
     const next = resolveTurn(emptyState, { type: "push", direction: 0 }, rng);
 
-    expect(coordKey(next.player.hex)).toBe(coordKey(emptyState.player.hex));
-    expect(next.log.length).toBeGreaterThan(emptyState.log.length);
+    expect(coordKey(next.player.hex)).not.toBe(coordKey(emptyState.player.hex));
+    expect(next.player.supply).toBe(0);
+    expect(next.player.health).toBe(4);
+    expect(next.log.some((entry) => entry.text.includes("(-1 Health)"))).toBe(true);
+  });
+
+  it("triggers game over when starving moves deplete health", () => {
+    const { state, rng } = makeState();
+    const next = resolveTurn(
+      {
+        ...state,
+        player: { ...state.player, supply: 0, health: 1 },
+      },
+      { type: "push", direction: 0 },
+      rng,
+    );
+
+    expect(next.status).toBe("lost");
+    expect(next.mode.type).toBe("gameover");
+    if (next.mode.type === "gameover") {
+      expect(next.mode.outcome).toBe("loss_health");
+    }
   });
 
   it("biases generated hex tags toward active rumor hints", () => {
