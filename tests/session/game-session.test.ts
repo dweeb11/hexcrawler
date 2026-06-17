@@ -174,6 +174,7 @@ describe("game session transitions", () => {
     const { session, deps } = makeSession();
     session.dispatch({ type: "pause", activity: "rest" });
     expect(session.getState().mode.type).toBe("camp");
+    expect(deps.audio.playRest).toHaveBeenCalled();
     deps.track.mockClear();
 
     const turnBefore = session.getState().turn;
@@ -202,12 +203,14 @@ describe("game session transitions", () => {
       encounterId: "forest-test",
       biome: "forest",
     });
+    expect(deps.audio.playEncounterOpen).toHaveBeenCalled();
   });
 
   it("dismisses first-turn hint on first move", () => {
     const { session, deps } = makeSession();
     session.dispatch({ type: "push", direction: 0 });
     expect(deps.hints.dismissHint).toHaveBeenCalledWith("first-turn");
+    expect(deps.audio.playMove).toHaveBeenCalled();
   });
 
   it("dismisses first-encounter hint when choosing in encounter mode", () => {
@@ -229,12 +232,14 @@ describe("game session transitions", () => {
     const { session, deps } = makeSession(inEncounter);
     session.dispatch({ type: "choose", choiceIndex: 0 });
     expect(deps.hints.dismissHint).toHaveBeenCalledWith("first-encounter");
+    expect(deps.audio.playChoiceSelect).toHaveBeenCalled();
   });
 
   it("dismisses low-supply hint when foraging", () => {
     const { session, deps } = makeSession();
     session.dispatch({ type: "pause", activity: "forage" });
     expect(deps.hints.dismissHint).toHaveBeenCalledWith("low-supply");
+    expect(deps.audio.playForage).toHaveBeenCalled();
   });
 
   it("dismisses first-rumor hint when a second rumor is discovered", () => {
@@ -261,6 +266,35 @@ describe("game session transitions", () => {
     handleProgressionTransitions(prev, next, { type: "push", direction: 0 }, transitionDeps);
 
     expect(deps.hints.dismissHint).toHaveBeenCalledWith("first-rumor");
+  });
+
+  it("tracks relic analytics when a relic is discovered", () => {
+    const prev = createInitialState([], seededRng(1));
+    const newRelic: Relic = {
+      id: "found-relic",
+      name: "Found Relic",
+      description: "Test relic",
+      effect: { type: "forage_bonus", bonus: 1 },
+    };
+    const next: GameState = {
+      ...prev,
+      turn: 5,
+      relics: [...prev.relics, newRelic],
+    };
+    const deps = createMockDeps();
+    const transitionDeps: TransitionDeps = {
+      getAnalytics: () => deps.getAnalytics(),
+      audio: deps.audio,
+      hints: deps.hints,
+      playtest: deps.playtest,
+    };
+
+    handleProgressionTransitions(prev, next, { type: "push", direction: 0 }, transitionDeps);
+
+    expect(deps.track).toHaveBeenCalledWith("relic", {
+      relicId: "found-relic",
+      turnCount: 5,
+    });
   });
 
   it("saves while playing", () => {
@@ -345,6 +379,7 @@ describe("game session transitions", () => {
       cause: "won",
       turnCount: session.getState().turn,
     });
+    expect(deps.audio.playWin).toHaveBeenCalled();
   });
 
   it("submits playtest and game_end analytics on loss", () => {
@@ -371,6 +406,7 @@ describe("game session transitions", () => {
         turnCount: session.getState().turn,
       }),
     );
+    expect(deps.audio.playLoss).toHaveBeenCalled();
   });
 });
 

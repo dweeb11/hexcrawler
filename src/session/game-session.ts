@@ -193,7 +193,11 @@ export function handleProgressionTransitions(
   }
 }
 
-/** Ordered transition handlers — order preserves current player-visible behavior. */
+/**
+ * Ordered transition handlers — order preserves current player-visible behavior.
+ * Encounter runs before camp because no single action triggers both; grouping
+ * choose + encounter-open keeps related side effects together.
+ */
 export const TRANSITION_HANDLERS: TransitionHandler[] = [
   handleMovementTransitions,
   handleEncounterTransitions,
