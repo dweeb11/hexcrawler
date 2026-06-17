@@ -1,85 +1,157 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { buildPlaytestPayload, submitPlaytest } from "../../src/api/playtests";
-import type { GameState } from "../../src/engine/state";
+import {
+  buildPlaytestPayload,
+  submitPlaytest,
+} from "../../src/api/playtests";
+import { coordKey, cubeCoord } from "../../src/engine/hex";
+import {
+  createInitialState,
+  type GameState,
+  type HexTile,
+} from "../../src/engine/state";
+import { seededRng } from "../helpers";
 
-function minimalGameState(overrides: Partial<GameState> = {}): GameState {
+function tile(
+  q: number,
+  r: number,
+  biome: HexTile["biome"],
+  visited: boolean,
+): HexTile {
+  const coord = cubeCoord(q, r, -q - r);
   return {
-    turn: 12,
-    status: "lost",
-    mode: { type: "gameover", reason: "searing", outcome: "loss_searing" },
-    map: new Map([
-      ["0,0,0", { biome: "forest", tags: [], visited: true, encounterId: null }],
-      ["1,0,-1", { biome: "marsh", tags: [], visited: true, encounterId: null }],
-      ["0,1,-1", { biome: "forest", tags: [], visited: false, encounterId: null }],
-    ]),
-    rumors: {
-      available: [],
-      active: [],
-      completed: [{ rumorId: "r1" }, { rumorId: "r2" }],
-    },
-    ...overrides,
-  } as GameState;
+    coord,
+    biome,
+    tags: new Set(),
+    encounter: null,
+    revealed: visited,
+    consumed: false,
+    visited,
+  };
 }
 
-describe("playtests", () => {
-  it("builds the correct payload for a loss", () => {
-    const state = minimalGameState();
+function gameStateWith(overrides: Partial<GameState>): GameState {
+  const base = createInitialState([], seededRng(1));
+  return { ...base, ...overrides };
+}
 
-    expect(buildPlaytestPayload(state, "lost")).toEqual({
-      outcome: "lost",
-      turnsSurvived: 12,
-      deathCause: "searing",
-      biomesVisited: ["forest", "marsh"],
+describe("buildPlaytestPayload", () => {
+  it("builds a win payload with visited biomes and rumor count", () => {
+    const forest = tile(1, 0, "forest", true);
+    const mountain = tile(0, 1, "mountain", true);
+    const hidden = tile(-1, 1, "wastes", false);
+    const state = gameStateWith({
+      turn: 17,
+      status: "won",
+      map: new Map([
+        [coordKey(forest.coord), forest],
+        [coordKey(mountain.coord), mountain],
+        [coordKey(hidden.coord), hidden],
+      ]),
+      rumors: {
+        available: [],
+        active: [],
+        completed: [
+          { rumorId: "r1", completedAtTurn: 5 },
+          { rumorId: "r2", completedAtTurn: 12 },
+        ],
+      },
+    });
+
+    expect(buildPlaytestPayload(state, "won")).toEqual({
+      outcome: "won",
+      turnsSurvived: 17,
+      deathCause: undefined,
+      biomesVisited: ["forest", "mountain"],
       rumorsCompleted: 2,
     });
   });
 
+  it("includes death cause for a lost game in gameover mode", () => {
+    const state = gameStateWith({
+      turn: 9,
+      status: "lost",
+      mode: {
+        type: "gameover",
+        reason: "The Searing caught you.",
+        outcome: "loss_searing",
+      },
+    });
+
+    expect(buildPlaytestPayload(state, "lost")).toEqual({
+      outcome: "lost",
+      turnsSurvived: 9,
+      deathCause: "The Searing caught you.",
+      biomesVisited: ["settlement"],
+      rumorsCompleted: 0,
+    });
+  });
+
   it("omits deathCause on a win", () => {
-    const state = minimalGameState({
+    const state = gameStateWith({
+      turn: 12,
       status: "won",
-      mode: { type: "gameover", reason: "won", outcome: "win_pillars" },
+      mode: {
+        type: "gameover",
+        reason: "won",
+        outcome: "win_pillars",
+      },
     });
 
     expect(buildPlaytestPayload(state, "won")).toEqual({
       outcome: "won",
       turnsSurvived: 12,
       deathCause: undefined,
-      biomesVisited: ["forest", "marsh"],
-      rumorsCompleted: 2,
+      biomesVisited: ["settlement"],
+      rumorsCompleted: 0,
     });
   });
 
-  it("POSTs fire-and-forget with mock fetch", async () => {
-    const fetchMock = vi.fn().mockResolvedValue({ ok: true });
-    const state = minimalGameState();
+  it("deduplicates visited biomes", () => {
+    const forestA = tile(1, 0, "forest", true);
+    const forestB = tile(0, 1, "forest", true);
+    const state = gameStateWith({
+      map: new Map([
+        [coordKey(forestA.coord), forestA],
+        [coordKey(forestB.coord), forestB],
+      ]),
+    });
 
-    submitPlaytest(state, "lost", fetchMock);
+    expect(buildPlaytestPayload(state, "won").biomesVisited).toEqual(["forest"]);
+  });
+});
+
+describe("submitPlaytest", () => {
+  it("POSTs the payload fire-and-forget", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true });
+    const state = gameStateWith({ turn: 4, status: "won" });
+
+    submitPlaytest(state, "won", fetchMock);
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(fetchMock).toHaveBeenCalledWith(
       "/api/playtests",
-      expect.objectContaining({
+      {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          outcome: "lost",
-          turnsSurvived: 12,
-          deathCause: "searing",
-          biomesVisited: ["forest", "marsh"],
-          rumorsCompleted: 2,
+          outcome: "won",
+          turnsSurvived: 4,
+          deathCause: undefined,
+          biomesVisited: ["settlement"],
+          rumorsCompleted: 0,
         }),
-      }),
+      },
     );
 
     await Promise.resolve();
   });
 
-  it("never throws if fetch rejects", async () => {
+  it("does not throw when fetch rejects", async () => {
     const fetchMock = vi.fn().mockRejectedValue(new Error("network"));
-    const state = minimalGameState();
+    const state = gameStateWith({ status: "lost" });
 
-    expect(() => submitPlaytest(state, "won", fetchMock)).not.toThrow();
+    expect(() => submitPlaytest(state, "lost", fetchMock)).not.toThrow();
 
     await Promise.resolve();
   });

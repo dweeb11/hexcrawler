@@ -11,12 +11,23 @@ describe("createRng", () => {
     const sequenceB = Array.from({ length: 5 }, () => rngB());
 
     expect(sequenceA).toEqual(sequenceB);
-    expect(sequenceA.every((value) => value >= 0 && value < 1)).toBe(true);
+    expect(sequenceA[0]).toBeCloseTo(0.0003287070433876543);
   });
 
-  it("normalizes non-positive seeds", () => {
-    const rng = createRng(0);
-    expect(rng()).toBeGreaterThanOrEqual(0);
-    expect(rng()).toBeLessThan(1);
+  it("normalizes non-positive seeds to valid starting states", () => {
+    const rngZero = createRng(0);
+    const rngZeroAgain = createRng(0);
+
+    expect(rngZero()).toBe(rngZeroAgain());
+  });
+
+  it("returns values in [0, 1)", () => {
+    const rng = createRng(12345);
+
+    for (let i = 0; i < 100; i++) {
+      const value = rng();
+      expect(value).toBeGreaterThanOrEqual(0);
+      expect(value).toBeLessThan(1);
+    }
   });
 });
