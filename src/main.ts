@@ -2,7 +2,6 @@ import { fetchEncounters } from "./api/encounters";
 import { fetchRumors } from "./api/rumors";
 import { createAnalyticsClient } from "./api/analytics";
 import { submitPlaytest } from "./api/playtests";
-import { coordKey } from "./engine/hex";
 import { createRng } from "./engine/rng";
 import { clearSave, hasSave, loadGame, saveGame } from "./ui/save";
 import { pixelToHex, setupCanvas } from "./renderer/canvas";
@@ -10,7 +9,7 @@ import { createCamera, screenToWorld, type Camera } from "./renderer/camera";
 import { hitTestEncounterChoice } from "./renderer/encounter-layout";
 import { render } from "./renderer/renderer";
 import { createInitialState, MAX_SUPPLY, type Action, type GameState } from "./engine/state";
-import { resolveTurn } from "./engine/turn";
+import { createGameSession, type GameSession, type GameSessionDeps } from "./game-session";
 import { getActiveHint, type HintId } from "./ui/hints";
 import { applyHopeStyling, clearLog, updateLog } from "./ui/log";
 import {
@@ -107,9 +106,6 @@ async function main(): Promise<void> {
   const encounters = await fetchEncounters();
   const rumors = await fetchRumors();
   let seed = Date.now();
-  let rng = createRng(seed);
-  let analytics = createAnalyticsClient();
-  let state: GameState;
   let camera = createCamera();
   const dismissedHints = loadDismissedHints();
 
@@ -120,37 +116,6 @@ async function main(): Promise<void> {
     }
   };
 
-  if (hasSave()) {
-    const saved = loadGame();
-    if (saved && saved.status === "playing") {
-      const shouldContinue = await showContinuePrompt(canvas, ctx);
-      if (shouldContinue) {
-        state = saved;
-      } else {
-        clearSave();
-        state = createInitialState(encounters, rng, rumors);
-        analytics.track("game_start", { seed, fromSave: true });
-      }
-    } else {
-      clearSave();
-      state = createInitialState(encounters, rng, rumors);
-      analytics.track("game_start", { seed, fromSave: true });
-    }
-  } else {
-    state = createInitialState(encounters, rng, rumors);
-    analytics.track("game_start", { seed, fromSave: false });
-  }
-
-  const restart = () => {
-    seed = Date.now();
-    rng = createRng(seed);
-    analytics = createAnalyticsClient();
-    state = createInitialState(encounters, rng, rumors);
-    clearSave();
-    clearLog(logPanel);
-    analytics.track("game_start", { seed, restart: true });
-  };
-
   const persistState = (nextState: GameState) => {
     if (nextState.status === "playing") {
       saveGame(nextState);
@@ -159,106 +124,60 @@ async function main(): Promise<void> {
     }
   };
 
-  const applyAction = (action: Action) => {
-    const previousState = state;
-    const nextState = resolveTurn(previousState, action, rng);
-    const previousRumorIds = new Set(previousState.rumors.active.map((rumor) => rumor.rumorId));
-    const previousRelicIds = new Set(previousState.relics.map((relic) => relic.id));
+  const deps: GameSessionDeps = {
+    rng: createRng(seed),
+    analytics: createAnalyticsClient(),
+    audio: {
+      playMove,
+      playEncounterOpen,
+      playChoiceSelect,
+      playSearingAdvance,
+      playForage,
+      playRest,
+      playWin,
+      playLoss,
+    },
+    dismissHint,
+    persistState,
+    submitPlaytest,
+  };
 
-    if (
-      action.type === "push" &&
-      coordKey(nextState.player.hex) !== coordKey(previousState.player.hex)
-    ) {
-      dismissHint("first-turn");
-      playMove();
-    }
-
-    if (action.type === "choose" && previousState.mode.type === "encounter") {
-      dismissHint("first-encounter");
-      playChoiceSelect();
-    }
-
-    if (action.type === "pause" && action.activity === "forage") {
-      dismissHint("low-supply");
-      playForage();
-    }
-
-    if (action.type === "pause" && action.activity === "rest") {
-      playRest();
-    }
-
-    if (
-      nextState.mode.type === "encounter" &&
-      previousState.mode.type !== "encounter"
-    ) {
-      playEncounterOpen();
-      const encounterHex = nextState.map.get(coordKey(nextState.mode.hex));
-      analytics.track("encounter", {
-        turnCount: nextState.turn,
-        encounterId: nextState.mode.encounter.id,
-        biome: encounterHex?.biome ?? null,
-      });
-    }
-
-    if (nextState.searing.line !== previousState.searing.line) {
-      playSearingAdvance();
-    }
-
-    if (nextState.status === "won" && previousState.status !== "won") {
-      playWin();
-      submitPlaytest(nextState, "won");
-      analytics.track("game_end", {
-        outcome: "won",
-        cause: "won",
-        turnCount: nextState.turn,
-      });
-    }
-
-    if (nextState.status === "lost" && previousState.status !== "lost") {
-      playLoss();
-      submitPlaytest(nextState, "lost");
-      analytics.track("game_end", {
-        outcome: "lost",
-        cause: nextState.mode.type === "gameover" ? nextState.mode.reason : "unknown",
-        turnCount: nextState.turn,
-      });
-    }
-
-    if (nextState.turn > previousState.turn) {
-      analytics.track("turn", {
-        turnCount: nextState.turn,
-        actionType: action.type,
-      });
-    }
-
-    for (const rumor of nextState.rumors.active) {
-      if (!previousRumorIds.has(rumor.rumorId)) {
-        analytics.track("rumor", {
-          rumorId: rumor.rumorId,
-          turnCount: nextState.turn,
-        });
-        const progressCount =
-          nextState.rumors.active.length + nextState.rumors.completed.length;
-        if (progressCount > 1) {
-          dismissHint("first-rumor");
-        }
+  let initialState: GameState;
+  if (hasSave()) {
+    const saved = loadGame();
+    if (saved && saved.status === "playing") {
+      const shouldContinue = await showContinuePrompt(canvas, ctx);
+      if (shouldContinue) {
+        initialState = saved;
+      } else {
+        clearSave();
+        initialState = createInitialState(encounters, deps.rng, rumors);
+        deps.analytics.track("game_start", { seed, fromSave: true });
       }
+    } else {
+      clearSave();
+      initialState = createInitialState(encounters, deps.rng, rumors);
+      deps.analytics.track("game_start", { seed, fromSave: true });
     }
+  } else {
+    initialState = createInitialState(encounters, deps.rng, rumors);
+    deps.analytics.track("game_start", { seed, fromSave: false });
+  }
 
-    for (const relic of nextState.relics) {
-      if (!previousRelicIds.has(relic.id)) {
-        analytics.track("relic", {
-          relicId: relic.id,
-          turnCount: nextState.turn,
-        });
-      }
-    }
+  let session: GameSession = createGameSession(initialState, deps);
 
-    state = nextState;
-    persistState(state);
+  const restart = () => {
+    seed = Date.now();
+    deps.rng = createRng(seed);
+    deps.analytics = createAnalyticsClient();
+    session.restart(createInitialState(encounters, deps.rng, rumors));
+    clearSave();
+    clearLog(logPanel);
+    deps.analytics.track("game_start", { seed, restart: true });
   };
 
   const frame = () => {
+    const state = session.getState();
     const activeHint = getActiveHint(
       {
         turn: state.turn,
@@ -280,6 +199,7 @@ async function main(): Promise<void> {
       return;
     }
 
+    const state = session.getState();
     if (state.mode.type === "gameover" && event.key === "Enter") {
       restart();
       return;
@@ -305,7 +225,7 @@ async function main(): Promise<void> {
         if (result.closeJournalFirst) {
           closeJournal(journalPanel, logPanel);
         }
-        applyAction(result.action);
+        session.dispatch(result.action);
         return;
       case "none":
         return;
@@ -323,12 +243,13 @@ async function main(): Promise<void> {
       const tabName = tab.getAttribute("data-tab");
       if (tabName === "rumors" || tabName === "relics") {
         setJournalTab(tabName);
-        updateJournal(journalContent, state);
+        updateJournal(journalContent, session.getState());
       }
     });
   });
 
   canvas.addEventListener("click", (event) => {
+    const state = session.getState();
     if (state.mode.type !== "map") {
       return;
     }
@@ -342,7 +263,7 @@ async function main(): Promise<void> {
     const clicked = pixelToHex(world.x, world.y);
     const action = clickedNeighborToAction(state.player.hex, clicked);
     if (action) {
-      applyAction(action);
+      session.dispatch(action);
     }
   });
 
@@ -370,13 +291,14 @@ async function main(): Promise<void> {
     const x = touch.clientX - rect.left;
     const y = touch.clientY - rect.top;
 
+    const state = session.getState();
     const result = canvasTouchToAction(state, x, y, camera);
     if (result === "restart") {
       restart();
       return;
     }
     if (result) {
-      applyAction(result);
+      session.dispatch(result);
     }
   }, { passive: false });
 
