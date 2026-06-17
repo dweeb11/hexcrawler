@@ -15,6 +15,7 @@ import { frostProximityBand } from "../win";
 import {
   appendLog,
   applyEndOfTurnEffects,
+  applyLossChecks,
   enterGameOver,
   SEARING_LOSS,
 } from "./end-of-turn";
@@ -112,8 +113,12 @@ export function resolvePush(
     );
     if (rumorEncounter) {
       const resolvedEncounter = encounterForHope(rumorEncounter, nextState.player.hope);
+      const afterLossCheck = applyLossChecks(nextState);
+      if (afterLossCheck.status !== "playing") {
+        return afterLossCheck;
+      }
       return {
-        ...nextState,
+        ...afterLossCheck,
         mode: {
           type: "encounter",
           encounter: resolvedEncounter,
@@ -128,8 +133,12 @@ export function resolvePush(
     const resolvedEncounter = encounterForHope(enteredTile.encounter, nextState.player.hope);
     const clearedTile = { ...enteredTile, encounter: null };
     map.set(key, clearedTile);
+    const afterLossCheck = applyLossChecks(nextState);
+    if (afterLossCheck.status !== "playing") {
+      return afterLossCheck;
+    }
     return {
-      ...nextState,
+      ...afterLossCheck,
       map: new Map(map),
       mode: {
         type: "encounter",
@@ -137,8 +146,8 @@ export function resolvePush(
         hex: destination,
       },
       log: [
-        ...nextState.log,
-        { turn: nextState.turn, text: resolvedEncounter.text, type: "narrative" },
+        ...afterLossCheck.log,
+        { turn: afterLossCheck.turn, text: resolvedEncounter.text, type: "narrative" },
       ],
     };
   }

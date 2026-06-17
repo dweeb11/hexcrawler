@@ -71,6 +71,40 @@ describe("resolveTurn push flow", () => {
     }
   });
 
+  it("triggers game over before encounter when starving move depletes health", () => {
+    const encounter: Encounter = {
+      id: "test",
+      text: "Test encounter",
+      requiredTags: [],
+      choices: [{ label: "OK", outcome: { hope: 1 } }],
+    };
+    const { state, rng } = makeState();
+    const target = neighbor(state.player.hex, 0);
+    const next = resolveTurn(
+      {
+        ...state,
+        player: { ...state.player, supply: 0, health: 1 },
+        map: new Map(state.map).set(coordKey(target), {
+          coord: target,
+          biome: "forest",
+          tags: new Set(["wood", "water"]),
+          encounter,
+          revealed: true,
+          consumed: false,
+          visited: false,
+        }),
+      },
+      { type: "push", direction: 0 },
+      rng,
+    );
+
+    expect(next.status).toBe("lost");
+    expect(next.mode.type).toBe("gameover");
+    if (next.mode.type === "gameover") {
+      expect(next.mode.outcome).toBe("loss_health");
+    }
+  });
+
   it("biases generated hex tags toward active rumor hints", () => {
     const rumor: Rumor = {
       id: "water-lead",
