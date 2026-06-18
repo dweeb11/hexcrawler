@@ -1,5 +1,10 @@
 import { type LossResult } from "../resources";
-import { type GameOverOutcome, type GameState, type LogType } from "../state";
+import {
+  type GameMode,
+  type GameOverOutcome,
+  type GameState,
+  type LogType,
+} from "../state";
 
 export function appendLog(state: GameState, text: string, type: LogType = "narrative"): GameState {
   return {
@@ -29,10 +34,31 @@ export function isWinOutcome(outcome: GameOverOutcome): outcome is Extract<GameO
   }
 }
 
+export function getGameOverDetails(
+  mode: GameMode,
+): { reason: string; outcome: GameOverOutcome } | null {
+  switch (mode.type) {
+    case "gameover":
+    case "pendingGameOver":
+      return { reason: mode.reason, outcome: mode.outcome };
+    default:
+      return null;
+  }
+}
+
 export function enterGameOver(state: GameState, outcome: GameOverOutcome, reason: string): GameState {
+  const status = isWinOutcome(outcome) ? "won" : "lost";
+  if (isWinOutcome(outcome)) {
+    return {
+      ...state,
+      status,
+      mode: { type: "gameover", reason, outcome },
+    };
+  }
+
   return {
     ...state,
-    status: isWinOutcome(outcome) ? "won" : "lost",
-    mode: { type: "gameover", reason, outcome },
+    status,
+    mode: { type: "pendingGameOver", reason, outcome },
   };
 }

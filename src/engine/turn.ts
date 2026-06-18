@@ -10,10 +10,15 @@ import { INVISIBLE_PUSH_MESSAGE, isPushable } from "./visibility";
 import { resolveDismiss, resolvePause } from "./turn/camp";
 import { applyLossChecks } from "./turn/checks";
 import { resolveChoose, resolveRevealEncounter } from "./turn/encounter-resolution";
+import { resolveRevealGameOver } from "./turn/game-over-resolution";
 import { appendLog } from "./turn/log";
 import { resolvePush } from "./turn/movement";
 
 export function resolveTurn(state: GameState, action: Action, rng: RNG): GameState {
+  if (action.type === "revealGameOver") {
+    return resolveRevealGameOver(state);
+  }
+
   if (state.status !== "playing") {
     return state;
   }

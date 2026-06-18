@@ -8,6 +8,7 @@ import {
   type RNG,
   type Rumor,
 } from "../engine/state";
+import { getGameOverDetails } from "../engine/turn/log";
 import { resolveTurn } from "../engine/turn";
 import { hasSave, loadGame } from "../ui/save";
 import type { HintId } from "../ui/hints";
@@ -15,6 +16,9 @@ import { assembleSessionDeps } from "./session-deps";
 
 /** Brief beat after movement before encounter UI, audio, and analytics. */
 export const ENCOUNTER_REVEAL_DELAY_MS = 300;
+
+/** Brief beat after a loss before the game-over screen appears. */
+export const GAME_OVER_REVEAL_DELAY_MS = 300;
 
 export interface GameSessionAudio {
   playMove(): void;
@@ -151,9 +155,10 @@ export function handleGameEndTransitions(
   if (next.status === "lost" && prev.status !== "lost") {
     deps.audio.playLoss();
     deps.playtest.submit(next, "lost");
+    const gameOver = getGameOverDetails(next.mode);
     deps.getAnalytics().track("game_end", {
       outcome: "lost",
-      cause: next.mode.type === "gameover" ? next.mode.reason : "unknown",
+      cause: gameOver?.reason ?? "unknown",
       turnCount: next.turn,
     });
   }
@@ -242,6 +247,7 @@ export function createGameSession(
 ): GameSession {
   let state = initialState;
   let encounterRevealTimer: ReturnType<typeof setTimeout> | null = null;
+  let gameOverRevealTimer: ReturnType<typeof setTimeout> | null = null;
 
   const transitionDeps = (): TransitionDeps => ({
     getAnalytics: () => deps.getAnalytics(),
@@ -265,6 +271,21 @@ export function createGameSession(
     }, ENCOUNTER_REVEAL_DELAY_MS);
   };
 
+  const clearGameOverRevealTimer = () => {
+    if (gameOverRevealTimer !== null) {
+      clearTimeout(gameOverRevealTimer);
+      gameOverRevealTimer = null;
+    }
+  };
+
+  const scheduleGameOverReveal = () => {
+    clearGameOverRevealTimer();
+    gameOverRevealTimer = setTimeout(() => {
+      gameOverRevealTimer = null;
+      dispatch({ type: "revealGameOver" });
+    }, GAME_OVER_REVEAL_DELAY_MS);
+  };
+
   const persistState = (nextState: GameState) => {
     if (nextState.status === "playing") {
       deps.persistence.save(nextState);
@@ -286,6 +307,12 @@ export function createGameSession(
       clearEncounterRevealTimer();
     }
 
+    if (next.mode.type === "pendingGameOver") {
+      scheduleGameOverReveal();
+    } else if (action.type === "revealGameOver") {
+      clearGameOverRevealTimer();
+    }
+
     return state;
   };
 
@@ -293,14 +320,22 @@ export function createGameSession(
     scheduleEncounterReveal();
   }
 
+  if (state.mode.type === "pendingGameOver") {
+    scheduleGameOverReveal();
+  }
+
   return {
     getState: () => state,
     restart: (newState: GameState) => {
       clearEncounterRevealTimer();
+      clearGameOverRevealTimer();
       state = newState;
       deps.persistence.clear();
       if (state.mode.type === "pendingEncounter") {
         scheduleEncounterReveal();
+      }
+      if (state.mode.type === "pendingGameOver") {
+        scheduleGameOverReveal();
       }
     },
     dispatch,

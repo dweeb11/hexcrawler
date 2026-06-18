@@ -56,7 +56,7 @@ export function keyToAction(key: string, mode: GameMode, state: GameState): Acti
     return { type: "dismiss" };
   }
 
-  if (mode.type === "pendingEncounter") {
+  if (mode.type === "pendingEncounter" || mode.type === "pendingGameOver") {
     return null;
   }
 

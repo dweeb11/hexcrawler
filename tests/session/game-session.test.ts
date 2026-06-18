@@ -13,6 +13,7 @@ import {
   createAppSession,
   createGameSession,
   ENCOUNTER_REVEAL_DELAY_MS,
+  GAME_OVER_REVEAL_DELAY_MS,
   handleProgressionTransitions,
   type GameSessionDeps,
   type TransitionDeps,
@@ -423,6 +424,69 @@ describe("game session transitions", () => {
 
     expect(session.getState().status).toBe("lost");
     expect(deps.persistence.clear).toHaveBeenCalled();
+  });
+
+  it("delays game-over screen after a loss", () => {
+    vi.useFakeTimers();
+    const dying: GameState = {
+      ...createInitialState([], seededRng(1)),
+      player: {
+        ...createInitialState([], seededRng(1)).player,
+        health: 0,
+      },
+    };
+    const { session } = makeSession(dying);
+
+    session.dispatch({ type: "push", direction: 0 });
+
+    expect(session.getState().status).toBe("lost");
+    expect(session.getState().mode.type).toBe("pendingGameOver");
+    const pendingMode = session.getState().mode;
+    if (pendingMode.type === "pendingGameOver") {
+      expect(pendingMode.outcome).toBe("loss_health");
+      expect(pendingMode.reason).toContain("body gives out");
+    }
+
+    vi.advanceTimersByTime(GAME_OVER_REVEAL_DELAY_MS);
+
+    expect(session.getState().mode.type).toBe("gameover");
+    vi.useRealTimers();
+  });
+
+  it("tracks loss cause from pending game-over state", () => {
+    const dying: GameState = {
+      ...createInitialState([], seededRng(1)),
+      player: {
+        ...createInitialState([], seededRng(1)).player,
+        hope: 0,
+      },
+    };
+    const { session, deps } = makeSession(dying);
+
+    session.dispatch({ type: "push", direction: 0 });
+
+    expect(deps.track).toHaveBeenCalledWith("game_end", {
+      outcome: "lost",
+      cause: "The light inside you fades. You sit down, and do not rise.",
+      turnCount: session.getState().turn,
+    });
+  });
+
+  it("ignores input while game-over reveal is pending", () => {
+    const dying: GameState = {
+      ...createInitialState([], seededRng(1)),
+      player: {
+        ...createInitialState([], seededRng(1)).player,
+        health: 0,
+      },
+    };
+    const { session } = makeSession(dying);
+
+    session.dispatch({ type: "push", direction: 0 });
+    expect(session.getState().mode.type).toBe("pendingGameOver");
+
+    const action = keyToAction("w", session.getState().mode, session.getState());
+    expect(action).toBeNull();
   });
 
   it("submits playtest and game_end analytics on win", () => {

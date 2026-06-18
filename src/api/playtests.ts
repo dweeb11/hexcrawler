@@ -1,4 +1,5 @@
 import type { GameState } from "../engine/state";
+import { getGameOverDetails } from "../engine/turn/log";
 
 const PLAYTESTS_ENDPOINT = "/api/playtests";
 
@@ -22,9 +23,7 @@ export function buildPlaytestPayload(
     ),
   ];
   const deathCause =
-    outcome === "lost" && gameState.mode.type === "gameover"
-      ? gameState.mode.reason
-      : undefined;
+    outcome === "lost" ? getGameOverDetails(gameState.mode)?.reason : undefined;
   const rumorsCompleted = gameState.rumors.completed.length;
 
   return {
