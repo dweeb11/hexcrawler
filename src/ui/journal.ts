@@ -125,8 +125,10 @@ function describeEffect(effect: import("../engine/state").RelicEffect): string {
       return `Hope decays ${effect.intervalBonus} turn(s) slower`;
     case "move_discount":
       return `${Math.round((effect.chance ?? 0) * 100)}% chance to move without spending supply`;
-    default:
-      return "";
+    default: {
+      const _exhaustive: never = effect.type;
+      throw new Error(`Unknown relic effect type: ${String(_exhaustive)}`);
+    }
   }
 }
 
