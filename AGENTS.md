@@ -6,6 +6,20 @@ See `CLAUDE.md` for the full project vision, architecture, process, and conventi
 
 The VM startup update script already runs `npm install`. Standard commands are documented in `README.md` / `CLAUDE.md` (`npm run dev`, `npm test`, `npm run typecheck`, `npm run build`). Notes below cover non-obvious caveats only.
 
+## Review guidelines
+
+Codex PR review should focus on P0/P1 defects: correctness bugs, regressions, security issues, data loss, broken player flows, and missing high-risk tests. Do not leave style-only comments or broad refactor suggestions.
+
+- Preserve the architecture boundary: `src/engine/` must stay pure TypeScript game logic with no DOM, Canvas, `window`, `document`, localStorage, or API calls.
+- Preserve immutable state semantics. `resolveTurn` and engine helpers must return new `GameState` values instead of mutating inputs.
+- Flag any new `Math.random()` use in engine code; engine randomness should flow through explicit seed/RNG inputs.
+- Keep cube coordinates as the game-logic coordinate system. Offset/pixel conversions belong at renderer/UI boundaries only.
+- Encounter mode is modal. Map movement/actions must not leak through while an encounter choice is active.
+- Encounter placement must respect `requiredTags`; do not allow encounters on hexes that fail their tag requirements.
+- API write endpoints must require `X-API-Key`, use constant-time comparison, and never log secrets.
+- Treat committed secrets or missing `.env.example` updates for new environment variables as P1.
+- For API-backed local flows, remember that plain `npm run dev` does not load `.env.local` into `/api/*` handlers. Prefer `node --env-file=.env.local node_modules/.bin/vite` when review guidance or reproduction steps need local API routes.
+
 ### Services
 
 This repo is a single product: **The Waning Light**, a browser hexcrawl game (Vite + TypeScript + Canvas). The only service needed to play/test is the **Vite dev server** (`npm run dev`, http://localhost:5173), which also serves the `/api/*` Vercel serverless handlers via the custom plugin in `scripts/vite-api-plugin.ts`. The backend uses Turso (libSQL); locally this is just a SQLite file (`file:local.db`), no external service required.
