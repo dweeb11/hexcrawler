@@ -1,6 +1,7 @@
 // tests/engine/relics.test.ts
 import { describe, expect, it } from "vitest";
 import {
+  getEffectiveCaps,
   getMaxResource,
   getForageBonus,
   getHopeDecayInterval,
@@ -41,6 +42,60 @@ const moveRelic: Relic = {
   description: "Sometimes move for free",
   effect: { type: "move_discount", chance: 0.2 },
 };
+
+const healthRelic: Relic = {
+  id: "iron-heart",
+  name: "Iron Heart",
+  description: "Carry more health",
+  effect: { type: "max_resource", resource: "health", bonus: 1 },
+};
+
+const hopeMaxRelic: Relic = {
+  id: "lantern-soul",
+  name: "Lantern Soul",
+  description: "Carry more hope",
+  effect: { type: "max_resource", resource: "hope", bonus: 1 },
+};
+
+describe("getEffectiveCaps", () => {
+  it("returns base caps when no relics", () => {
+    expect(getEffectiveCaps([])).toEqual({
+      supply: MAX_SUPPLY,
+      hope: MAX_HOPE,
+      health: MAX_HEALTH,
+    });
+  });
+
+  it("adds bonuses from matching max_resource relics", () => {
+    expect(getEffectiveCaps([supplyRelic])).toEqual({
+      supply: MAX_SUPPLY + 2,
+      hope: MAX_HOPE,
+      health: MAX_HEALTH,
+    });
+  });
+
+  it("stacks max_resource bonuses for the same resource", () => {
+    const extraSupply: Relic = {
+      id: "travelers-satchel",
+      name: "Traveler's Satchel",
+      description: "Even more supply",
+      effect: { type: "max_resource", resource: "supply", bonus: 1 },
+    };
+    expect(getEffectiveCaps([supplyRelic, extraSupply])).toEqual({
+      supply: MAX_SUPPLY + 3,
+      hope: MAX_HOPE,
+      health: MAX_HEALTH,
+    });
+  });
+
+  it("aggregates bonuses across all three resources", () => {
+    expect(getEffectiveCaps([supplyRelic, hopeMaxRelic, healthRelic])).toEqual({
+      supply: MAX_SUPPLY + 2,
+      hope: MAX_HOPE + 1,
+      health: MAX_HEALTH + 1,
+    });
+  });
+});
 
 describe("getMaxResource", () => {
   it("returns base max when no relics", () => {

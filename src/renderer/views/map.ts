@@ -1,7 +1,8 @@
 import { coordKey } from "../../engine/hex";
 import { getVisibleNeighbors } from "../../engine/map";
 import { searingDistance } from "../../engine/searing";
-import { type GameState, type HexTile, MAX_HOPE } from "../../engine/state";
+import { getEffectiveCaps } from "../../engine/relics";
+import { type GameState, type HexTile } from "../../engine/state";
 import { drawHexagon, hexToPixel, HEX_SIZE } from "../canvas";
 import type { Camera } from "../camera";
 import { worldToScreen } from "../camera";
@@ -10,7 +11,9 @@ import { renderHud } from "../hud";
 import { drawHintOverlay, type ActiveHint } from "../hint-overlay";
 import { drawLegend } from "../legend";
 
-const LOW_HOPE_THRESHOLD = Math.floor(MAX_HOPE * 0.4);
+function lowHopeThreshold(relics: GameState["relics"]): number {
+  return Math.floor(getEffectiveCaps(relics).hope * 0.4);
+}
 
 function drawConsumedGradient(
   ctx: CanvasRenderingContext2D,
@@ -121,8 +124,9 @@ export function renderMap(
   const pulsePhase = (now / 600) % (Math.PI * 2);
 
   const { hope } = state.player;
-  if (hope <= LOW_HOPE_THRESHOLD) {
-    const saturation = Math.round((hope / LOW_HOPE_THRESHOLD) * 80);
+  const hopeThreshold = lowHopeThreshold(state.relics);
+  if (hope <= hopeThreshold) {
+    const saturation = Math.round((hope / hopeThreshold) * 80);
     ctx.filter = `saturate(${saturation}%)`;
   }
 
