@@ -1,10 +1,6 @@
+import { getEffectiveCaps } from "../engine/relics";
 import { searingDistance } from "../engine/searing";
-import {
-  MAX_HEALTH,
-  MAX_HOPE,
-  MAX_SUPPLY,
-  type GameState,
-} from "../engine/state";
+import { type GameState } from "../engine/state";
 import { COLORS } from "./glyphs";
 
 function resourceColor(current: number, max: number): string {
@@ -61,9 +57,10 @@ export function renderHud(
 
   ctx.textAlign = "left";
   ctx.textBaseline = "top";
-  drawResourceBar(ctx, 28, 34, "◆", "Supply", state.player.supply, MAX_SUPPLY);
-  drawResourceBar(ctx, 28, 58, "✦", "Hope", state.player.hope, MAX_HOPE);
-  drawResourceBar(ctx, 28, 82, "♥", "Health", state.player.health, MAX_HEALTH);
+  const caps = getEffectiveCaps(state.relics);
+  drawResourceBar(ctx, 28, 34, "◆", "Supply", state.player.supply, caps.supply);
+  drawResourceBar(ctx, 28, 58, "✦", "Hope", state.player.hope, caps.hope);
+  drawResourceBar(ctx, 28, 82, "♥", "Health", state.player.health, caps.health);
 
   ctx.fillStyle = COLORS.text;
   ctx.font = "14px monospace";

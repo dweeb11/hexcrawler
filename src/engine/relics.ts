@@ -7,15 +7,34 @@ import {
   type Relic,
 } from "./state";
 
-export function getMaxResource(
+export interface EffectiveCaps {
+  supply: number;
+  hope: number;
+  health: number;
+}
+
+function maxResourceBonus(
   resource: "supply" | "hope" | "health",
-  relics: Relic[]
+  relics: Relic[],
 ): number {
-  const base = { supply: MAX_SUPPLY, hope: MAX_HOPE, health: MAX_HEALTH }[resource];
-  const bonus = relics
+  return relics
     .filter((r) => r.effect.type === "max_resource" && r.effect.resource === resource)
     .reduce((sum, r) => sum + (r.effect.bonus ?? 0), 0);
-  return base + bonus;
+}
+
+export function getEffectiveCaps(relics: Relic[]): EffectiveCaps {
+  return {
+    supply: MAX_SUPPLY + maxResourceBonus("supply", relics),
+    hope: MAX_HOPE + maxResourceBonus("hope", relics),
+    health: MAX_HEALTH + maxResourceBonus("health", relics),
+  };
+}
+
+export function getMaxResource(
+  resource: "supply" | "hope" | "health",
+  relics: Relic[],
+): number {
+  return getEffectiveCaps(relics)[resource];
 }
 
 export function getForageBonus(relics: Relic[]): number {
