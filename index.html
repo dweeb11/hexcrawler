@@ -26,6 +26,7 @@
 
       #game-canvas {
         flex: 1;
+        min-width: 0;
       }
 
       #side-panels {
@@ -44,7 +45,7 @@
         flex: 1;
       }
 
-      #journal-panel {
+      #journal-panel:not(.hidden) {
         display: flex;
         flex-direction: column;
       }
