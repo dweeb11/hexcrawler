@@ -45,7 +45,7 @@ describe("rollTags", () => {
 });
 
 describe("generateHex", () => {
-  it("creates a hex with biome, tags, and visibility flags", () => {
+  it("creates a hex with biome, tags, and tile state flags", () => {
     const tile = generateHex(cubeCoord(1, 0, -1), new Map(), [], seededRng(42));
     expect(tile.biome).toBeTruthy();
     expect(tile.tags.size).toBeGreaterThanOrEqual(2);
