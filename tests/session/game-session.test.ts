@@ -232,6 +232,41 @@ describe("game session transitions", () => {
     vi.useRealTimers();
   });
 
+  it("resumes encounter reveal timer when loading pendingEncounter state", () => {
+    vi.useFakeTimers();
+    const encounter: Encounter = {
+      id: "resume-test",
+      text: "Waiting.",
+      requiredTags: [],
+      choices: [{ label: "Continue", outcome: {} }],
+    };
+    const base = createInitialState([], seededRng(1));
+    const withEncounter = encounterOnNeighbor(base, encounter);
+    const { session: firstSession } = makeSession(withEncounter);
+
+    firstSession.dispatch({ type: "push", direction: 0 });
+    expect(firstSession.getState().mode.type).toBe("pendingEncounter");
+
+    const { session: resumedSession, deps: resumedDeps } = makeSession(
+      firstSession.getState(),
+    );
+
+    expect(resumedSession.getState().mode.type).toBe("pendingEncounter");
+    expect(resumedDeps.audio.playEncounterOpen).not.toHaveBeenCalled();
+    expect(resumedDeps.track).not.toHaveBeenCalledWith("encounter", expect.anything());
+
+    vi.advanceTimersByTime(ENCOUNTER_REVEAL_DELAY_MS);
+
+    expect(resumedSession.getState().mode.type).toBe("encounter");
+    expect(resumedDeps.audio.playEncounterOpen).toHaveBeenCalledTimes(1);
+    expect(resumedDeps.track).toHaveBeenCalledWith("encounter", {
+      turnCount: resumedSession.getState().turn,
+      encounterId: "resume-test",
+      biome: "forest",
+    });
+    vi.useRealTimers();
+  });
+
   it("ignores input while an encounter reveal is pending", () => {
     const encounter: Encounter = {
       id: "blocked-test",
@@ -544,6 +579,40 @@ describe("createAppSession", () => {
   beforeEach(() => {
     storage.clear();
     vi.clearAllMocks();
+    vi.stubGlobal(
+      "AudioContext",
+      class {
+        state = "running";
+        currentTime = 0;
+        sampleRate = 44100;
+        destination = {};
+        resume = vi.fn().mockResolvedValue(undefined);
+        createOscillator = vi.fn(() => ({
+          connect: vi.fn(),
+          start: vi.fn(),
+          stop: vi.fn(),
+          type: "sine",
+          frequency: { setValueAtTime: vi.fn() },
+        }));
+        createGain = vi.fn(() => ({
+          connect: vi.fn(),
+          gain: {
+            value: 0,
+            setValueAtTime: vi.fn(),
+            linearRampToValueAtTime: vi.fn(),
+            exponentialRampToValueAtTime: vi.fn(),
+          },
+        }));
+        createBuffer = vi.fn((_channels: number, length: number) => ({
+          getChannelData: () => new Float32Array(length),
+        }));
+        createBufferSource = vi.fn(() => ({
+          connect: vi.fn(),
+          start: vi.fn(),
+          buffer: null,
+        }));
+      },
+    );
   });
 
   it("starts a new game and tracks game_start when no save exists", () => {
@@ -554,6 +623,32 @@ describe("createAppSession", () => {
 
     expect(session.getState().turn).toBe(0);
     expect(session.getState().status).toBe("playing");
+  });
+
+  it("continues saved pendingEncounter and reveals after delay", () => {
+    vi.useFakeTimers();
+    const encounter: Encounter = {
+      id: "saved-pending",
+      text: "Saved mid-beat.",
+      requiredTags: [],
+      choices: [{ label: "Continue", outcome: {} }],
+    };
+    const base = createInitialState([], seededRng(1));
+    const withEncounter = encounterOnNeighbor(base, encounter);
+    const { session } = makeSession(withEncounter);
+
+    session.dispatch({ type: "push", direction: 0 });
+    expect(session.getState().mode.type).toBe("pendingEncounter");
+    saveGame(session.getState());
+
+    const appSession = createAppSession({ encounters: [], rumors: [] });
+    expect(appSession.hasContinuableSave()).toBe(true);
+    appSession.start(true);
+
+    expect(appSession.getState().mode.type).toBe("pendingEncounter");
+    vi.advanceTimersByTime(ENCOUNTER_REVEAL_DELAY_MS);
+    expect(appSession.getState().mode.type).toBe("encounter");
+    vi.useRealTimers();
   });
 
   it("continues a saved game without emitting game_start", () => {
