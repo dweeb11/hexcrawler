@@ -37,6 +37,187 @@ export interface GameSessionDeps {
   playtest: GameSessionPlaytest;
 }
 
+export interface TransitionDeps {
+  getAnalytics(): AnalyticsClient;
+  audio: GameSessionAudio;
+  hints: GameSessionHints;
+  playtest: GameSessionPlaytest;
+}
+
+export type TransitionHandler = (
+  prev: GameState,
+  next: GameState,
+  action: Action,
+  deps: TransitionDeps,
+) => void;
+
+/** Movement: successful push plays audio and dismisses the first-turn hint. */
+export function handleMovementTransitions(
+  prev: GameState,
+  next: GameState,
+  action: Action,
+  deps: TransitionDeps,
+): void {
+  if (
+    action.type === "push" &&
+    coordKey(next.player.hex) !== coordKey(prev.player.hex)
+  ) {
+    deps.hints.dismissHint("first-turn");
+    deps.audio.playMove();
+  }
+}
+
+/** Encounter: choice audio/hint dismiss; encounter-open analytics on mode entry. */
+export function handleEncounterTransitions(
+  prev: GameState,
+  next: GameState,
+  action: Action,
+  deps: TransitionDeps,
+): void {
+  if (action.type === "choose" && prev.mode.type === "encounter") {
+    deps.hints.dismissHint("first-encounter");
+    deps.audio.playChoiceSelect();
+  }
+
+  if (next.mode.type === "encounter" && prev.mode.type !== "encounter") {
+    deps.audio.playEncounterOpen();
+    const encounterHex = next.map.get(coordKey(next.mode.hex));
+    deps.getAnalytics().track("encounter", {
+      turnCount: next.turn,
+      encounterId: next.mode.encounter.id,
+      biome: encounterHex?.biome ?? null,
+    });
+  }
+}
+
+/** Camp: forage/rest audio and hint dismiss. dismiss exits camp with no transition side effects. */
+export function handleCampTransitions(
+  _prev: GameState,
+  _next: GameState,
+  action: Action,
+  deps: TransitionDeps,
+): void {
+  if (action.type === "pause" && action.activity === "forage") {
+    deps.hints.dismissHint("low-supply");
+    deps.audio.playForage();
+  }
+
+  if (action.type === "pause" && action.activity === "rest") {
+    deps.audio.playRest();
+  }
+}
+
+/** Searing: line advance audio when the frontier moves. */
+export function handleSearingTransitions(
+  prev: GameState,
+  next: GameState,
+  _action: Action,
+  deps: TransitionDeps,
+): void {
+  if (next.searing.line !== prev.searing.line) {
+    deps.audio.playSearingAdvance();
+  }
+}
+
+/** Game end: win/loss audio, playtest submit, and game_end analytics. */
+export function handleGameEndTransitions(
+  prev: GameState,
+  next: GameState,
+  _action: Action,
+  deps: TransitionDeps,
+): void {
+  if (next.status === "won" && prev.status !== "won") {
+    deps.audio.playWin();
+    deps.playtest.submit(next, "won");
+    deps.getAnalytics().track("game_end", {
+      outcome: "won",
+      cause: "won",
+      turnCount: next.turn,
+    });
+  }
+
+  if (next.status === "lost" && prev.status !== "lost") {
+    deps.audio.playLoss();
+    deps.playtest.submit(next, "lost");
+    deps.getAnalytics().track("game_end", {
+      outcome: "lost",
+      cause: next.mode.type === "gameover" ? next.mode.reason : "unknown",
+      turnCount: next.turn,
+    });
+  }
+}
+
+/**
+ * Progression: turn analytics and rumor/relic discovery analytics.
+ *
+ * Turn analytics fire only when `next.turn > prev.turn`. The engine does not
+ * increment turn for `choose` or `dismiss` (see engine/turn.ts), so those
+ * actions never emit turn analytics — by design, not omission.
+ */
+export function handleProgressionTransitions(
+  prev: GameState,
+  next: GameState,
+  action: Action,
+  deps: TransitionDeps,
+): void {
+  if (next.turn > prev.turn) {
+    deps.getAnalytics().track("turn", {
+      turnCount: next.turn,
+      actionType: action.type,
+    });
+  }
+
+  const previousRumorIds = new Set(prev.rumors.active.map((rumor) => rumor.rumorId));
+  for (const rumor of next.rumors.active) {
+    if (!previousRumorIds.has(rumor.rumorId)) {
+      deps.getAnalytics().track("rumor", {
+        rumorId: rumor.rumorId,
+        turnCount: next.turn,
+      });
+      const progressCount =
+        next.rumors.active.length + next.rumors.completed.length;
+      if (progressCount > 1) {
+        deps.hints.dismissHint("first-rumor");
+      }
+    }
+  }
+
+  const previousRelicIds = new Set(prev.relics.map((relic) => relic.id));
+  for (const relic of next.relics) {
+    if (!previousRelicIds.has(relic.id)) {
+      deps.getAnalytics().track("relic", {
+        relicId: relic.id,
+        turnCount: next.turn,
+      });
+    }
+  }
+}
+
+/**
+ * Ordered transition handlers — order preserves current player-visible behavior.
+ * Encounter runs before camp because no single action triggers both; grouping
+ * choose + encounter-open keeps related side effects together.
+ */
+export const TRANSITION_HANDLERS: TransitionHandler[] = [
+  handleMovementTransitions,
+  handleEncounterTransitions,
+  handleCampTransitions,
+  handleSearingTransitions,
+  handleGameEndTransitions,
+  handleProgressionTransitions,
+];
+
+export function runTransitionHandlers(
+  prev: GameState,
+  next: GameState,
+  action: Action,
+  deps: TransitionDeps,
+): void {
+  for (const handler of TRANSITION_HANDLERS) {
+    handler(prev, next, action, deps);
+  }
+}
+
 export interface GameSession {
   getState(): GameState;
   restart(initialState: GameState): void;
@@ -49,6 +230,13 @@ export function createGameSession(
 ): GameSession {
   let state = initialState;
 
+  const transitionDeps = (): TransitionDeps => ({
+    getAnalytics: () => deps.getAnalytics(),
+    audio: deps.audio,
+    hints: deps.hints,
+    playtest: deps.playtest,
+  });
+
   const persistState = (nextState: GameState) => {
     if (nextState.status === "playing") {
       deps.persistence.save(nextState);
@@ -58,101 +246,10 @@ export function createGameSession(
   };
 
   const dispatch = (action: Action): GameState => {
-    const previousState = state;
-    const nextState = resolveTurn(previousState, action, deps.getRng());
-    const previousRumorIds = new Set(previousState.rumors.active.map((rumor) => rumor.rumorId));
-    const previousRelicIds = new Set(previousState.relics.map((relic) => relic.id));
-
-    if (
-      action.type === "push" &&
-      coordKey(nextState.player.hex) !== coordKey(previousState.player.hex)
-    ) {
-      deps.hints.dismissHint("first-turn");
-      deps.audio.playMove();
-    }
-
-    if (action.type === "choose" && previousState.mode.type === "encounter") {
-      deps.hints.dismissHint("first-encounter");
-      deps.audio.playChoiceSelect();
-    }
-
-    if (action.type === "pause" && action.activity === "forage") {
-      deps.hints.dismissHint("low-supply");
-      deps.audio.playForage();
-    }
-
-    if (action.type === "pause" && action.activity === "rest") {
-      deps.audio.playRest();
-    }
-
-    if (
-      nextState.mode.type === "encounter" &&
-      previousState.mode.type !== "encounter"
-    ) {
-      deps.audio.playEncounterOpen();
-      const encounterHex = nextState.map.get(coordKey(nextState.mode.hex));
-      deps.getAnalytics().track("encounter", {
-        turnCount: nextState.turn,
-        encounterId: nextState.mode.encounter.id,
-        biome: encounterHex?.biome ?? null,
-      });
-    }
-
-    if (nextState.searing.line !== previousState.searing.line) {
-      deps.audio.playSearingAdvance();
-    }
-
-    if (nextState.status === "won" && previousState.status !== "won") {
-      deps.audio.playWin();
-      deps.playtest.submit(nextState, "won");
-      deps.getAnalytics().track("game_end", {
-        outcome: "won",
-        cause: "won",
-        turnCount: nextState.turn,
-      });
-    }
-
-    if (nextState.status === "lost" && previousState.status !== "lost") {
-      deps.audio.playLoss();
-      deps.playtest.submit(nextState, "lost");
-      deps.getAnalytics().track("game_end", {
-        outcome: "lost",
-        cause: nextState.mode.type === "gameover" ? nextState.mode.reason : "unknown",
-        turnCount: nextState.turn,
-      });
-    }
-
-    if (nextState.turn > previousState.turn) {
-      deps.getAnalytics().track("turn", {
-        turnCount: nextState.turn,
-        actionType: action.type,
-      });
-    }
-
-    for (const rumor of nextState.rumors.active) {
-      if (!previousRumorIds.has(rumor.rumorId)) {
-        deps.getAnalytics().track("rumor", {
-          rumorId: rumor.rumorId,
-          turnCount: nextState.turn,
-        });
-        const progressCount =
-          nextState.rumors.active.length + nextState.rumors.completed.length;
-        if (progressCount > 1) {
-          deps.hints.dismissHint("first-rumor");
-        }
-      }
-    }
-
-    for (const relic of nextState.relics) {
-      if (!previousRelicIds.has(relic.id)) {
-        deps.getAnalytics().track("relic", {
-          relicId: relic.id,
-          turnCount: nextState.turn,
-        });
-      }
-    }
-
-    state = nextState;
+    const prev = state;
+    const next = resolveTurn(prev, action, deps.getRng());
+    runTransitionHandlers(prev, next, action, transitionDeps());
+    state = next;
     persistState(state);
     return state;
   };

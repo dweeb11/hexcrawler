@@ -209,7 +209,7 @@ async function main(): Promise<void> {
         }
         toggleJournal(journalPanel, logPanel);
         if (opening) {
-          updateJournal(journalContent, state);
+          updateJournal(journalContent, session.getState());
         }
         return;
       }
@@ -230,13 +230,12 @@ async function main(): Promise<void> {
 
   journalTabs.forEach((tab) => {
     tab.addEventListener("click", () => {
-      const state = session.getState();
       journalTabs.forEach((t) => t.classList.remove("active"));
       tab.classList.add("active");
       const tabName = tab.getAttribute("data-tab");
       if (tabName === "rumors" || tabName === "relics") {
         setJournalTab(tabName);
-        updateJournal(journalContent, state);
+        updateJournal(journalContent, session.getState());
       }
     });
   });
