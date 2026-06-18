@@ -1,8 +1,17 @@
 import { describe, expect, it } from "vitest";
 
 import { ALL_BIOMES } from "../../src/engine/data/biomes";
+import { ALL_RELICS } from "../../src/engine/data/relics";
 import rumorsSeed from "../../src/engine/data/rumors-seed.json";
 import seedEncounters from "../../src/engine/data/seed-encounters.json";
+import type { RelicEffectType } from "../../src/engine/state";
+
+const IMPLEMENTED_RELIC_EFFECT_TYPES = [
+  "max_resource",
+  "forage_bonus",
+  "hope_decay_slow",
+  "move_discount",
+] as const satisfies readonly RelicEffectType[];
 
 describe("seed encounter data", () => {
   it("ships a substantial encounter table for M2", () => {
@@ -92,6 +101,15 @@ describe("seed rumor data", () => {
       for (const step of rumor.steps) {
         expect(encounterIds.has(step.encounterId)).toBe(true);
       }
+    }
+  });
+
+  it("grants rumor rewards with only implemented relic effect types", () => {
+    const relicById = new Map(ALL_RELICS.map((relic) => [relic.id, relic]));
+    for (const rumor of rumorsSeed) {
+      const reward = relicById.get(rumor.rewardId);
+      expect(reward).toBeDefined();
+      expect(IMPLEMENTED_RELIC_EFFECT_TYPES).toContain(reward!.effect.type);
     }
   });
 });

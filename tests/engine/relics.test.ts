@@ -7,13 +7,21 @@ import {
   getHopeDecayInterval,
   getMoveDiscount,
 } from "../../src/engine/relics";
-import type { Relic } from "../../src/engine/state";
+import { ALL_RELICS } from "../../src/engine/data/relics";
+import type { Relic, RelicEffectType } from "../../src/engine/state";
 import {
   MAX_SUPPLY,
   MAX_HOPE,
   MAX_HEALTH,
   HOPE_DECAY_INTERVAL,
 } from "../../src/engine/state";
+
+const IMPLEMENTED_EFFECT_TYPES = [
+  "max_resource",
+  "forage_bonus",
+  "hope_decay_slow",
+  "move_discount",
+] as const satisfies readonly RelicEffectType[];
 
 const foragRelic: Relic = {
   id: "gatherers-pouch",
@@ -140,5 +148,13 @@ describe("getMoveDiscount", () => {
 
   it("returns discount chance from relics", () => {
     expect(getMoveDiscount([moveRelic])).toBeCloseTo(0.2);
+  });
+});
+
+describe("relic catalog (ADR-0001)", () => {
+  it("uses only implemented relic effect types", () => {
+    for (const relic of ALL_RELICS) {
+      expect(IMPLEMENTED_EFFECT_TYPES).toContain(relic.effect.type);
+    }
   });
 });
