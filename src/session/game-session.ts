@@ -291,6 +291,7 @@ export interface AppSessionData {
 export function createAppSession(data: AppSessionData): AppSession {
   const deps = assembleSessionDeps();
   let session: GameSession | null = null;
+  let continuableSave: GameState | null = null;
 
   const requireSession = (): GameSession => {
     if (!session) {
@@ -310,19 +311,27 @@ export function createAppSession(data: AppSessionData): AppSession {
     getState: () => requireSession().getState(),
     getDismissedHints: () => deps.getDismissedHints(),
     hasContinuableSave: () => {
+      continuableSave = null;
       if (!hasSave()) {
         return false;
       }
       const saved = loadGame();
-      return saved != null && saved.status === "playing";
+      if (saved != null && saved.status === "playing") {
+        continuableSave = saved;
+        return true;
+      }
+      return false;
     },
     start(shouldContinue: boolean) {
       if (shouldContinue) {
-        const saved = loadGame();
-        if (saved && saved.status === "playing") {
+        const saved = continuableSave;
+        continuableSave = null;
+        if (saved) {
           session = createGameSession(saved, deps);
           return;
         }
+      } else {
+        continuableSave = null;
       }
 
       const hadSave = hasSave();

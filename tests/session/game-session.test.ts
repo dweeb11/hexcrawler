@@ -478,6 +478,20 @@ describe("createAppSession", () => {
     expect(session.getState().log).toContainEqual({ turn: 1, text: "progress" });
   });
 
+  it("continues from cached snapshot when save is cleared before start", () => {
+    const saved = createInitialState([], seededRng(7));
+    saveGame({ ...saved, turn: 4 });
+
+    const session = createAppSession({ encounters: [], rumors: [] });
+    expect(session.hasContinuableSave()).toBe(true);
+    storage.clear();
+
+    session.start(true);
+
+    expect(session.getState().turn).toBe(4);
+    expect(session.getState().status).toBe("playing");
+  });
+
   it("starts fresh when user declines continue", () => {
     const saved = createInitialState([], seededRng(7));
     saveGame({ ...saved, turn: 5 });
