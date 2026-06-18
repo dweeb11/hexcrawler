@@ -10,6 +10,9 @@ export function getSearingGlyphColor(intensity: number): string {
 }
 
 export function getSearingGlyphColorForIndex(index: number): string {
+  if (index >= SEARING_GRADIENT_GLYPHS.length - 1) {
+    return getSearingGlyphColor(1);
+  }
   const intensity = Math.min(1, (index + 0.5) / SEARING_GRADIENT_GLYPHS.length);
   return getSearingGlyphColor(intensity);
 }
