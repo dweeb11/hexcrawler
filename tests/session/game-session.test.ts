@@ -472,6 +472,29 @@ describe("game session transitions", () => {
     });
   });
 
+  it("cancels game-over reveal timer on restart", () => {
+    vi.useFakeTimers();
+    const dying: GameState = {
+      ...createInitialState([], seededRng(1)),
+      player: {
+        ...createInitialState([], seededRng(1)).player,
+        health: 0,
+      },
+    };
+    const { session } = makeSession(dying);
+
+    session.dispatch({ type: "push", direction: 0 });
+    expect(session.getState().mode.type).toBe("pendingGameOver");
+
+    session.restart(createInitialState([], seededRng(99)));
+
+    vi.advanceTimersByTime(GAME_OVER_REVEAL_DELAY_MS);
+
+    expect(session.getState().status).toBe("playing");
+    expect(session.getState().mode.type).toBe("map");
+    vi.useRealTimers();
+  });
+
   it("ignores input while game-over reveal is pending", () => {
     const dying: GameState = {
       ...createInitialState([], seededRng(1)),

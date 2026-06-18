@@ -301,13 +301,13 @@ export function createGameSession(
     state = next;
     persistState(state);
 
-    if (next.mode.type === "pendingEncounter") {
+    if (prev.mode.type !== "pendingEncounter" && next.mode.type === "pendingEncounter") {
       scheduleEncounterReveal();
     } else if (action.type === "revealEncounter") {
       clearEncounterRevealTimer();
     }
 
-    if (next.mode.type === "pendingGameOver") {
+    if (prev.mode.type !== "pendingGameOver" && next.mode.type === "pendingGameOver") {
       scheduleGameOverReveal();
     } else if (action.type === "revealGameOver") {
       clearGameOverRevealTimer();
