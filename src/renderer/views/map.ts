@@ -11,6 +11,7 @@ import { drawHexagon, hexToPixel, HEX_SIZE } from "../canvas";
 import type { Camera } from "../camera";
 import { worldToScreen } from "../camera";
 import { COLORS, BIOME_GLYPHS } from "../glyphs";
+import { getSearingGlyphColor } from "../searing-style";
 import { renderHud } from "../hud";
 import { drawHintOverlay, type ActiveHint } from "../hint-overlay";
 import { drawLegend } from "../legend";
@@ -110,7 +111,7 @@ function drawTile(
     ctx.font = "bold 18px monospace";
     ctx.fillText(BIOME_GLYPHS[tile.biome], screen.x, screen.y - 4);
     if (searingGlyph) {
-      ctx.fillStyle = `rgba(255, 80, 30, ${0.5 + intensity * 0.5})`;
+      ctx.fillStyle = getSearingGlyphColor(intensity);
       ctx.font = "bold 14px monospace";
       ctx.fillText(searingGlyph, screen.x, screen.y + 12);
     }
