@@ -5,7 +5,6 @@ import {
   advanceSearing,
   getSearingGlyph,
   getSearingIntensity,
-  getSearingTowardConsumedDelta,
   initSearing,
   isConsumed,
   searingDistance,
@@ -97,19 +96,5 @@ describe("getSearingGlyph", () => {
     expect(getSearingGlyph(0.4)).toBe("▒");
     expect(getSearingGlyph(0.7)).toBe("▓");
     expect(getSearingGlyph(1)).toBe("█");
-  });
-});
-
-describe("getSearingTowardConsumedDelta", () => {
-  it("points opposite the advance direction on each axis", () => {
-    expect(getSearingTowardConsumedDelta({ axis: "q", direction: 1, line: 0, advanceRate: 4 })).toEqual(
-      cubeCoord(-1, 0, 1),
-    );
-    expect(getSearingTowardConsumedDelta({ axis: "r", direction: -1, line: 0, advanceRate: 4 })).toEqual(
-      cubeCoord(0, 1, -1),
-    );
-    expect(getSearingTowardConsumedDelta({ axis: "s", direction: 1, line: 0, advanceRate: 4 })).toEqual(
-      cubeCoord(1, 0, -1),
-    );
   });
 });

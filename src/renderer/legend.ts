@@ -37,7 +37,6 @@ function drawMapLegend(
     { label: "", style: "spacer" as const },
     { label: "SEARING", style: "header" as const },
     { label: "█ Consumed  ▓ Near", style: "normal" as const },
-    { label: "◀ Edge arrow = threat", style: "normal" as const },
   ];
 
   const totalHeight = lines.length * lineHeight + 8;

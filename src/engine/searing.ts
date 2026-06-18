@@ -1,4 +1,4 @@
-import { cubeCoord, type CubeCoord } from "./hex";
+import { type CubeCoord } from "./hex";
 import type { HexAxis, RNG, SearingState } from "./state";
 
 export const SEARING_ADVANCE_RATE = 5;
@@ -58,21 +58,4 @@ export function getSearingGlyph(intensity: number): string {
   }
   const index = Math.min(SEARING_GRADIENT_GLYPHS.length - 1, Math.floor(intensity * SEARING_GRADIENT_GLYPHS.length));
   return SEARING_GRADIENT_GLYPHS[index] ?? "█";
-}
-
-/** Cube step toward consumed territory (opposite the advance direction). */
-export function getSearingTowardConsumedDelta(searing: SearingState): CubeCoord {
-  const towardConsumed = searing.direction === 1 ? -1 : 1;
-  switch (searing.axis) {
-    case "q":
-      return cubeCoord(towardConsumed, 0, -towardConsumed);
-    case "r":
-      return cubeCoord(0, towardConsumed, -towardConsumed);
-    case "s":
-      return cubeCoord(-towardConsumed, 0, towardConsumed);
-    default: {
-      const _exhaustive: never = searing.axis;
-      return _exhaustive;
-    }
-  }
 }
