@@ -48,7 +48,7 @@ function enterEncounter(
     ...afterLossCheck,
     ...(options?.map ? { map: options.map } : {}),
     mode: {
-      type: "encounter",
+      type: "pendingEncounter",
       encounter,
       hex,
       ...(options?.rumorContext ? { rumorContext: options.rumorContext } : {}),

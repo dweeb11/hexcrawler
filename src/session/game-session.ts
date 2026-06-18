@@ -13,6 +13,9 @@ import { hasSave, loadGame } from "../ui/save";
 import type { HintId } from "../ui/hints";
 import { assembleSessionDeps } from "./session-deps";
 
+/** Brief beat after movement before encounter UI, audio, and analytics. */
+export const ENCOUNTER_REVEAL_DELAY_MS = 300;
+
 export interface GameSessionAudio {
   playMove(): void;
   playEncounterOpen(): void;
@@ -238,6 +241,7 @@ export function createGameSession(
   deps: GameSessionDeps,
 ): GameSession {
   let state = initialState;
+  let encounterRevealTimer: ReturnType<typeof setTimeout> | null = null;
 
   const transitionDeps = (): TransitionDeps => ({
     getAnalytics: () => deps.getAnalytics(),
@@ -245,6 +249,21 @@ export function createGameSession(
     hints: deps.hints,
     playtest: deps.playtest,
   });
+
+  const clearEncounterRevealTimer = () => {
+    if (encounterRevealTimer !== null) {
+      clearTimeout(encounterRevealTimer);
+      encounterRevealTimer = null;
+    }
+  };
+
+  const scheduleEncounterReveal = () => {
+    clearEncounterRevealTimer();
+    encounterRevealTimer = setTimeout(() => {
+      encounterRevealTimer = null;
+      dispatch({ type: "revealEncounter" });
+    }, ENCOUNTER_REVEAL_DELAY_MS);
+  };
 
   const persistState = (nextState: GameState) => {
     if (nextState.status === "playing") {
@@ -260,14 +279,29 @@ export function createGameSession(
     runTransitionHandlers(prev, next, action, transitionDeps());
     state = next;
     persistState(state);
+
+    if (next.mode.type === "pendingEncounter") {
+      scheduleEncounterReveal();
+    } else if (action.type === "revealEncounter") {
+      clearEncounterRevealTimer();
+    }
+
     return state;
   };
+
+  if (state.mode.type === "pendingEncounter") {
+    scheduleEncounterReveal();
+  }
 
   return {
     getState: () => state,
     restart: (newState: GameState) => {
+      clearEncounterRevealTimer();
       state = newState;
       deps.persistence.clear();
+      if (state.mode.type === "pendingEncounter") {
+        scheduleEncounterReveal();
+      }
     },
     dispatch,
   };

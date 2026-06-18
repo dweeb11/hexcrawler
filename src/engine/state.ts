@@ -132,14 +132,16 @@ export type GameOverOutcome =
   | "loss_hope"
   | "loss_searing";
 
+export type EncounterModeData = {
+  readonly encounter: Encounter;
+  readonly hex: CubeCoord;
+  readonly rumorContext?: RumorContext;
+};
+
 export type GameMode =
   | { readonly type: "map" }
-  | {
-      readonly type: "encounter";
-      readonly encounter: Encounter;
-      readonly hex: CubeCoord;
-      readonly rumorContext?: RumorContext;
-    }
+  | { readonly type: "pendingEncounter" } & EncounterModeData
+  | { readonly type: "encounter" } & EncounterModeData
   | { readonly type: "camp"; readonly result: LogEntry; readonly incident: LogEntry | null }
   | { readonly type: "gameover"; readonly reason: string; readonly outcome: GameOverOutcome };
 
@@ -155,7 +157,8 @@ export type Action =
   | { readonly type: "push"; readonly direction: HexDirection }
   | { readonly type: "pause"; readonly activity: "rest" | "forage" }
   | { readonly type: "choose"; readonly choiceIndex: number }
-  | { readonly type: "dismiss" };
+  | { readonly type: "dismiss" }
+  | { readonly type: "revealEncounter" };
 
 export interface Player {
   readonly hex: CubeCoord;
