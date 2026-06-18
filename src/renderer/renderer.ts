@@ -23,6 +23,7 @@ export function render(
   switch (state.mode.type) {
     case "map":
     case "pendingEncounter":
+    case "pendingGameOver":
       renderMap(ctx, state, centeredCamera, width, height, activeHint);
       break;
     case "encounter":

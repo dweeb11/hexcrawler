@@ -65,8 +65,8 @@ describe("resolveTurn push flow", () => {
     );
 
     expect(next.status).toBe("lost");
-    expect(next.mode.type).toBe("gameover");
-    if (next.mode.type === "gameover") {
+    expect(next.mode.type).toBe("pendingGameOver");
+    if (next.mode.type === "pendingGameOver") {
       expect(next.mode.outcome).toBe("loss_health");
     }
   });
@@ -99,8 +99,8 @@ describe("resolveTurn push flow", () => {
     );
 
     expect(next.status).toBe("lost");
-    expect(next.mode.type).toBe("gameover");
-    if (next.mode.type === "gameover") {
+    expect(next.mode.type).toBe("pendingGameOver");
+    if (next.mode.type === "pendingGameOver") {
       expect(next.mode.outcome).toBe("loss_health");
     }
   });
@@ -494,7 +494,7 @@ describe("resolveTurn searing and loss flow", () => {
     );
 
     expect(next.status).toBe("lost");
-    expect(next.mode.type).toBe("gameover");
+    expect(next.mode.type).toBe("pendingGameOver");
   });
 
   it("triggers immediate game over when entering a consumed hex with an encounter", () => {
@@ -530,7 +530,7 @@ describe("resolveTurn searing and loss flow", () => {
     );
 
     expect(next.status).toBe("lost");
-    expect(next.mode.type).toBe("gameover");
+    expect(next.mode.type).toBe("pendingGameOver");
   });
 
   it("triggers game over immediately when the player is already on a consumed hex", () => {
@@ -546,8 +546,8 @@ describe("resolveTurn searing and loss flow", () => {
     );
 
     expect(next.status).toBe("lost");
-    expect(next.mode.type).toBe("gameover");
-    if (next.mode.type === "gameover") {
+    expect(next.mode.type).toBe("pendingGameOver");
+    if (next.mode.type === "pendingGameOver") {
       expect(next.mode.reason).toContain("Searing catches you");
     }
   });
@@ -741,7 +741,7 @@ describe("resolveTurn win flow", () => {
       rng,
     );
     expect(next.status).toBe("lost");
-    if (next.mode.type === "gameover") {
+    if (next.mode.type === "pendingGameOver") {
       expect(next.mode.outcome).toBe("loss_health");
     }
   });
@@ -754,7 +754,7 @@ describe("resolveTurn win flow", () => {
       rng,
     );
     expect(next.status).toBe("lost");
-    if (next.mode.type === "gameover") {
+    if (next.mode.type === "pendingGameOver") {
       expect(next.mode.outcome).toBe("loss_hope");
       expect(next.mode.reason).toContain("do not rise");
     }
@@ -781,8 +781,29 @@ describe("resolveTurn win flow", () => {
       rng,
     );
     expect(next.status).toBe("lost");
-    if (next.mode.type === "gameover") {
+    if (next.mode.type === "pendingGameOver") {
       expect(next.mode.outcome).toBe("loss_searing");
+    }
+  });
+
+  it("reveals the game-over screen from pendingGameOver", () => {
+    const { state, rng } = makeState();
+    const pending: GameState = {
+      ...state,
+      status: "lost",
+      mode: {
+        type: "pendingGameOver",
+        reason: "The light inside you fades. You sit down, and do not rise.",
+        outcome: "loss_hope",
+      },
+    };
+
+    const next = resolveTurn(pending, { type: "revealGameOver" }, rng);
+
+    expect(next.mode.type).toBe("gameover");
+    if (next.mode.type === "gameover") {
+      expect(next.mode.outcome).toBe("loss_hope");
+      expect(next.mode.reason).toContain("do not rise");
     }
   });
 });

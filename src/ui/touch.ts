@@ -30,6 +30,7 @@ export function canvasTouchToAction(
       return { type: "choose", choiceIndex };
     }
     case "pendingEncounter":
+    case "pendingGameOver":
       return null;
     case "map": {
       const world = screenToWorld(camera, x, y);

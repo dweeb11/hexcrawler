@@ -87,6 +87,26 @@ describe("buildPlaytestPayload", () => {
     });
   });
 
+  it("includes death cause for a lost game in pendingGameOver mode", () => {
+    const state = gameStateWith({
+      turn: 6,
+      status: "lost",
+      mode: {
+        type: "pendingGameOver",
+        reason: "The light inside you fades. You sit down, and do not rise.",
+        outcome: "loss_hope",
+      },
+    });
+
+    expect(buildPlaytestPayload(state, "lost")).toEqual({
+      outcome: "lost",
+      turnsSurvived: 6,
+      deathCause: "The light inside you fades. You sit down, and do not rise.",
+      biomesVisited: ["settlement"],
+      rumorsCompleted: 0,
+    });
+  });
+
   it("omits deathCause on a win", () => {
     const state = gameStateWith({
       turn: 12,

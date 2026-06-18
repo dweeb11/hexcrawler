@@ -138,12 +138,18 @@ export type EncounterModeData = {
   readonly rumorContext?: RumorContext;
 };
 
+export type GameOverModeData = {
+  readonly reason: string;
+  readonly outcome: GameOverOutcome;
+};
+
 export type GameMode =
   | { readonly type: "map" }
   | { readonly type: "pendingEncounter" } & EncounterModeData
   | { readonly type: "encounter" } & EncounterModeData
   | { readonly type: "camp"; readonly result: LogEntry; readonly incident: LogEntry | null }
-  | { readonly type: "gameover"; readonly reason: string; readonly outcome: GameOverOutcome };
+  | { readonly type: "pendingGameOver" } & GameOverModeData
+  | { readonly type: "gameover" } & GameOverModeData;
 
 export interface GameStats {
   hexesExplored: number;
@@ -158,7 +164,8 @@ export type Action =
   | { readonly type: "pause"; readonly activity: "rest" | "forage" }
   | { readonly type: "choose"; readonly choiceIndex: number }
   | { readonly type: "dismiss" }
-  | { readonly type: "revealEncounter" };
+  | { readonly type: "revealEncounter" }
+  | { readonly type: "revealGameOver" };
 
 export interface Player {
   readonly hex: CubeCoord;
