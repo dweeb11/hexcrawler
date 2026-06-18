@@ -165,7 +165,6 @@ interface Relic {
 type RelicEffect =
   | { type: "max_resource"; resource: "supply" | "hope" | "health"; bonus: number }
   | { type: "forage_bonus"; chance: number }         // +N% forage success
-  | { type: "searing_resist"; extraTurns: number }   // survive N extra turns on searing edge
   | { type: "hope_decay_slow"; intervalBonus: number } // hope decays N turns slower
   | { type: "move_discount"; chance: number }         // N% chance move costs 0 supply
 ```
