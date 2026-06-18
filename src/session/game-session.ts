@@ -1,8 +1,17 @@
 import type { AnalyticsClient } from "../api/analytics";
 import { coordKey } from "../engine/hex";
-import type { Action, GameState, RNG } from "../engine/state";
+import {
+  createInitialState,
+  type Action,
+  type Encounter,
+  type GameState,
+  type RNG,
+  type Rumor,
+} from "../engine/state";
 import { resolveTurn } from "../engine/turn";
+import { hasSave, loadGame } from "../ui/save";
 import type { HintId } from "../ui/hints";
+import { assembleSessionDeps } from "./session-deps";
 
 export interface GameSessionAudio {
   playMove(): void;
@@ -261,5 +270,84 @@ export function createGameSession(
       deps.persistence.clear();
     },
     dispatch,
+  };
+}
+
+export interface AppSession {
+  getState(): GameState;
+  getDismissedHints(): ReadonlySet<HintId>;
+  hasContinuableSave(): boolean;
+  start(shouldContinue: boolean): void;
+  restart(): void;
+  dispatch(action: Action): GameState;
+  onJournalOpen(): void;
+}
+
+export interface AppSessionData {
+  encounters: Encounter[];
+  rumors: Rumor[];
+}
+
+export function createAppSession(data: AppSessionData): AppSession {
+  const deps = assembleSessionDeps();
+  let session: GameSession | null = null;
+  let continuableSave: GameState | null = null;
+
+  const requireSession = (): GameSession => {
+    if (!session) {
+      throw new Error("AppSession.start() must be called before using the session.");
+    }
+    return session;
+  };
+
+  const newGameState = () =>
+    createInitialState(data.encounters, deps.getRng(), data.rumors);
+
+  const trackNewGame = (payload: Record<string, unknown>) => {
+    deps.getAnalytics().track("game_start", payload);
+  };
+
+  return {
+    getState: () => requireSession().getState(),
+    getDismissedHints: () => deps.getDismissedHints(),
+    hasContinuableSave: () => {
+      continuableSave = null;
+      if (!hasSave()) {
+        return false;
+      }
+      const saved = loadGame();
+      if (saved != null && saved.status === "playing") {
+        continuableSave = saved;
+        return true;
+      }
+      return false;
+    },
+    start(shouldContinue: boolean) {
+      if (shouldContinue) {
+        const saved = continuableSave;
+        continuableSave = null;
+        if (saved) {
+          session = createGameSession(saved, deps);
+          return;
+        }
+      } else {
+        continuableSave = null;
+      }
+
+      const hadSave = hasSave();
+      if (hadSave) {
+        deps.persistence.clear();
+      }
+
+      session = createGameSession(newGameState(), deps);
+      trackNewGame({ seed: deps.runtime.getSeed(), fromSave: hadSave });
+    },
+    restart() {
+      const seed = deps.runtime.reset();
+      requireSession().restart(newGameState());
+      trackNewGame({ seed, restart: true });
+    },
+    dispatch: (action) => requireSession().dispatch(action),
+    onJournalOpen: () => deps.hints.dismissHint("first-rumor"),
   };
 }
