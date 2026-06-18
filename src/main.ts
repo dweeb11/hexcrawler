@@ -82,7 +82,7 @@ async function main(): Promise<void> {
     }
 
     const journalOpen = isJournalOpen(journalPanel);
-    const result = resolveKeydown(event.key, state.mode, state.status, journalOpen);
+    const result = resolveKeydown(event.key, state.mode, state.status, journalOpen, state);
 
     switch (result.type) {
       case "toggle-journal": {
@@ -137,7 +137,7 @@ async function main(): Promise<void> {
     };
     const world = screenToWorld(camera, screen.x, screen.y);
     const clicked = pixelToHex(world.x, world.y);
-    const action = clickedNeighborToAction(state.player.hex, clicked);
+    const action = clickedNeighborToAction(state, clicked);
     if (action) {
       session.dispatch(action);
     }

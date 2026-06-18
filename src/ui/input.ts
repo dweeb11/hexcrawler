@@ -1,5 +1,6 @@
 import { coordKey, HEX_DIRECTIONS, type CubeCoord, type HexDirection } from "../engine/hex";
 import type { Action, GameMode, GameState } from "../engine/state";
+import { isPushableDirection } from "../engine/visibility";
 
 export type KeydownResult =
   | { type: "none" }
@@ -16,12 +17,23 @@ const KEY_TO_DIRECTION: Record<string, HexDirection> = {
   d: 0,
 };
 
-export function keyToAction(key: string, mode: GameMode): Action | null {
+export function keyToAction(key: string, mode: GameMode, state: GameState): Action | null {
   const normalized = key.toLowerCase();
 
   if (mode.type === "map") {
     if (normalized in KEY_TO_DIRECTION) {
-      return { type: "push", direction: KEY_TO_DIRECTION[normalized] };
+      const direction = KEY_TO_DIRECTION[normalized];
+      if (
+        !isPushableDirection(
+          state.player.hex,
+          direction,
+          state.player.hope,
+          state.searing,
+        )
+      ) {
+        return null;
+      }
+      return { type: "push", direction };
     }
     if (normalized === "r") {
       return { type: "pause", activity: "rest" };
@@ -52,6 +64,7 @@ export function resolveKeydown(
   mode: GameMode,
   status: GameState["status"],
   journalOpen: boolean,
+  state: GameState,
 ): KeydownResult {
   const normalizedKey = key.toLowerCase();
 
@@ -63,7 +76,7 @@ export function resolveKeydown(
     return { type: "toggle-journal" };
   }
 
-  const action = keyToAction(key, mode);
+  const action = keyToAction(key, mode, state);
   if (action) {
     return { type: "game-action", action, closeJournalFirst: journalOpen };
   }
@@ -71,7 +84,11 @@ export function resolveKeydown(
   return { type: "none" };
 }
 
-export function clickedNeighborToAction(center: CubeCoord, clicked: CubeCoord): Action | null {
+export function clickedNeighborToAction(
+  state: GameState,
+  clicked: CubeCoord,
+): Action | null {
+  const center = state.player.hex;
   const targetKey = coordKey(clicked);
   const direction = HEX_DIRECTIONS.findIndex((delta) =>
     coordKey({
@@ -85,5 +102,17 @@ export function clickedNeighborToAction(center: CubeCoord, clicked: CubeCoord): 
     return null;
   }
 
-  return { type: "push", direction: direction as HexDirection };
+  const hexDirection = direction as HexDirection;
+  if (
+    !isPushableDirection(
+      center,
+      hexDirection,
+      state.player.hope,
+      state.searing,
+    )
+  ) {
+    return null;
+  }
+
+  return { type: "push", direction: hexDirection };
 }

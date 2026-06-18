@@ -32,7 +32,7 @@ export function canvasTouchToAction(
     case "map": {
       const world = screenToWorld(camera, x, y);
       const clicked = pixelToHex(world.x, world.y);
-      return clickedNeighborToAction(state.player.hex, clicked);
+      return clickedNeighborToAction(state, clicked);
     }
     default: {
       const _exhaustive: never = state.mode;
