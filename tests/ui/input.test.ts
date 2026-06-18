@@ -90,6 +90,20 @@ describe("resolveKeydown", () => {
     });
   });
 
+  it("blocks movement keys while game-over reveal is pending", () => {
+    expect(
+      keyToAction(
+        "w",
+        {
+          type: "pendingGameOver",
+          reason: "The light inside you fades. You sit down, and do not rise.",
+          outcome: "loss_hope",
+        },
+        mapState,
+      ),
+    ).toBeNull();
+  });
+
   it("does not open the journal with J when the game is over", () => {
     expect(
       resolveKeydown(

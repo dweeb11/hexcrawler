@@ -786,6 +786,32 @@ describe("resolveTurn win flow", () => {
     }
   });
 
+  it("enters pendingGameOver when an encounter choice depletes hope", () => {
+    const encounter: Encounter = {
+      id: "fatal-choice",
+      text: "A grim choice.",
+      requiredTags: [],
+      choices: [{ label: "Risk it", outcome: { hope: -1 } }],
+    };
+    const { state, rng } = makeState();
+    const next = resolveTurn(
+      {
+        ...state,
+        player: { ...state.player, hope: 1 },
+        mode: { type: "encounter", encounter, hex: state.player.hex },
+      },
+      { type: "choose", choiceIndex: 0 },
+      rng,
+    );
+
+    expect(next.status).toBe("lost");
+    expect(next.mode.type).toBe("pendingGameOver");
+    if (next.mode.type === "pendingGameOver") {
+      expect(next.mode.outcome).toBe("loss_hope");
+      expect(next.mode.reason).toContain("do not rise");
+    }
+  });
+
   it("reveals the game-over screen from pendingGameOver", () => {
     const { state, rng } = makeState();
     const pending: GameState = {
