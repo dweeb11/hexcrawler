@@ -13,7 +13,3 @@ export function getSearingGlyphColorForIndex(index: number): string {
   const intensity = Math.min(1, (index + 0.5) / SEARING_GRADIENT_GLYPHS.length);
   return getSearingGlyphColor(intensity);
 }
-
-export function getSearingEdgeArrowColor(alpha: number): string {
-  return `rgba(255, 60, 20, ${alpha})`;
-}

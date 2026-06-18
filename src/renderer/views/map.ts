@@ -1,9 +1,8 @@
-import { addCoords, coordKey, scaleCoord } from "../../engine/hex";
+import { coordKey } from "../../engine/hex";
 import { getVisibleNeighbors } from "../../engine/visibility";
 import {
   getSearingGlyph,
   getSearingIntensity,
-  getSearingTowardConsumedDelta,
   searingDistance,
 } from "../../engine/searing";
 import { getEffectiveCaps } from "../../engine/relics";
@@ -12,7 +11,7 @@ import { drawHexagon, hexToPixel, HEX_SIZE } from "../canvas";
 import type { Camera } from "../camera";
 import { worldToScreen } from "../camera";
 import { COLORS, BIOME_GLYPHS } from "../glyphs";
-import { getSearingGlyphColor, getSearingEdgeArrowColor } from "../searing-style";
+import { getSearingGlyphColor } from "../searing-style";
 import { renderHud } from "../hud";
 import { drawHintOverlay, type ActiveHint } from "../hint-overlay";
 import { drawLegend } from "../legend";
@@ -153,51 +152,6 @@ function drawSearingEdgeGlow(
   ctx.restore();
 }
 
-function drawSearingDirectionMarker(
-  ctx: CanvasRenderingContext2D,
-  camera: Camera,
-  playerHex: GameState["player"]["hex"],
-  searing: SearingState,
-  width: number,
-  height: number,
-  distance: number,
-  pulsePhase: number,
-): void {
-  const towardConsumed = getSearingTowardConsumedDelta(searing);
-  const reference = addCoords(playerHex, scaleCoord(towardConsumed, 4));
-  const playerScreen = worldToScreen(camera, hexToPixel(playerHex).x, hexToPixel(playerHex).y);
-  const refScreen = worldToScreen(camera, hexToPixel(reference).x, hexToPixel(reference).y);
-  const angle = Math.atan2(refScreen.y - playerScreen.y, refScreen.x - playerScreen.x);
-
-  const margin = 28;
-  const cx = width / 2;
-  const cy = height / 2;
-  const halfW = width / 2 - margin;
-  const halfH = height / 2 - margin;
-  const cos = Math.cos(angle);
-  const sin = Math.sin(angle);
-  const t = Math.min(
-    Math.abs(cos) > 0.001 ? halfW / Math.abs(cos) : Number.POSITIVE_INFINITY,
-    Math.abs(sin) > 0.001 ? halfH / Math.abs(sin) : Number.POSITIVE_INFINITY,
-  );
-  const edgeX = cx + cos * t;
-  const edgeY = cy + sin * t;
-
-  const urgency = distance <= 5 ? (5 - distance) / 5 : 0.25;
-  const pulse = 0.7 + Math.sin(pulsePhase) * 0.3;
-  const alpha = (0.35 + urgency * 0.45) * pulse;
-
-  ctx.save();
-  ctx.translate(edgeX, edgeY);
-  ctx.rotate(angle);
-  ctx.fillStyle = getSearingEdgeArrowColor(alpha);
-  ctx.font = "bold 16px monospace";
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillText("◀", 0, 0);
-  ctx.restore();
-}
-
 function drawFogTile(
   ctx: CanvasRenderingContext2D,
   camera: Camera,
@@ -279,7 +233,6 @@ export function renderMap(
 
   ctx.filter = "none";
   const distance = searingDistance(state.player.hex, state.searing);
-  drawSearingDirectionMarker(ctx, camera, state.player.hex, state.searing, width, height, distance, pulsePhase);
   drawSearingEdgeGlow(ctx, width, height, distance, pulsePhase);
 
   renderHud(ctx, state, width);

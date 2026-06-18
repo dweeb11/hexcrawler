@@ -1,9 +1,6 @@
 import { SEARING_GRADIENT_GLYPHS } from "../engine/searing";
 import { COLORS } from "./glyphs";
-import {
-  getSearingEdgeArrowColor,
-  getSearingGlyphColorForIndex,
-} from "./searing-style";
+import { getSearingGlyphColorForIndex } from "./searing-style";
 
 export type LegendMode = "map" | "encounter" | "camp" | "gameover";
 
@@ -77,12 +74,6 @@ function drawSearingLegendLines(
   drawSegmentedLine(ctx, x, y + 12, glyphSegments);
   y += lineHeight;
 
-  drawSegmentedLine(ctx, x, y + 12, [
-    { text: "◀", color: getSearingEdgeArrowColor(0.85), font: "bold 16px monospace" },
-    { text: "  edge = threat direction", color: COLORS.textDim },
-  ]);
-  y += lineHeight;
-
   return y;
 }
 
@@ -107,7 +98,7 @@ function drawMapLegend(
     { style: "spacer" },
   ];
 
-  const searingLineCount = 3;
+  const searingLineCount = 2;
   const totalHeight = (lines.length + searingLineCount) * lineHeight + 8;
   drawPanel(ctx, x, startY, width, totalHeight, padding);
 
