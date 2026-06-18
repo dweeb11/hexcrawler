@@ -1,6 +1,15 @@
 import { describe, expect, it } from "vitest";
 
+import { getEffectiveCaps } from "../../src/engine/relics";
+import type { Relic } from "../../src/engine/state";
 import { getActiveHint } from "../../src/ui/hints";
+
+const deepPack: Relic = {
+  id: "deep-pack",
+  name: "Deep Pack",
+  description: "Carry more supplies",
+  effect: { type: "max_resource", resource: "supply", bonus: 2 },
+};
 
 describe("getActiveHint", () => {
   it("returns the first-turn hint on turn 0", () => {
@@ -112,5 +121,43 @@ describe("first-rumor hint", () => {
     );
 
     expect(hint?.id).not.toBe("first-rumor");
+  });
+});
+
+describe("low-supply hint with effective caps", () => {
+  it("shows when supply is low and below effective max from relics", () => {
+    const maxSupply = getEffectiveCaps([deepPack]).supply;
+
+    const hint = getActiveHint(
+      { turn: 5, supply: 1, maxSupply, mode: "map" },
+      new Set(),
+    );
+
+    expect(hint?.id).toBe("low-supply");
+  });
+
+  it("suppresses when supply is at effective max cap", () => {
+    const maxSupply = getEffectiveCaps([deepPack]).supply;
+
+    const hint = getActiveHint(
+      { turn: 5, supply: maxSupply, maxSupply, mode: "map" },
+      new Set(),
+    );
+
+    expect(hint).toBeNull();
+  });
+
+  it("treats supply below effective max as not full (e.g. 8/12)", () => {
+    const maxSupply = getEffectiveCaps([deepPack]).supply;
+
+    expect(8 < maxSupply).toBe(true);
+  });
+
+  it("does not treat supply as at cap when at base max but below effective max", () => {
+    const maxSupply = getEffectiveCaps([deepPack]).supply;
+    const supply = 10;
+
+    expect(supply < maxSupply).toBe(true);
+    expect(supply < 10).toBe(false);
   });
 });

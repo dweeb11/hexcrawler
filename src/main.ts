@@ -1,6 +1,6 @@
 import { fetchEncounters } from "./api/encounters";
 import { fetchRumors } from "./api/rumors";
-import { MAX_SUPPLY } from "./engine/state";
+import { getEffectiveCaps } from "./engine/relics";
 import { pixelToHex, setupCanvas } from "./renderer/canvas";
 import { createCamera, screenToWorld } from "./renderer/camera";
 import { render } from "./renderer/renderer";
@@ -57,7 +57,7 @@ async function main(): Promise<void> {
       {
         turn: state.turn,
         supply: state.player.supply,
-        maxSupply: MAX_SUPPLY,
+        maxSupply: getEffectiveCaps(state.relics).supply,
         mode: state.mode.type,
         rumorProgressCount: state.rumors.active.length + state.rumors.completed.length,
       },
