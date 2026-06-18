@@ -71,20 +71,24 @@ export function setupCanvas(canvas: HTMLCanvasElement): CanvasRenderingContext2D
   }
 
   const resize = () => {
-    const container = canvas.parentElement ?? document.body;
-    const rect = container.getBoundingClientRect();
     const ratio = window.devicePixelRatio || 1;
+    const width = canvas.clientWidth;
+    const height = canvas.clientHeight;
+    if (width === 0 || height === 0) {
+      return;
+    }
 
-    canvas.width = Math.floor(rect.width * ratio);
-    canvas.height = Math.floor(rect.height * ratio);
-    canvas.style.width = `${rect.width}px`;
-    canvas.style.height = `${rect.height}px`;
+    canvas.width = Math.floor(width * ratio);
+    canvas.height = Math.floor(height * ratio);
     ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
   };
 
+  const observer = new ResizeObserver(() => {
+    resize();
+  });
+  observer.observe(canvas);
   resize();
-  window.addEventListener("resize", resize);
   return ctx;
 }
