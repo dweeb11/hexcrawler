@@ -1,6 +1,11 @@
 import { getEffectiveCaps } from "../engine/relics";
-import { searingDistance } from "../engine/searing";
+import {
+  getSearingTowardConsumedDelta,
+  searingDistance,
+} from "../engine/searing";
+import { addCoords, scaleCoord } from "../engine/hex";
 import { type GameState } from "../engine/state";
+import { hexToPixel } from "./canvas";
 import { COLORS } from "./glyphs";
 
 function resourceColor(current: number, max: number): string {
@@ -43,6 +48,19 @@ function drawResourceBar(
   ctx.fillText(`${current}/${max}`, x + 220, y);
 }
 
+const COMPASS_ARROWS = ["→", "↘", "↓", "↙", "←", "↖", "↑", "↗"] as const;
+
+function searingCompassArrow(state: GameState): string {
+  const towardConsumed = getSearingTowardConsumedDelta(state.searing);
+  const reference = addCoords(state.player.hex, scaleCoord(towardConsumed, 4));
+  const playerPixel = hexToPixel(state.player.hex);
+  const refPixel = hexToPixel(reference);
+  const angle = Math.atan2(refPixel.y - playerPixel.y, refPixel.x - playerPixel.x);
+  const normalized = ((angle % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
+  const index = Math.round(normalized / (Math.PI / 4)) % COMPASS_ARROWS.length;
+  return COMPASS_ARROWS[index] ?? "←";
+}
+
 export function renderHud(
   ctx: CanvasRenderingContext2D,
   state: GameState,
@@ -75,10 +93,16 @@ export function renderHud(
   }
 
   const distance = searingDistance(state.player.hex, state.searing);
+  const arrow = searingCompassArrow(state);
+  const hexLabel = distance === 1 ? "hex" : "hexes";
   if (distance <= 5) {
     ctx.fillStyle = distance <= 2 ? "#d44" : "#da4";
     ctx.font = "bold 14px monospace";
-    ctx.fillText(`⚠ SEARING: ${distance} hex${distance === 1 ? "" : "es"}`, 28, 128);
+    ctx.fillText(`⚠ SEARING ${arrow} ${distance} ${hexLabel}`, 28, 128);
+  } else {
+    ctx.fillStyle = "#a85";
+    ctx.font = "14px monospace";
+    ctx.fillText(`☀ Searing ${arrow} ${distance} ${hexLabel}`, 28, 128);
   }
 
   ctx.restore();
