@@ -1,27 +1,12 @@
 import { fetchEncounters } from "./api/encounters";
 import { fetchRumors } from "./api/rumors";
-import { createAnalyticsClient } from "./api/analytics";
-import { submitPlaytest } from "./api/playtests";
-import { createRng } from "./engine/rng";
-import { clearSave, hasSave, loadGame, saveGame } from "./ui/save";
+import { MAX_SUPPLY } from "./engine/state";
 import { pixelToHex, setupCanvas } from "./renderer/canvas";
-import { createCamera, screenToWorld, type Camera } from "./renderer/camera";
-import { hitTestEncounterChoice } from "./renderer/encounter-layout";
+import { createCamera, screenToWorld } from "./renderer/camera";
 import { render } from "./renderer/renderer";
-import { createInitialState, MAX_SUPPLY, type Action, type GameState } from "./engine/state";
-import { createGameSession } from "./session/game-session";
-import { getActiveHint, type HintId } from "./ui/hints";
+import { createAppSession } from "./session/game-session";
+import { getActiveHint } from "./ui/hints";
 import { applyHopeStyling, clearLog, updateLog } from "./ui/log";
-import {
-  playMove,
-  playEncounterOpen,
-  playChoiceSelect,
-  playSearingAdvance,
-  playForage,
-  playRest,
-  playWin,
-  playLoss,
-} from "./ui/audio";
 import { clickedNeighborToAction, resolveKeydown } from "./ui/input";
 import {
   toggleJournal,
@@ -30,61 +15,7 @@ import {
   closeJournal,
   isJournalOpen,
 } from "./ui/journal";
-
-const HINTS_KEY = "waning-light-hints";
-const VALID_HINT_IDS: HintId[] = ["first-turn", "low-supply", "first-encounter", "first-rumor"];
-
-function loadDismissedHints(): Set<HintId> {
-  try {
-    const raw = localStorage.getItem(HINTS_KEY);
-    if (!raw) return new Set();
-    const parsed: unknown = JSON.parse(raw);
-    if (!Array.isArray(parsed)) return new Set();
-    return new Set(parsed.filter((v): v is HintId => VALID_HINT_IDS.includes(v as HintId)));
-  } catch {
-    return new Set();
-  }
-}
-
-function saveDismissedHints(hints: Set<HintId>): void {
-  localStorage.setItem(HINTS_KEY, JSON.stringify([...hints]));
-}
-
-type CanvasTouchResult = Action | "restart";
-
-function canvasTouchToAction(
-  state: GameState,
-  x: number,
-  y: number,
-  camera: Camera,
-): CanvasTouchResult | null {
-  switch (state.mode.type) {
-    case "gameover":
-      return "restart";
-    case "camp":
-      return { type: "dismiss" };
-    case "encounter": {
-      const choiceIndex = hitTestEncounterChoice(
-        y,
-        state.mode.encounter.choices.length,
-        state.mode.rumorContext != null,
-      );
-      if (choiceIndex === null) {
-        return null;
-      }
-      return { type: "choose", choiceIndex };
-    }
-    case "map": {
-      const world = screenToWorld(camera, x, y);
-      const clicked = pixelToHex(world.x, world.y);
-      return clickedNeighborToAction(state.player.hex, clicked);
-    }
-    default: {
-      const _exhaustive: never = state.mode;
-      return _exhaustive;
-    }
-  }
-}
+import { canvasTouchToAction } from "./ui/touch";
 
 async function main(): Promise<void> {
   const canvas = document.getElementById("game-canvas");
@@ -105,66 +36,19 @@ async function main(): Promise<void> {
   const ctx = setupCanvas(canvas);
   const encounters = await fetchEncounters();
   const rumors = await fetchRumors();
-  let seed = Date.now();
-  let rng = createRng(seed);
-  let analytics = createAnalyticsClient();
+  const session = createAppSession({ encounters, rumors });
   let camera = createCamera();
-  const dismissedHints = loadDismissedHints();
 
-  const dismissHint = (id: HintId): void => {
-    if (!dismissedHints.has(id)) {
-      dismissedHints.add(id);
-      saveDismissedHints(dismissedHints);
-    }
-  };
-
-  let initialState: GameState;
-  if (hasSave()) {
-    const saved = loadGame();
-    if (saved && saved.status === "playing") {
-      const shouldContinue = await showContinuePrompt(canvas, ctx);
-      if (shouldContinue) {
-        initialState = saved;
-      } else {
-        clearSave();
-        initialState = createInitialState(encounters, rng, rumors);
-        analytics.track("game_start", { seed, fromSave: true });
-      }
-    } else {
-      clearSave();
-      initialState = createInitialState(encounters, rng, rumors);
-      analytics.track("game_start", { seed, fromSave: true });
-    }
+  if (session.hasContinuableSave()) {
+    const shouldContinue = await showContinuePrompt(canvas, ctx);
+    session.start(shouldContinue);
   } else {
-    initialState = createInitialState(encounters, rng, rumors);
-    analytics.track("game_start", { seed, fromSave: false });
+    session.start(false);
   }
 
-  const session = createGameSession(initialState, {
-    getRng: () => rng,
-    getAnalytics: () => analytics,
-    audio: {
-      playMove,
-      playEncounterOpen,
-      playChoiceSelect,
-      playSearingAdvance,
-      playForage,
-      playRest,
-      playWin,
-      playLoss,
-    },
-    hints: { dismissHint },
-    persistence: { save: saveGame, clear: clearSave },
-    playtest: { submit: submitPlaytest },
-  });
-
   const restart = () => {
-    seed = Date.now();
-    rng = createRng(seed);
-    analytics = createAnalyticsClient();
-    session.restart(createInitialState(encounters, rng, rumors));
+    session.restart();
     clearLog(logPanel);
-    analytics.track("game_start", { seed, restart: true });
   };
 
   const frame = () => {
@@ -177,7 +61,7 @@ async function main(): Promise<void> {
         mode: state.mode.type,
         rumorProgressCount: state.rumors.active.length + state.rumors.completed.length,
       },
-      dismissedHints,
+      session.getDismissedHints(),
     );
     camera = render(ctx, state, camera, activeHint);
     updateLog(logPanel, state.log);
@@ -205,7 +89,7 @@ async function main(): Promise<void> {
         event.preventDefault();
         const opening = !journalOpen;
         if (opening) {
-          dismissHint("first-rumor");
+          session.onJournalOpen();
         }
         toggleJournal(journalPanel, logPanel);
         if (opening) {
@@ -259,7 +143,6 @@ async function main(): Promise<void> {
     }
   });
 
-  // Touch input for mobile
   let touchStartX = 0;
   let touchStartY = 0;
 
@@ -274,7 +157,6 @@ async function main(): Promise<void> {
     event.preventDefault();
     const touch = event.changedTouches[0];
 
-    // Ignore swipes — only handle taps (< 10px movement)
     if (Math.abs(touch.clientX - touchStartX) > 10 || Math.abs(touch.clientY - touchStartY) > 10) {
       return;
     }

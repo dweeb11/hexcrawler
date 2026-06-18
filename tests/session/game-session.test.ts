@@ -10,12 +10,27 @@ import {
 } from "../../src/engine/state";
 import { PILLARS_DISTANCE_THRESHOLD, GEAR_RELIC_THRESHOLD } from "../../src/engine/win";
 import {
+  createAppSession,
   createGameSession,
   handleProgressionTransitions,
   type GameSessionDeps,
   type TransitionDeps,
 } from "../../src/session/game-session";
+import { hasSave, saveGame } from "../../src/ui/save";
 import { seededRng } from "../helpers";
+
+const storage = new Map<string, string>();
+const localStorageMock = {
+  getItem: (key: string) => storage.get(key) ?? null,
+  setItem: (key: string, value: string) => {
+    storage.set(key, value);
+  },
+  removeItem: (key: string) => {
+    storage.delete(key);
+  },
+};
+
+vi.stubGlobal("localStorage", localStorageMock);
 
 function createMockDeps(rng = seededRng(42)): GameSessionDeps & {
   persistence: { save: ReturnType<typeof vi.fn>; clear: ReturnType<typeof vi.fn> };
@@ -430,5 +445,66 @@ describe("handleProgressionTransitions turn semantics", () => {
     handleProgressionTransitions(prev, next, { type: "dismiss" }, transitionDeps);
 
     expect(deps.track).not.toHaveBeenCalledWith("turn", expect.anything());
+  });
+});
+
+describe("createAppSession", () => {
+  beforeEach(() => {
+    storage.clear();
+    vi.clearAllMocks();
+  });
+
+  it("starts a new game and tracks game_start when no save exists", () => {
+    const session = createAppSession({ encounters: [], rumors: [] });
+    expect(session.hasContinuableSave()).toBe(false);
+
+    session.start(false);
+
+    expect(session.getState().turn).toBe(0);
+    expect(session.getState().status).toBe("playing");
+  });
+
+  it("continues a saved game without emitting game_start", () => {
+    const saved = createInitialState([], seededRng(7));
+    saved.log.push({ turn: 1, text: "progress" });
+    saveGame({ ...saved, turn: 3 });
+
+    const session = createAppSession({ encounters: [], rumors: [] });
+    expect(session.hasContinuableSave()).toBe(true);
+
+    session.start(true);
+
+    expect(session.getState().turn).toBe(3);
+    expect(session.getState().log).toContainEqual({ turn: 1, text: "progress" });
+  });
+
+  it("starts fresh when user declines continue", () => {
+    const saved = createInitialState([], seededRng(7));
+    saveGame({ ...saved, turn: 5 });
+
+    const session = createAppSession({ encounters: [], rumors: [] });
+    session.start(false);
+
+    expect(session.getState().turn).toBe(0);
+    expect(hasSave()).toBe(false);
+  });
+
+  it("restart resets to a new game", () => {
+    const session = createAppSession({ encounters: [], rumors: [] });
+    session.start(false);
+
+    session.restart();
+
+    expect(session.getState().turn).toBe(0);
+    expect(session.getState().status).toBe("playing");
+  });
+
+  it("dismisses first-rumor hint when journal opens", () => {
+    const session = createAppSession({ encounters: [], rumors: [] });
+    session.start(false);
+
+    session.onJournalOpen();
+
+    expect(session.getDismissedHints().has("first-rumor")).toBe(true);
   });
 });
