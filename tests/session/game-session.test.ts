@@ -12,10 +12,12 @@ import { PILLARS_DISTANCE_THRESHOLD, GEAR_RELIC_THRESHOLD } from "../../src/engi
 import {
   createAppSession,
   createGameSession,
+  ENCOUNTER_REVEAL_DELAY_MS,
   handleProgressionTransitions,
   type GameSessionDeps,
   type TransitionDeps,
 } from "../../src/session/game-session";
+import { keyToAction } from "../../src/ui/input";
 import { hasSave, saveGame } from "../../src/ui/save";
 import { seededRng } from "../helpers";
 
@@ -199,7 +201,8 @@ describe("game session transitions", () => {
     expect(deps.track).not.toHaveBeenCalledWith("turn", expect.anything());
   });
 
-  it("tracks encounter analytics when mode transitions to encounter", () => {
+  it("tracks encounter analytics after the reveal beat", () => {
+    vi.useFakeTimers();
     const encounter: Encounter = {
       id: "forest-test",
       text: "A rustle in the leaves.",
@@ -212,6 +215,12 @@ describe("game session transitions", () => {
 
     encounterSession.dispatch({ type: "push", direction: 0 });
 
+    expect(encounterSession.getState().mode.type).toBe("pendingEncounter");
+    expect(deps.track).not.toHaveBeenCalledWith("encounter", expect.anything());
+    expect(deps.audio.playEncounterOpen).not.toHaveBeenCalled();
+
+    vi.advanceTimersByTime(ENCOUNTER_REVEAL_DELAY_MS);
+
     expect(encounterSession.getState().mode.type).toBe("encounter");
     expect(deps.track).toHaveBeenCalledWith("encounter", {
       turnCount: encounterSession.getState().turn,
@@ -219,6 +228,25 @@ describe("game session transitions", () => {
       biome: "forest",
     });
     expect(deps.audio.playEncounterOpen).toHaveBeenCalled();
+    vi.useRealTimers();
+  });
+
+  it("ignores input while an encounter reveal is pending", () => {
+    const encounter: Encounter = {
+      id: "blocked-test",
+      text: "Blocked.",
+      requiredTags: [],
+      choices: [{ label: "Continue", outcome: {} }],
+    };
+    const base = createInitialState([], seededRng(1));
+    const withEncounter = encounterOnNeighbor(base, encounter);
+    const { session } = makeSession(withEncounter);
+
+    session.dispatch({ type: "push", direction: 0 });
+    expect(session.getState().mode.type).toBe("pendingEncounter");
+
+    const action = keyToAction("1", session.getState().mode, session.getState());
+    expect(action).toBeNull();
   });
 
   it("dismisses first-turn hint on first move", () => {

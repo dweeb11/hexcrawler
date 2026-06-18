@@ -9,7 +9,7 @@ import { type Action, type GameState, type RNG } from "./state";
 import { INVISIBLE_PUSH_MESSAGE, isPushable } from "./visibility";
 import { resolveDismiss, resolvePause } from "./turn/camp";
 import { applyLossChecks } from "./turn/checks";
-import { resolveChoose } from "./turn/encounter-resolution";
+import { resolveChoose, resolveRevealEncounter } from "./turn/encounter-resolution";
 import { appendLog } from "./turn/log";
 import { resolvePush } from "./turn/movement";
 
@@ -28,6 +28,8 @@ export function resolveTurn(state: GameState, action: Action, rng: RNG): GameSta
       return resolveChoose(checkedState, action, rng);
     case "dismiss":
       return resolveDismiss(checkedState);
+    case "revealEncounter":
+      return resolveRevealEncounter(checkedState);
     case "push": {
       if (!isPushable(checkedState, action)) {
         return appendLog(checkedState, INVISIBLE_PUSH_MESSAGE, "system");

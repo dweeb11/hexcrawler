@@ -9,6 +9,23 @@ import { type Action, type GameState, type RNG } from "../state";
 import { appendLog } from "./log";
 import { applyEndOfTurnEffects } from "./end-of-turn";
 
+export function resolveRevealEncounter(state: GameState): GameState {
+  if (state.mode.type !== "pendingEncounter") {
+    return state;
+  }
+
+  const pending = state.mode;
+  return {
+    ...state,
+    mode: {
+      type: "encounter",
+      encounter: pending.encounter,
+      hex: pending.hex,
+      ...(pending.rumorContext ? { rumorContext: pending.rumorContext } : {}),
+    },
+  };
+}
+
 export function resolveChoose(
   state: GameState,
   action: Extract<Action, { type: "choose" }>,

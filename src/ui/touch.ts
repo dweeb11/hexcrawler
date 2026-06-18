@@ -29,6 +29,8 @@ export function canvasTouchToAction(
       }
       return { type: "choose", choiceIndex };
     }
+    case "pendingEncounter":
+      return null;
     case "map": {
       const world = screenToWorld(camera, x, y);
       const clicked = pixelToHex(world.x, world.y);

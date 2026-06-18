@@ -223,7 +223,7 @@ describe("resolveTurn encounter flow", () => {
       rng,
     );
 
-    expect(next.mode.type).toBe("encounter");
+    expect(next.mode.type).toBe("pendingEncounter");
   });
 
   it("uses shadow encounter text at low Hope", () => {
@@ -254,9 +254,32 @@ describe("resolveTurn encounter flow", () => {
       rng,
     );
 
+    expect(next.mode.type).toBe("pendingEncounter");
+    if (next.mode.type === "pendingEncounter") {
+      expect(next.mode.encounter.text).toBe("The path tightens like a snare.");
+    }
+  });
+
+  it("reveals a pending encounter without incrementing turn", () => {
+    const encounter: Encounter = {
+      id: "reveal-test",
+      text: "Something stirs.",
+      requiredTags: [],
+      choices: [{ label: "OK", outcome: {} }],
+    };
+    const { state, rng } = makeState();
+    const pending: GameState = {
+      ...state,
+      turn: 4,
+      mode: { type: "pendingEncounter", encounter, hex: cubeCoord(1, 0, -1) },
+    };
+
+    const next = resolveTurn(pending, { type: "revealEncounter" }, rng);
+
+    expect(next.turn).toBe(4);
     expect(next.mode.type).toBe("encounter");
     if (next.mode.type === "encounter") {
-      expect(next.mode.encounter.text).toBe("The path tightens like a snare.");
+      expect(next.mode.encounter.id).toBe("reveal-test");
     }
   });
 
@@ -329,8 +352,8 @@ describe("rumor step triggering", () => {
 
     const next = resolveTurn(stateWithRumor, { type: "push", direction: 0 }, rng);
     // Should enter encounter mode with the rumor step encounter
-    expect(next.mode.type).toBe("encounter");
-    if (next.mode.type === "encounter") {
+    expect(next.mode.type).toBe("pendingEncounter");
+    if (next.mode.type === "pendingEncounter") {
       expect(next.mode.encounter.id).toBe("ww-step-0");
     }
   });

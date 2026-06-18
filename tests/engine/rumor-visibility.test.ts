@@ -170,8 +170,8 @@ describe("rumorContext on encounter mode", () => {
 
     const next = resolveTurn(prepared, { type: "push", direction: 0 }, seededRng(99));
 
-    expect(next.mode.type).toBe("encounter");
-    if (next.mode.type !== "encounter") return;
+    expect(next.mode.type).toBe("pendingEncounter");
+    if (next.mode.type !== "pendingEncounter") return;
     expect(next.mode.rumorContext).toEqual({
       rumorId: "whispering-well",
       rumorTitle: "The Whispering Well",
@@ -210,8 +210,8 @@ describe("rumorContext on encounter mode", () => {
 
     const next = resolveTurn(prepared, { type: "push", direction: 0 }, seededRng(99));
 
-    if (next.mode.type !== "encounter") {
-      throw new Error("expected encounter mode");
+    if (next.mode.type !== "pendingEncounter") {
+      throw new Error("expected pendingEncounter mode");
     }
     expect(next.mode.rumorContext?.isFinalStep).toBe(true);
     expect(next.mode.rumorContext?.stepIndex).toBe(1);
