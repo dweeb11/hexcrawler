@@ -1,5 +1,5 @@
 import { coordKey } from "../../engine/hex";
-import { getVisibleNeighbors } from "../../engine/map";
+import { getVisibleNeighbors } from "../../engine/visibility";
 import { searingDistance } from "../../engine/searing";
 import { getEffectiveCaps } from "../../engine/relics";
 import { type GameState, type HexTile } from "../../engine/state";

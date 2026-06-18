@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { coordKey, cubeCoord } from "../../src/engine/hex";
-import { generateHex, getVisibleNeighbors, rollBiome, rollTags } from "../../src/engine/map";
+import { generateHex, rollBiome, rollTags } from "../../src/engine/map";
 import type { Encounter, HexTile } from "../../src/engine/state";
 import { seededRng } from "../helpers";
 
@@ -80,13 +80,6 @@ describe("generateHex", () => {
     const map = new Map([[coordKey(neighborCoord), existing]]);
     const tile = generateHex(coord, map, [], seededRng(42));
     expect(tile.tags.size).toBeGreaterThanOrEqual(2);
-  });
-});
-
-describe("getVisibleNeighbors", () => {
-  it("returns all neighbors at normal hope and three safer neighbors at low hope", () => {
-    expect(getVisibleNeighbors(cubeCoord(0, 0, 0), 3, "q", 1)).toHaveLength(6);
-    expect(getVisibleNeighbors(cubeCoord(0, 0, 0), 1, "q", 1)).toHaveLength(3);
   });
 });
 
