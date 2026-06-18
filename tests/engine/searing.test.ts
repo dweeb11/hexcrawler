@@ -3,6 +3,9 @@ import { describe, expect, it } from "vitest";
 import { cubeCoord } from "../../src/engine/hex";
 import {
   advanceSearing,
+  getSearingGlyph,
+  getSearingIntensity,
+  getSearingTowardConsumedDelta,
   initSearing,
   isConsumed,
   searingDistance,
@@ -66,5 +69,47 @@ describe("initSearing", () => {
     const expected = initSearing(seed);
     const state = createInitialState([], () => 0.42);
     expect(state.searing).toEqual(expected);
+  });
+});
+
+describe("getSearingIntensity", () => {
+  const searing: SearingState = { axis: "q", direction: 1, line: -5, advanceRate: 4 };
+
+  it("returns 1 for consumed hexes", () => {
+    expect(getSearingIntensity(cubeCoord(-6, 6, 0), searing)).toBe(1);
+  });
+
+  it("returns a gradient in the proximity zone", () => {
+    expect(getSearingIntensity(cubeCoord(-4, 4, 0), searing)).toBeCloseTo(0.767, 2);
+    expect(getSearingIntensity(cubeCoord(-3, 3, 0), searing)).toBeCloseTo(0.533, 2);
+    expect(getSearingIntensity(cubeCoord(-2, 2, 0), searing)).toBeCloseTo(0.3, 2);
+  });
+
+  it("returns 0 beyond the proximity zone", () => {
+    expect(getSearingIntensity(cubeCoord(0, 0, 0), searing)).toBe(0);
+  });
+});
+
+describe("getSearingGlyph", () => {
+  it("maps intensity to the gradient glyphs", () => {
+    expect(getSearingGlyph(0)).toBe("");
+    expect(getSearingGlyph(0.1)).toBe("░");
+    expect(getSearingGlyph(0.4)).toBe("▒");
+    expect(getSearingGlyph(0.7)).toBe("▓");
+    expect(getSearingGlyph(1)).toBe("█");
+  });
+});
+
+describe("getSearingTowardConsumedDelta", () => {
+  it("points opposite the advance direction on each axis", () => {
+    expect(getSearingTowardConsumedDelta({ axis: "q", direction: 1, line: 0, advanceRate: 4 })).toEqual(
+      cubeCoord(-1, 0, 1),
+    );
+    expect(getSearingTowardConsumedDelta({ axis: "r", direction: -1, line: 0, advanceRate: 4 })).toEqual(
+      cubeCoord(0, 1, -1),
+    );
+    expect(getSearingTowardConsumedDelta({ axis: "s", direction: 1, line: 0, advanceRate: 4 })).toEqual(
+      cubeCoord(1, 0, -1),
+    );
   });
 });

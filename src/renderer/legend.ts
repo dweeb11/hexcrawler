@@ -34,6 +34,10 @@ function drawMapLegend(
     { label: "R  Rest (+Health)", style: "normal" as const },
     { label: "F  Forage (+Supply)", style: "normal" as const },
     { label: "J  Journal", style: "normal" as const },
+    { label: "", style: "spacer" as const },
+    { label: "SEARING", style: "header" as const },
+    { label: "█ Consumed  ▓ Near", style: "normal" as const },
+    { label: "◀ Edge arrow = threat", style: "normal" as const },
   ];
 
   const totalHeight = lines.length * lineHeight + 8;
