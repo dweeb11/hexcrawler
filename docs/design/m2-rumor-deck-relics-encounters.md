@@ -28,7 +28,6 @@
 export type RelicEffectType =
   | "max_resource"
   | "forage_bonus"
-  | "searing_resist"
   | "hope_decay_slow"
   | "move_discount";
 
@@ -37,7 +36,6 @@ export interface RelicEffect {
   resource?: "supply" | "hope" | "health";
   bonus?: number;
   chance?: number;
-  extraTurns?: number;
   intervalBonus?: number;
 }
 
@@ -1101,8 +1099,6 @@ function describeEffect(effect: import("../engine/state").RelicEffect): string {
       return `+${effect.bonus} max ${effect.resource}`;
     case "forage_bonus":
       return `+${Math.round((effect.chance ?? 0) * 100)}% forage success`;
-    case "searing_resist":
-      return `Survive ${effect.extraTurns} extra turn(s) on searing edge`;
     case "hope_decay_slow":
       return `Hope decays ${effect.intervalBonus} turn(s) slower`;
     case "move_discount":

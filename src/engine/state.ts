@@ -38,7 +38,6 @@ export interface Encounter {
 export type RelicEffectType =
   | "max_resource"
   | "forage_bonus"
-  | "searing_resist"
   | "hope_decay_slow"
   | "move_discount";
 
@@ -47,7 +46,6 @@ export interface RelicEffect {
   resource?: "supply" | "hope" | "health";
   bonus?: number;
   chance?: number;
-  extraTurns?: number;
   intervalBonus?: number;
 }
 
