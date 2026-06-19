@@ -22,6 +22,8 @@ Terminal aesthetic. ASCII glyphs. Canvas 2D. No framework.
 - Searing advancement along a random axis (set per game)
 - Night incidents during camping
 - Full-screen encounter mode (map input disabled during encounters)
+- Journal panel toggle at `J`
+- Searing map cues and legend clarify the wall's position, direction, and distance
 - Admin panel for encounter CRUD at `/admin`
 - API routes with key-authenticated writes and public reads
 
