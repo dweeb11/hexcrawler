@@ -1,6 +1,7 @@
 import { coordKey, neighbors } from "./hex";
 import { findMatchingEncounters } from "./encounters";
 import { discoveryEncounterWeight } from "./rumors";
+import { isPillarsCoord } from "./win";
 import {
   ALL_BIOMES,
   BIOME_CONFIGS,
@@ -170,7 +171,20 @@ export function generateHex(
   searing?: SearingState,
   rumorWeights?: RumorWeights,
   boostDiscovery = false,
+  pillarsCoord?: CubeCoord,
 ): HexTile {
+  if (pillarsCoord && isPillarsCoord(coord, pillarsCoord)) {
+    return {
+      coord,
+      biome: "mountain",
+      tags: new Set(["ice", "frozen", "landmark", "elevated"]),
+      encounter: null,
+      revealed: true,
+      consumed: searing ? isConsumed(coord, searing) : false,
+      visited: false,
+    };
+  }
+
   const neighborTiles = neighbors(coord)
     .map((neighborCoord) => existingMap.get(coordKey(neighborCoord)))
     .filter((tile): tile is HexTile => Boolean(tile));

@@ -77,7 +77,7 @@ describe("seed encounter data", () => {
 
 describe("seed rumor data", () => {
   it("ships the bundled rumor chains", () => {
-    expect(rumorsSeed.length).toBe(4);
+    expect(rumorsSeed.length).toBe(5);
   });
 
   it("contains the required fields for each rumor and step", () => {

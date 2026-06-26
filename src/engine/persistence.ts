@@ -1,3 +1,5 @@
+import { cubeCoord, type CubeCoord } from "./hex";
+import { placePillarsCoord } from "./win";
 import type {
   ActiveRumor,
   CompletedRumor,
@@ -30,6 +32,7 @@ export interface SerializedGameState {
   readonly rumors: RumorState;
   readonly relics: GameState["relics"];
   readonly stats: GameState["stats"];
+  readonly pillarsCoord?: CubeCoord;
 }
 
 interface LegacyRumorStep extends RumorStep {
@@ -98,6 +101,7 @@ export function serializeState(state: GameState): SerializedGameState {
     rumors: state.rumors,
     relics: state.relics,
     stats: state.stats,
+    pillarsCoord: state.pillarsCoord,
   };
 }
 
@@ -131,6 +135,9 @@ export function deserializeState(data: any): GameState {
       ? normalizeRumorState(data.rumors)
       : { available: [], active: [], completed: [] },
     relics: data.relics ?? [],
+    pillarsCoord:
+      data.pillarsCoord ??
+      placePillarsCoord(cubeCoord(0, 0, 0), data.searing, () => 0.5),
     stats: data.stats ?? {
       hexesExplored: 0,
       encountersResolved: 0,

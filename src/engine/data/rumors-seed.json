@@ -124,5 +124,44 @@
     ],
     "rewardId": "deep-pack",
     "hopeBonus": 2
+  },
+  {
+    "id": "pillars-of-frost-chain",
+    "title": "Whispers of the Frozen North",
+    "premise": "Old travelers speak of a corridor where the Searing thins and the world remembers winter.",
+    "steps": [
+      {
+        "stepIndex": 0,
+        "stepTitle": "A breath of winter",
+        "encounterId": "pf-step-0",
+        "journalHint": "Seek a sheltered hollow where the air bites sharper than the ash should allow.",
+        "hintTags": ["sheltered", "ice"],
+        "hintBiomes": ["forest", "mountain"]
+      },
+      {
+        "stepIndex": 1,
+        "stepTitle": "The corridor line",
+        "encounterId": "pf-step-1",
+        "journalHint": "Follow the axis the Searing has not yet claimed — straight, not wandering.",
+        "hintTags": ["scarred", "elevated"]
+      },
+      {
+        "stepIndex": 2,
+        "stepTitle": "Frost on stone",
+        "encounterId": "pf-step-2",
+        "journalHint": "Ice gathers where the safe path runs true. Look for frost that outlasts the dawn.",
+        "hintTags": ["ice", "stone", "frozen"],
+        "hintBiomes": ["mountain"]
+      },
+      {
+        "stepIndex": 3,
+        "stepTitle": "The standing cold",
+        "encounterId": "pf-step-3",
+        "journalHint": "The Pillars wait where the corridor ends in monuments of frost.",
+        "hintTags": ["frozen", "landmark", "elevated"]
+      }
+    ],
+    "rewardId": "starseer-lens",
+    "hopeBonus": 2
   }
 ]

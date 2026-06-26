@@ -8,7 +8,8 @@ import {
   type GameState,
   type Relic,
 } from "../../src/engine/state";
-import { PILLARS_DISTANCE_THRESHOLD, GEAR_RELIC_THRESHOLD } from "../../src/engine/win";
+import { GEAR_RELIC_THRESHOLD } from "../../src/engine/win";
+import { GEAR_RITUAL_ENCOUNTER, PILLARS_WIN_ENCOUNTER } from "../../src/engine/win-encounters";
 import {
   createAppSession,
   createGameSession,
@@ -384,30 +385,42 @@ describe("game session transitions", () => {
   });
 
   it("clears save on win", () => {
-    const thresholdQ = createInitialState([], seededRng(1)).searing.line + PILLARS_DISTANCE_THRESHOLD;
-    const startHex = cubeCoord(thresholdQ - 1, -(thresholdQ - 1), 0);
     const base = createInitialState([], seededRng(99));
+    const pillarsCoord = cubeCoord(15, -15, 0);
+    const startHex = cubeCoord(14, -14, 0);
     const nearWin: GameState = {
       ...base,
-      searing: { ...base.searing, axis: "q", direction: 1, advanceRate: 999 },
+      pillarsCoord,
+      searing: { ...base.searing, axis: "q", direction: 1, line: -10, advanceRate: 999 },
       player: { ...base.player, hex: startHex },
-      map: new Map(base.map).set(coordKey(startHex), {
-        coord: startHex,
-        biome: "forest",
-        tags: new Set(["wood"]),
-        encounter: null,
-        revealed: true,
-        consumed: false,
-        visited: true,
-      }),
+      map: new Map(base.map)
+        .set(coordKey(startHex), {
+          coord: startHex,
+          biome: "wastes",
+          tags: new Set(),
+          encounter: null,
+          revealed: true,
+          consumed: false,
+          visited: true,
+        })
+        .set(coordKey(pillarsCoord), {
+          coord: pillarsCoord,
+          biome: "mountain",
+          tags: new Set(["ice", "frozen", "landmark"]),
+          encounter: null,
+          revealed: true,
+          consumed: false,
+          visited: false,
+        }),
     };
     const { session, deps } = makeSession(nearWin, 99);
 
-    session.dispatch({ type: "push", direction: 0 });
+    session.dispatch({ type: "push", direction: 1 });
+    session.dispatch({ type: "revealEncounter" });
+    session.dispatch({ type: "choose", choiceIndex: 0 });
 
     expect(session.getState().status).toBe("won");
     expect(deps.persistence.clear).toHaveBeenCalled();
-    expect(deps.persistence.save).not.toHaveBeenCalled();
   });
 
   it("clears save on loss", () => {
@@ -519,16 +532,14 @@ describe("game session transitions", () => {
       description: "Ritual relic",
       effect: { type: "forage_bonus", bonus: 1 },
     }));
-    const encounter: Encounter = {
-      id: "gear-ritual-prep",
-      text: "The ritual is within reach.",
-      requiredTags: [],
-      choices: [{ label: "Continue", outcome: {} }],
-    };
     const nearWin: GameState = {
       ...createInitialState([], seededRng(1)),
       relics,
-      mode: { type: "encounter", encounter, hex: cubeCoord(0, 0, 0) },
+      mode: {
+        type: "encounter",
+        encounter: GEAR_RITUAL_ENCOUNTER,
+        hex: cubeCoord(0, 0, 0),
+      },
     };
     const { session, deps } = makeSession(nearWin);
 

@@ -118,6 +118,25 @@ describe("encounter density", () => {
     expect(woodHexes).toBeGreaterThan(0);
   });
 
+  it("generates the Pillars landmark at the seeded coordinate", () => {
+    const pillarsCoord = cubeCoord(15, -15, 0);
+    const tile = generateHex(
+      pillarsCoord,
+      new Map(),
+      [],
+      seededRng(42),
+      undefined,
+      undefined,
+      false,
+      pillarsCoord,
+    );
+
+    expect(tile.biome).toBe("mountain");
+    expect(tile.tags.has("landmark")).toBe(true);
+    expect(tile.tags.has("frozen")).toBe(true);
+    expect(tile.encounter).toBeNull();
+  });
+
   it("falls back to zero-tag encounters when no tag match exists", () => {
     const fallbackEncounter: Encounter = {
       id: "any-fallback",
