@@ -9,7 +9,7 @@ import {
   findNextRumorStep,
   shouldBoostRumorDiscovery,
 } from "../rumors";
-import { isConsumed, searingDistance } from "../searing";
+import { isConsumed } from "../searing";
 import {
   type Encounter,
   type GameState,
@@ -18,7 +18,17 @@ import {
   type RumorContext,
   type Action,
 } from "../state";
-import { frostProximityBand } from "../win";
+import {
+  checkRestartTheGear,
+  distanceToPillars,
+  frostProximityBand,
+  isInSafeCorridor,
+  isPillarsCoord,
+} from "../win";
+import {
+  GEAR_RITUAL_ENCOUNTER,
+  PILLARS_WIN_ENCOUNTER,
+} from "../win-encounters";
 import { applyLossChecks } from "./checks";
 import { applyEndOfTurnEffects } from "./end-of-turn";
 import { appendLog, enterGameOver, SEARING_LOSS } from "./log";
@@ -97,6 +107,7 @@ export function resolvePush(
         nextState.searing,
         rumorWeights,
         boostDiscovery,
+        nextState.pillarsCoord,
       ),
     );
   }
@@ -128,14 +139,27 @@ export function resolvePush(
     "resource",
   );
 
-  const oldBand = frostProximityBand(searingDistance(state.player.hex, state.searing));
-  const newBand = frostProximityBand(searingDistance(destination, state.searing));
-  if (newBand > oldBand) {
+  const oldBand = frostProximityBand(distanceToPillars(state.player.hex, state.pillarsCoord));
+  const newBand = frostProximityBand(distanceToPillars(destination, state.pillarsCoord));
+  if (
+    newBand > oldBand &&
+    isInSafeCorridor(destination, state.pillarsCoord, state.searing)
+  ) {
     nextState = appendLog(nextState, FROST_PROXIMITY_MESSAGES[newBand as 1 | 2 | 3], "narrative");
   }
 
   if (enteredTile.consumed || isConsumed(enteredTile.coord, nextState.searing)) {
     return enterGameOver(nextState, SEARING_LOSS.outcome, SEARING_LOSS.reason);
+  }
+
+  if (isPillarsCoord(destination, state.pillarsCoord)) {
+    const resolvedEncounter = encounterForHope(PILLARS_WIN_ENCOUNTER, nextState.player.hope);
+    return enterEncounter(nextState, resolvedEncounter, destination, { map });
+  }
+
+  if (checkRestartTheGear(state.relics)) {
+    const resolvedEncounter = encounterForHope(GEAR_RITUAL_ENCOUNTER, nextState.player.hope);
+    return enterEncounter(nextState, resolvedEncounter, destination, { map });
   }
 
   const rumorMatch = findNextRumorStep(

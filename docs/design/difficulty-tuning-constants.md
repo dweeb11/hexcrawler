@@ -14,7 +14,9 @@ Target feel: accessible survival for friends-and-family playtests. Risk should s
 | `MAX_HEALTH` | `src/engine/state.ts` | `5` | `5` | No change. |
 | `SEARING_ADVANCE_RATE` | `src/engine/state.ts` | `4` | `5` | Slows map pressure from every 4 to every 5 turns. |
 | `HOPE_DECAY_INTERVAL` | `src/engine/state.ts` | `6` | `7` | Slows passive hope loss. |
-| `PILLARS_DISTANCE_THRESHOLD` | `src/engine/win.ts` | `20` | `18` | Makes Pillars win more reachable in demo sessions. |
+| `PILLARS_MIN_DISTANCE` | `src/engine/win.ts` | — | `12` | Minimum corridor distance from player start and Searing line when seeding Pillars. |
+| `PILLARS_MAX_DISTANCE` | `src/engine/win.ts` | — | `18` | Maximum corridor distance for Pillars placement (replaces `PILLARS_DISTANCE_THRESHOLD`). |
+| `SAFE_CORRIDOR_TOLERANCE` | `src/engine/win.ts` | — | `2` | Perpendicular hex tolerance for frost proximity messages. |
 | `GEAR_RELIC_THRESHOLD` | `src/engine/win.ts` | `5` | `4` | Lowers relic grind for the alternate win. |
 | `RUMOR_TAG_WEIGHT_BONUS` | `src/engine/rumors.ts` | `0.25` | `0.30` | Improves hinted-tag encounter targeting. |
 | `RUMOR_BIOME_WEIGHT_BONUS` | `src/engine/rumors.ts` | `0.20` | `0.25` | Improves hinted-biome encounter targeting. |
@@ -27,7 +29,7 @@ Target feel: accessible survival for friends-and-family playtests. Risk should s
 
 For next manual tuning pass, run 5-10 games split across:
 
-- Rush strategy (direct Pillars pressure)
+- Rush strategy (push safe corridor toward seeded Pillars)
 - Explore strategy (rumor + relic hunting)
 
 Track per run:

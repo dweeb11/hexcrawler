@@ -437,7 +437,7 @@ Document all tunable constants in one place for easy adjustment:
 | `MAX_HEALTH` | `state.ts` | 5 | Max health |
 | `SEARING_ADVANCE_RATE` | `state.ts` | 4 | Turns between searing advances |
 | `HOPE_DECAY_INTERVAL` | `state.ts` | 6 | Turns between passive hope decay |
-| `PILLARS_DISTANCE_THRESHOLD` | `win.ts` | 20 | Distance to reach Pillars |
+| `PILLARS_MIN_DISTANCE` / `PILLARS_MAX_DISTANCE` | `win.ts` | 12 / 18 | Seeded Pillars placement bounds along safe corridor |
 | `GEAR_RELIC_THRESHOLD` | `win.ts` | 5 | Relics needed for Gear win |
 | `RUMOR_TAG_WEIGHT_BONUS` | `rumors.ts` | 0.25 | Weight bonus per hint tag |
 | `RUMOR_BIOME_WEIGHT_BONUS` | `rumors.ts` | 0.20 | Weight bonus per hint biome |

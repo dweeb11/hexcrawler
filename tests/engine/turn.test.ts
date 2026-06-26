@@ -10,7 +10,8 @@ import {
   type Rumor,
 } from "../../src/engine/state";
 import { resolveTurn } from "../../src/engine/turn";
-import { FROST_PROXIMITY_THRESHOLDS, GEAR_RELIC_THRESHOLD, PILLARS_DISTANCE_THRESHOLD } from "../../src/engine/win";
+import { FROST_PROXIMITY_THRESHOLDS, GEAR_RELIC_THRESHOLD } from "../../src/engine/win";
+import { GEAR_RITUAL_ENCOUNTER_ID, PILLARS_ENCOUNTER_ID } from "../../src/engine/win-encounters";
 import { seededRng } from "../helpers";
 
 function makeState(seed = 42): { state: GameState; rng: () => number } {
@@ -554,23 +555,98 @@ describe("resolveTurn searing and loss flow", () => {
 });
 
 describe("frost proximity signals", () => {
-  it("emits a frost log message when crossing into a new proximity band", () => {
+  it("emits a frost log message when crossing into a new proximity band along the corridor", () => {
     const { state, rng } = makeState();
-    // Place the player just below band 1 threshold, facing the frost direction.
-    // Use searing axis=q, direction=1, line=0 so distance = player.q - 0.
-    // Band 1 fires at distance >= FROST_PROXIMITY_THRESHOLDS[0] (12).
-    // Start at q = threshold - 1 (11), move to q = threshold (12).
+    const pillarsCoord = cubeCoord(15, -15, 0);
     const band1 = FROST_PROXIMITY_THRESHOLDS[0];
-    const startQ = band1 - 1;
-    const startHex = cubeCoord(startQ, -startQ, 0);
-    const destinationQ = band1;
-    const destinationHex = cubeCoord(destinationQ, -destinationQ, 0);
+    const startHex = cubeCoord(15 - (band1 + 1), -(15 - (band1 + 1)), 0);
+    const destinationHex = cubeCoord(15 - band1, -(15 - band1), 0);
 
     const logsBefore = state.log.length;
     const next = resolveTurn(
       {
         ...state,
-        searing: { axis: "q", direction: 1, line: 0, advanceRate: 999 },
+        pillarsCoord,
+        searing: { axis: "q", direction: 1, line: -10, advanceRate: 999 },
+        player: { ...state.player, hex: startHex },
+        map: new Map(state.map)
+          .set(coordKey(startHex), {
+            coord: startHex,
+            biome: "wastes",
+            tags: new Set(),
+            encounter: null,
+            revealed: true,
+            consumed: false,
+            visited: true,
+          })
+          .set(coordKey(destinationHex), {
+            coord: destinationHex,
+            biome: "wastes",
+            tags: new Set(),
+            encounter: null,
+            revealed: true,
+            consumed: false,
+            visited: false,
+          }),
+      },
+      { type: "push", direction: 1 },
+      rng,
+    );
+
+    const frostLogs = next.log.filter((e) => e.type === "narrative" && e.text.includes("chill"));
+    expect(frostLogs.length).toBeGreaterThan(0);
+    expect(next.log.length).toBeGreaterThan(logsBefore);
+  });
+
+  it("does not emit a frost signal when moving within the same band", () => {
+    const { state, rng } = makeState();
+    const pillarsCoord = cubeCoord(15, -15, 0);
+    const band1 = FROST_PROXIMITY_THRESHOLDS[0];
+    const startHex = cubeCoord(15 - band1, -(15 - band1), 0);
+    const destinationHex = cubeCoord(15 - (band1 - 1), -(15 - (band1 - 1)), 0);
+
+    const stateInBand: GameState = {
+      ...state,
+      pillarsCoord,
+      searing: { axis: "q", direction: 1, line: -10, advanceRate: 999 },
+      player: { ...state.player, hex: startHex },
+      map: new Map(state.map)
+        .set(coordKey(startHex), {
+          coord: startHex,
+          biome: "wastes",
+          tags: new Set(),
+          encounter: null,
+          revealed: true,
+          consumed: false,
+          visited: true,
+        })
+        .set(coordKey(destinationHex), {
+          coord: destinationHex,
+          biome: "wastes",
+          tags: new Set(),
+          encounter: null,
+          revealed: true,
+          consumed: false,
+          visited: false,
+        }),
+    };
+
+    const next = resolveTurn(stateInBand, { type: "push", direction: 1 }, rng);
+    const frostLogs = next.log.filter((e) => e.type === "narrative" && (e.text.includes("chill") || e.text.includes("crystals") || e.text.includes("plummets")));
+    expect(frostLogs.length).toBe(0);
+  });
+
+  it("does not emit frost signals off the safe corridor", () => {
+    const { state, rng } = makeState();
+    const pillarsCoord = cubeCoord(15, -15, 0);
+    const startHex = cubeCoord(17, -14, -3);
+    const destinationHex = cubeCoord(16, -13, -3);
+
+    const next = resolveTurn(
+      {
+        ...state,
+        pillarsCoord,
+        searing: { axis: "q", direction: 1, line: -10, advanceRate: 999 },
         player: { ...state.player, hex: startHex },
         map: new Map(state.map)
           .set(coordKey(startHex), {
@@ -596,23 +672,21 @@ describe("frost proximity signals", () => {
       rng,
     );
 
-    const frostLogs = next.log.filter((e) => e.type === "narrative" && e.text.includes("chill"));
-    expect(frostLogs.length).toBeGreaterThan(0);
-    expect(next.log.length).toBeGreaterThan(logsBefore);
+    const frostLogs = next.log.filter((e) => e.type === "narrative" && (e.text.includes("chill") || e.text.includes("crystals") || e.text.includes("plummets")));
+    expect(frostLogs.length).toBe(0);
   });
+});
 
-  it("does not emit a frost signal when moving within the same band", () => {
-    const { state, rng } = makeState();
-    // Band 1 is distance 12-14. Move from 12 to 13 — same band, no new message.
-    const band1 = FROST_PROXIMITY_THRESHOLDS[0];
-    const startQ = band1;
-    const startHex = cubeCoord(startQ, -startQ, 0);
-    const destinationQ = band1 + 1;
-    const destinationHex = cubeCoord(destinationQ, -destinationQ, 0);
-
-    const stateInBand: GameState = {
+describe("resolveTurn win flow", () => {
+  function pillarsWinSetup(seed = 42) {
+    const { state, rng } = makeState(seed);
+    const pillarsCoord = cubeCoord(15, -15, 0);
+    const startHex = cubeCoord(14, -14, 0);
+    const destinationHex = pillarsCoord;
+    const winState: GameState = {
       ...state,
-      searing: { axis: "q", direction: 1, line: 0, advanceRate: 999 },
+      pillarsCoord,
+      searing: { ...state.searing, axis: "q", direction: 1, line: -10, advanceRate: 999 },
       player: { ...state.player, hex: startHex },
       map: new Map(state.map)
         .set(coordKey(startHex), {
@@ -626,54 +700,39 @@ describe("frost proximity signals", () => {
         })
         .set(coordKey(destinationHex), {
           coord: destinationHex,
-          biome: "wastes",
-          tags: new Set(),
+          biome: "mountain",
+          tags: new Set(["ice", "frozen", "landmark"]),
           encounter: null,
           revealed: true,
           consumed: false,
           visited: false,
         }),
     };
+    return { winState, rng };
+  }
 
-    const next = resolveTurn(stateInBand, { type: "push", direction: 0 }, rng);
-    const frostLogs = next.log.filter((e) => e.type === "narrative" && (e.text.includes("chill") || e.text.includes("crystals") || e.text.includes("plummets")));
-    expect(frostLogs.length).toBe(0);
-  });
-});
+  it("offers the Pillars win encounter on arrival and wins after acknowledgment", () => {
+    const { winState, rng } = pillarsWinSetup();
+    const afterPush = resolveTurn(winState, { type: "push", direction: 1 }, rng);
 
-describe("resolveTurn win flow", () => {
-  it("wins when the player crosses the Pillars of Frost threshold", () => {
-    const { state, rng } = makeState();
-    const thresholdQ = state.searing.line + PILLARS_DISTANCE_THRESHOLD;
-    const startHex = cubeCoord(thresholdQ - 1, -(thresholdQ - 1), 0);
+    expect(afterPush.status).toBe("playing");
+    expect(afterPush.mode.type).toBe("pendingEncounter");
+    if (afterPush.mode.type === "pendingEncounter") {
+      expect(afterPush.mode.encounter.id).toBe(PILLARS_ENCOUNTER_ID);
+    }
 
-    const next = resolveTurn(
-      {
-        ...state,
-        searing: { ...state.searing, axis: "q", direction: 1, advanceRate: 999 },
-        player: { ...state.player, hex: startHex },
-        map: new Map(state.map).set(coordKey(startHex), {
-          coord: startHex,
-          biome: "forest",
-          tags: new Set(["wood"]),
-          encounter: null,
-          revealed: true,
-          consumed: false,
-          visited: true,
-        }),
-      },
-      { type: "push", direction: 0 },
-      rng,
-    );
+    const revealed = resolveTurn(afterPush, { type: "revealEncounter" }, rng);
+    const won = resolveTurn(revealed, { type: "choose", choiceIndex: 0 }, rng);
 
-    expect(next.status).toBe("won");
-    expect(next.mode.type).toBe("gameover");
-    if (next.mode.type === "gameover") {
-      expect(next.mode.reason.toLowerCase()).toContain("pillars of frost");
+    expect(won.status).toBe("won");
+    expect(won.mode.type).toBe("gameover");
+    if (won.mode.type === "gameover") {
+      expect(won.mode.reason.toLowerCase()).toContain("pillars of frost");
+      expect(won.mode.outcome).toBe("win_pillars");
     }
   });
 
-  it("wins when relic count reaches the Gear threshold", () => {
+  it("wins via Gear Ritual when relic threshold is met on hex entry", () => {
     const { state, rng } = makeState();
     const relics: Relic[] = Array.from({ length: GEAR_RELIC_THRESHOLD }, (_, i) => ({
       id: `gear-${i}`,
@@ -681,56 +740,75 @@ describe("resolveTurn win flow", () => {
       description: "Ritual relic",
       effect: { type: "forage_bonus", bonus: 1 },
     }));
-    const encounter: Encounter = {
-      id: "gear-ritual-prep",
-      text: "The ritual is within reach.",
-      requiredTags: [],
-      choices: [{ label: "Continue", outcome: {} }],
-    };
+    const destinationHex = cubeCoord(1, -1, 0);
 
-    const next = resolveTurn(
+    const afterPush = resolveTurn(
       {
         ...state,
         relics,
-        mode: { type: "encounter", encounter, hex: cubeCoord(0, 0, 0) },
-      },
-      { type: "choose", choiceIndex: 0 },
-      rng,
-    );
-
-    expect(next.status).toBe("won");
-    expect(next.mode.type).toBe("gameover");
-    if (next.mode.type === "gameover") {
-      expect(next.mode.reason.toLowerCase()).toContain("gear");
-    }
-  });
-
-  it("sets outcome=win_pillars on Pillars of Frost win", () => {
-    const { state, rng } = makeState();
-    const thresholdQ = state.searing.line + PILLARS_DISTANCE_THRESHOLD;
-    const startHex = cubeCoord(thresholdQ - 1, -(thresholdQ - 1), 0);
-    const next = resolveTurn(
-      {
-        ...state,
-        searing: { ...state.searing, axis: "q", direction: 1, advanceRate: 999 },
-        player: { ...state.player, hex: startHex },
-        map: new Map(state.map).set(coordKey(startHex), {
-          coord: startHex,
+        searing: { ...state.searing, advanceRate: 999 },
+        map: new Map(state.map).set(coordKey(destinationHex), {
+          coord: destinationHex,
           biome: "forest",
           tags: new Set(["wood"]),
           encounter: null,
           revealed: true,
           consumed: false,
-          visited: true,
+          visited: false,
         }),
       },
-      { type: "push", direction: 0 },
+      { type: "push", direction: 1 },
       rng,
     );
-    expect(next.status).toBe("won");
-    if (next.mode.type === "gameover") {
-      expect(next.mode.outcome).toBe("win_pillars");
+
+    expect(afterPush.mode.type).toBe("pendingEncounter");
+    if (afterPush.mode.type === "pendingEncounter") {
+      expect(afterPush.mode.encounter.id).toBe(GEAR_RITUAL_ENCOUNTER_ID);
     }
+
+    const revealed = resolveTurn(afterPush, { type: "revealEncounter" }, rng);
+    const won = resolveTurn(revealed, { type: "choose", choiceIndex: 0 }, rng);
+
+    expect(won.status).toBe("won");
+    if (won.mode.type === "gameover") {
+      expect(won.mode.reason.toLowerCase()).toContain("gear");
+      expect(won.mode.outcome).toBe("win_gear");
+    }
+  });
+
+  it("allows declining the Gear Ritual and continuing on the map", () => {
+    const { state, rng } = makeState();
+    const relics: Relic[] = Array.from({ length: GEAR_RELIC_THRESHOLD }, (_, i) => ({
+      id: `gear-${i}`,
+      name: `Gear ${i}`,
+      description: "Ritual relic",
+      effect: { type: "forage_bonus", bonus: 1 },
+    }));
+    const destinationHex = cubeCoord(1, -1, 0);
+
+    const afterPush = resolveTurn(
+      {
+        ...state,
+        relics,
+        searing: { ...state.searing, advanceRate: 999 },
+        map: new Map(state.map).set(coordKey(destinationHex), {
+          coord: destinationHex,
+          biome: "forest",
+          tags: new Set(["wood"]),
+          encounter: null,
+          revealed: true,
+          consumed: false,
+          visited: false,
+        }),
+      },
+      { type: "push", direction: 1 },
+      rng,
+    );
+    const revealed = resolveTurn(afterPush, { type: "revealEncounter" }, rng);
+    const declined = resolveTurn(revealed, { type: "choose", choiceIndex: 1 }, rng);
+
+    expect(declined.status).toBe("playing");
+    expect(declined.mode.type).toBe("map");
   });
 
   it("sets outcome=loss_health on health depletion", () => {

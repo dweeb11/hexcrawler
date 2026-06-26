@@ -1,5 +1,6 @@
 import { coordKey, cubeCoord, type CubeCoord, type HexDirection } from "./hex";
 import { initSearing } from "./searing";
+import { placePillarsCoord } from "./win";
 
 export type Biome = "forest" | "mountain" | "ruins" | "settlement" | "wastes";
 export type HexAxis = "q" | "r" | "s";
@@ -187,6 +188,7 @@ export interface GameState {
   rumors: RumorState;
   relics: Relic[]; // collected relics
   // NEW in M3:
+  pillarsCoord: CubeCoord;
   stats: GameStats;
 }
 
@@ -210,6 +212,8 @@ export function createInitialState(
   rumors: Rumor[] = []
 ): GameState {
   const startCoord = cubeCoord(0, 0, 0);
+  const searing = initSearing(rng);
+  const pillarsCoord = placePillarsCoord(startCoord, searing, rng);
   const startHex: HexTile = {
     coord: startCoord,
     biome: "settlement",
@@ -227,7 +231,8 @@ export function createInitialState(
       health: STARTING_HEALTH,
     },
     map: new Map([[coordKey(startCoord), startHex]]),
-    searing: initSearing(rng),
+    searing,
+    pillarsCoord,
     turn: 0,
     mode: { type: "map" },
     log: [

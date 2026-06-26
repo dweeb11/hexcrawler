@@ -5,8 +5,9 @@ import {
   resolveRumorAfterEncounter,
   resolveRumorDiscovery,
 } from "../rumors";
+import { resolveSpecialWinChoice } from "../win-encounters";
 import { type Action, type GameState, type RNG } from "../state";
-import { appendLog } from "./log";
+import { appendLog, enterGameOver } from "./log";
 import { applyEndOfTurnEffects } from "./end-of-turn";
 
 export function resolveRevealEncounter(state: GameState): GameState {
@@ -39,6 +40,21 @@ export function resolveChoose(
   const choice = encounterMode.encounter.choices[action.choiceIndex];
   if (!choice) {
     return appendLog(state, "You hesitate. No such choice presents itself.", "system");
+  }
+
+  const winResolution = resolveSpecialWinChoice(encounterMode.encounter.id, action.choiceIndex);
+  if (winResolution?.type === "win") {
+    return enterGameOver(
+      {
+        ...state,
+        stats: { ...state.stats, encountersResolved: state.stats.encountersResolved + 1 },
+      },
+      winResolution.outcome,
+      winResolution.reason,
+    );
+  }
+  if (winResolution?.type === "decline") {
+    return { ...state, mode: { type: "map" } };
   }
 
   const outcome = resolveChoice(choice, rng);

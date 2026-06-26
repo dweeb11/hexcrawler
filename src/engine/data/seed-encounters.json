@@ -3740,5 +3740,67 @@
         }
       }
     ]
+  },
+  {
+    "id": "pf-step-0",
+    "text": "In a sheltered hollow, the air carries a bite of winter that the Searing should have burned away long ago.",
+    "requiredTags": ["sheltered", "ice"],
+    "biomes": ["forest", "mountain"],
+    "choices": [
+      {
+        "label": "Mark the direction of the cold",
+        "outcome": { "hope": 1 }
+      },
+      {
+        "label": "Press on without lingering",
+        "outcome": {}
+      }
+    ]
+  },
+  {
+    "id": "pf-step-1",
+    "text": "Scarred high ground reveals a straight run ahead — the axis the Searing has not yet swallowed.",
+    "requiredTags": ["scarred", "elevated"],
+    "choices": [
+      {
+        "label": "Commit to the corridor",
+        "outcome": { "hope": 1 }
+      },
+      {
+        "label": "Note it and move carefully",
+        "outcome": {}
+      }
+    ]
+  },
+  {
+    "id": "pf-step-2",
+    "text": "Frost clings to mountain stone along a narrow line, as if something ahead refuses to thaw.",
+    "requiredTags": ["ice", "stone", "frozen"],
+    "biomes": ["mountain"],
+    "choices": [
+      {
+        "label": "Follow the frost line",
+        "outcome": { "hope": 1 }
+      },
+      {
+        "label": "Take what warmth you can from the sight",
+        "outcome": { "supply": 1 }
+      }
+    ]
+  },
+  {
+    "id": "pf-step-3",
+    "text": "The cold deepens until your breath clouds. Somewhere ahead, the world ends in pillars of living ice.",
+    "requiredTags": ["frozen", "landmark", "elevated"],
+    "choices": [
+      {
+        "label": "You know where to go now",
+        "outcome": { "hope": 2 }
+      },
+      {
+        "label": "Hold the vision close",
+        "outcome": { "hope": 1 }
+      }
+    ]
   }
 ]
