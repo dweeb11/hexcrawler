@@ -222,19 +222,24 @@ The game has endings, atmosphere, and emotional payoff. Players can win two diff
 
 ### Win Condition: Pillars of Frost
 
-**Mechanic:** The player reaches a threshold distance from the Searing's origin along the opposite axis. This rewards Push-heavy, efficient movement.
+**Mechanic:** Find a seeded landmark hex in the safe corridor (the axis opposite the Searing's advance). Rewards navigation and Push-heavy movement toward the frozen edge of the world.
 
-MUST: When the player reaches distance >= N from the Searing origin (N tuned in M4), the next generated hex is the Pillars of Frost — a unique landmark hex.
-MUST: Entering the Pillars hex triggers a win encounter with narrative text.
-SHOULD: The world signals proximity to the Pillars — encounter text gets colder, frost imagery increases in the turns before arrival.
+MUST: At game start, seed `pillarsCoord` in the safe corridor. Placement is at least a minimum distance from both the player start and the Searing line, and may be placed anywhere from that minimum up to a maximum cap along the corridor (tuned in M4). See ADR-0002.
+MUST: The player does not know the Pillars location at start — no map marker or compass.
+MUST: When map generation reveals `pillarsCoord`, that hex is the Pillars of Frost landmark (not a normal biome roll).
+MUST: Entering the Pillars hex triggers a single-acknowledgment win encounter (no decline option).
+MUST: A dedicated optional Pillars rumor chain guides players toward the safe corridor; completing it is not required to win.
+SHOULD: Frost proximity log messages fire when the player is within banded distance of `pillarsCoord` and within ±2 hexes of the safe-corridor line.
+MUST: If Pillars and Gear Ritual would both trigger on the same hex, Pillars takes priority.
 MUST: Win screen shows journey stats (turn count, hexes explored, encounters resolved, relics found, rumors completed).
 
 ### Win Condition: Restart the Gear
 
-**Mechanic:** Collect enough relics to perform a ritual that restarts the world's mechanism. This rewards exploration and rumor-chasing.
+**Mechanic:** Collect enough relics to perform a ritual that restarts the world's mechanism. Rewards exploration and rumor-chasing.
 
-MUST: When relic count >= threshold (tuned in M4, starting estimate: 5-6), a special encounter triggers at the next hex — the Gear ritual.
-MUST: The ritual is a player choice, not automatic. The encounter presents the option to perform the ritual or continue exploring.
+MUST: When relic count >= threshold (tuned in M4, starting estimate: 4), entering a hex triggers the Gear Ritual encounter — unless a landmark encounter (Pillars) takes priority on that hex.
+MUST: The ritual is a player choice, not automatic. Two choices: perform the ritual (win) or decline and return to the map.
+MUST: If the player declines, re-offer the Gear Ritual on every subsequent hex entry while the relic threshold remains met.
 MUST: Win screen shows relics collected and rumors completed.
 
 ### Loss Conditions (unchanged)
@@ -271,7 +276,7 @@ MUST: "New Game" option.
 
 ### Parallel Work (M3)
 
-- Win condition engine logic (distance check, relic threshold, Pillars/Gear encounters) is independent of visual/audio work
+- Win condition engine logic (seeded Pillars placement, relic threshold, Pillars/Gear encounters) is independent of visual/audio work
 - Sound asset sourcing can start during M2
 - Low-Hope effects (visual) are independent of sound design
 
@@ -345,6 +350,7 @@ Each milestone depends on the previous for integration, but sub-tasks within eac
 | 2-tag uncommon encounters | 30-40 | M2 |
 | 3-tag rare encounters | 10-15 | M2 |
 | Rumor chains | 4-6 (3-5 steps each) | M2 |
+| Pillars rumor chain | 1 (3-5 steps, optional guidance) | M3 |
 | Rumor step encounters | 15-25 | M2 |
 | Relics | 8-10 | M2 |
 | Total encounters | ~100-130 | M2 |
@@ -353,7 +359,8 @@ This is the longest-lead item in the roadmap. Encounter content can be authored 
 
 ## Open Tuning Questions (Resolved in M4)
 
-- Pillars of Frost distance threshold
+- Pillars of Frost min/max placement distance along safe corridor
+- Safe corridor tolerance for frost proximity (±2 hexes)
 - Restart the Gear relic count threshold
 - Weighted generation bonus for active rumors (+20-30% — needs playtesting)
 - Hope decay rate with the denser encounter model (may need rebalancing)

@@ -10,165 +10,107 @@
 
 **Design Spec:** `docs/design/friends-family-demo.md` — Milestone 3 section
 
+**Design Spec:** `docs/design/friends-family-demo.md` — Milestone 3 section  
+**Domain glossary:** `CONTEXT.md`  
+**ADR:** `docs/adr/0002-seeded-pillars-landmark.md` — canonical win-condition model (supersedes distance-threshold approach below if this plan drifts)
+
 **Prerequisite:** M2 must be complete (rumor deck, relics, encounter overhaul).
+
+**Implementation note:** Current code auto-wins via `end-of-turn.ts` distance/relic checks. Task 1 replaces that with encounter-based wins per ADR-0002.
 
 ---
 
-### Task 1: Pillars of Frost Win Condition
+### Task 1: Pillars of Frost — Seeded Landmark + Win Encounter
 
 **Files:**
-- Create: `src/engine/win.ts`
-- Test: `tests/engine/win.test.ts`
-- Modify: `src/engine/turn.ts`
+- Modify: `src/engine/win.ts`
+- Modify: `src/engine/state.ts`
 - Modify: `src/engine/map.ts`
+- Modify: `src/engine/turn/movement.ts`
+- Modify: `src/engine/turn/end-of-turn.ts` (remove auto-win)
+- Test: `tests/engine/win.test.ts`
+- Test: `tests/engine/turn.test.ts`
 
-- [ ] **Step 1: Write win condition tests**
+- [ ] **Step 1: Add `pillarsCoord` to GameState and seed at init**
 
-```typescript
-// tests/engine/win.test.ts
-import { describe, expect, it } from "vitest";
-import {
-  checkPillarsOfFrost,
-  checkRestartTheGear,
-  PILLARS_DISTANCE_THRESHOLD,
-  GEAR_RELIC_THRESHOLD,
-} from "../../src/engine/win";
-import { cubeCoord } from "../../src/engine/hex";
-import type { SearingState, Relic } from "../../src/engine/state";
+In `createInitialState`, call `placePillarsCoord(startCoord, searing, rng)` to pick a coordinate in the safe corridor:
+- At least `PILLARS_MIN_DISTANCE` from player start and Searing line
+- At most `PILLARS_MAX_DISTANCE` along the corridor from player start
+- Random position within that range on the corridor axis; perpendicular offset 0 (Pillars sit on the ideal line)
 
-describe("checkPillarsOfFrost", () => {
-  const searing: SearingState = { axis: "q", direction: 1, line: -10, advanceRate: 4 };
+Persist `pillarsCoord` through serialize/deserialize.
 
-  it("returns false when player is too close to searing origin", () => {
-    expect(checkPillarsOfFrost(cubeCoord(0, 0, 0), searing)).toBe(false);
-  });
+- [ ] **Step 2: Write placement and landmark tests**
 
-  it("returns true when player reaches threshold distance opposite the searing", () => {
-    // Searing advances along +q, so player needs to go far in +q direction
-    // Distance from searing line is playerQ - searingLine
-    const farCoord = cubeCoord(PILLARS_DISTANCE_THRESHOLD + (-10) + 1, -(PILLARS_DISTANCE_THRESHOLD + (-10) + 1), 0);
-    // Actually: distance = playerAxisValue - searingLine for direction=1
-    // We need playerQ - (-10) >= threshold
-    // So playerQ >= threshold - 10
-    const needed = PILLARS_DISTANCE_THRESHOLD;
-    const playerQ = needed + searing.line;
-    expect(checkPillarsOfFrost(cubeCoord(playerQ, -playerQ, 0), searing)).toBe(true);
-  });
+Test `placePillarsCoord` respects min/max bounds and safe-corridor axis. Test that `generateHex` at `pillarsCoord` returns a Pillars landmark tile (distinct biome/tags). Test entering Pillars coord triggers win encounter, not normal encounter. Test Pillars priority over Gear Ritual on same hex.
 
-  it("returns false when player is on the wrong side", () => {
-    // Player behind the searing line
-    expect(checkPillarsOfFrost(cubeCoord(-15, 15, 0), searing)).toBe(false);
-  });
-});
-
-describe("checkRestartTheGear", () => {
-  const makeRelic = (id: string): Relic => ({
-    id,
-    name: id,
-    description: "",
-    effect: { type: "forage_bonus", chance: 0.1 },
-  });
-
-  it("returns false when not enough relics", () => {
-    const relics = Array.from({ length: GEAR_RELIC_THRESHOLD - 1 }, (_, i) => makeRelic(`r${i}`));
-    expect(checkRestartTheGear(relics)).toBe(false);
-  });
-
-  it("returns true when relic count meets threshold", () => {
-    const relics = Array.from({ length: GEAR_RELIC_THRESHOLD }, (_, i) => makeRelic(`r${i}`));
-    expect(checkRestartTheGear(relics)).toBe(true);
-  });
-});
-```
-
-- [ ] **Step 2: Run tests to verify they fail**
-
-Run: `npx vitest run tests/engine/win.test.ts`
-Expected: FAIL — module not found
-
-- [ ] **Step 3: Implement win.ts**
+- [ ] **Step 3: Implement placement in `win.ts`**
 
 ```typescript
-// src/engine/win.ts
-import type { CubeCoord } from "./hex";
-import type { SearingState, Relic } from "./state";
+export const PILLARS_MIN_DISTANCE = 12;  // tuned in M4
+export const PILLARS_MAX_DISTANCE = 18;  // tuned in M4
+export const SAFE_CORRIDOR_TOLERANCE = 2;
+export const GEAR_RELIC_THRESHOLD = 4;
 
-// Tuning constants — adjusted in M4 based on playtesting
-export const PILLARS_DISTANCE_THRESHOLD = 20;
-export const GEAR_RELIC_THRESHOLD = 5;
+export function placePillarsCoord(
+  playerStart: CubeCoord,
+  searing: SearingState,
+  rng: RNG,
+): CubeCoord { /* safe-corridor random in [min, max] */ }
 
-export function checkPillarsOfFrost(
-  playerHex: CubeCoord,
-  searing: SearingState
-): boolean {
-  const playerAxisValue = playerHex[searing.axis];
-  const distance =
-    searing.direction === 1
-      ? playerAxisValue - searing.line
-      : searing.line - playerAxisValue;
-  return distance >= PILLARS_DISTANCE_THRESHOLD;
-}
+export function isInSafeCorridor(
+  coord: CubeCoord,
+  pillarsCoord: CubeCoord,
+  searing: SearingState,
+): boolean { /* ±SAFE_CORRIDOR_TOLERANCE of ideal line */ }
+
+export function distanceToPillars(coord: CubeCoord, pillarsCoord: CubeCoord): number;
 
 export function checkRestartTheGear(relics: Relic[]): boolean {
   return relics.length >= GEAR_RELIC_THRESHOLD;
 }
 ```
 
-- [ ] **Step 4: Run tests**
+Remove `checkPillarsOfFrost` distance-threshold helper (replaced by coord equality).
 
-Run: `npx vitest run tests/engine/win.test.ts`
-Expected: All pass
+- [ ] **Step 4: Landmark generation in `map.ts`**
 
-- [ ] **Step 5: Integrate Pillars check into `handlePush` in `src/engine/turn.ts`**
+When `generateHex` is called for `pillarsCoord`, return a Pillars landmark `HexTile` (fixed encounter id `pillars-of-frost`).
 
-After moving the player, check if they've reached the Pillars threshold. If so, generate a Pillars of Frost landmark hex and trigger a win encounter:
+- [ ] **Step 5: Pillars win encounter on hex entry (`movement.ts`)**
 
-```typescript
-import { checkPillarsOfFrost, checkRestartTheGear } from "./win";
-
-// In handlePush, after moving:
-if (checkPillarsOfFrost(newPlayerHex, state.searing)) {
-  // Generate the Pillars landmark hex
-  const pillarsEncounter: Encounter = {
-    id: "pillars-of-frost",
-    text: "Towering columns of ice rise from the earth, ancient beyond measure. The air is still and cold. You have reached the Pillars of Frost — the edge of the frozen world. The Searing cannot reach you here.",
-    requiredTags: [],
-    choices: [{ label: "You made it.", outcome: { hope: 5 } }],
-  };
-  return {
-    ...newState,
-    mode: { type: "encounter", encounter: pillarsEncounter, hex: newPlayerHex },
-    status: "won",
-  };
-}
-```
-
-- [ ] **Step 6: Integrate Gear check into turn resolution**
-
-After resolving an encounter choice that grants a relic, check the Gear threshold:
+On push into `pillarsCoord`, enter a single-choice win encounter:
 
 ```typescript
-if (checkRestartTheGear(newState.relics)) {
-  // Don't auto-win — flag it so the next hex triggers the Gear ritual encounter
-  // Add a flag to state or check in handlePush
-}
+const pillarsEncounter: Encounter = {
+  id: "pillars-of-frost",
+  text: "Towering columns of ice rise from the earth...",
+  requiredTags: [],
+  choices: [{ label: "You made it.", outcome: {} }],
+};
+// Resolve choice → enterGameOver(state, "win_pillars", reason)
 ```
 
-The Gear ritual is a player choice: when they have enough relics and enter a new hex, trigger the ritual encounter. The player can choose to perform it or continue exploring.
+No decline option. Do not set `status: "won"` until encounter resolves.
 
-- [ ] **Step 7: Update GameState status to include win type**
+- [ ] **Step 6: Gear Ritual encounter on hex entry (`movement.ts`)**
 
-Extend the `status` field or `GameMode` gameover to distinguish win types:
+If `checkRestartTheGear(relics)` and destination is not `pillarsCoord`, offer Gear Ritual before normal encounter:
 
 ```typescript
-type GameMode =
-  | { type: "map" }
-  | { type: "encounter"; encounter: Encounter; hex: CubeCoord }
-  | { type: "camp"; result: string; incident: IncidentResult | null }
-  | { type: "gameover"; reason: string; outcome: "win_pillars" | "win_gear" | "loss_health" | "loss_hope" | "loss_searing" };
+choices: [
+  { label: "Perform the ritual.", outcome: { /* triggers win_gear on resolve */ } },
+  { label: "Not yet.", outcome: {} },
+];
 ```
 
-- [ ] **Step 8: Run all tests, fix any breakage from status type change**
+Decline returns to map; re-offer on next hex entry.
+
+- [ ] **Step 7: Remove auto-win from `end-of-turn.ts`**
+
+Delete `checkPillarsOfFrost` / `checkRestartTheGear` calls from `applyWinChecks`. Wins flow only through encounter resolution.
+
+- [ ] **Step 8: Run tests**
 
 Run: `npx vitest run`
 Expected: All pass
@@ -176,8 +118,8 @@ Expected: All pass
 - [ ] **Step 9: Commit**
 
 ```bash
-git add src/engine/win.ts tests/engine/win.test.ts src/engine/turn.ts src/engine/state.ts
-git commit -m "feat: add Pillars of Frost and Restart the Gear win conditions"
+git add src/engine/win.ts src/engine/state.ts src/engine/map.ts src/engine/turn/
+git commit -m "feat: seeded Pillars landmark and encounter-based wins"
 ```
 
 ---
@@ -185,36 +127,47 @@ git commit -m "feat: add Pillars of Frost and Restart the Gear win conditions"
 ### Task 2: Frost Proximity Signals
 
 **Files:**
-- Modify: `src/engine/turn.ts`
+- Modify: `src/engine/turn/movement.ts`
 
-- [ ] **Step 1: Add frost proximity log messages**
+- [ ] **Step 1: Rework frost proximity to use `pillarsCoord`**
 
-In `handlePush`, when the player is within a few hexes of the Pillars threshold, add atmospheric log entries:
+Replace searing-distance bands with distance-to-`pillarsCoord` bands. Only emit messages when `isInSafeCorridor(playerHex, pillarsCoord, searing)` is true:
 
 ```typescript
-const distanceToPillars = PILLARS_DISTANCE_THRESHOLD - distance;
-if (distanceToPillars <= 5 && distanceToPillars > 0) {
-  const frostMessages = [
-    "The air grows colder. Frost clings to everything.",
-    "Your breath crystallizes. The Pillars must be near.",
-    "Ice patterns form on stone surfaces. You're close.",
-    "The temperature drops sharply. The frozen world is ahead.",
-    "You can feel it — the edge of the world, cold and still.",
-  ];
-  const message = frostMessages[Math.min(5 - distanceToPillars, frostMessages.length - 1)];
-  newState = appendLog(newState, message, "narrative");
+const oldBand = frostProximityBand(distanceToPillars(state.player.hex, state.pillarsCoord));
+const newBand = frostProximityBand(distanceToPillars(destination, state.pillarsCoord));
+if (newBand > oldBand && isInSafeCorridor(destination, state.pillarsCoord, state.searing)) {
+  appendLog(nextState, FROST_PROXIMITY_MESSAGES[newBand], "narrative");
 }
 ```
 
 - [ ] **Step 2: Manually verify in browser**
 
-Play toward the Pillars and confirm frost messages appear in the log as you get close.
+Push along the safe corridor toward the Pillars. Confirm frost messages appear in-band and do not fire when wandering off-axis beyond ±2.
 
 - [ ] **Step 3: Commit**
 
 ```bash
-git add src/engine/turn.ts
-git commit -m "feat: add frost proximity narrative messages near Pillars of Frost"
+git add src/engine/turn/movement.ts src/engine/win.ts
+git commit -m "feat: frost proximity uses Pillars distance and safe corridor"
+```
+
+---
+
+### Task 2b: Pillars Rumor Chain Content
+
+**Files:**
+- Modify: rumor seed data (e.g. `src/engine/data/rumors` or equivalent)
+- Modify: encounter seed data for rumor steps
+
+- [ ] **Step 1: Author dedicated Pillars rumor chain (3–5 steps)**
+
+Narrative progressively hints at the safe corridor and frozen world. Chain is optional — Pillars remain findable without it.
+
+- [ ] **Step 2: Commit**
+
+```bash
+git commit -m "content: add optional Pillars rumor chain"
 ```
 
 ---
@@ -667,8 +620,8 @@ Expected: No type errors
 - [ ] **Step 3: Manual playtest checklist**
 
 Run: `npm run dev`
-- [ ] Pillars of Frost win: reach far enough from searing, see frost messages, trigger win
-- [ ] Restart the Gear win: collect enough relics, trigger Gear ritual, choose to win
+- [ ] Pillars of Frost win: find seeded landmark in safe corridor, frost messages in-band only, single-acknowledgment win encounter
+- [ ] Restart the Gear win: collect enough relics, Gear ritual on hex entry, decline re-offers on next hex
 - [ ] Win screens show stats and narrative text
 - [ ] Loss screens show appropriate narrative per cause
 - [ ] Low-Hope desaturation and log flicker work
